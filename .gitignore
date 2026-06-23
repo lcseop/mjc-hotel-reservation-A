@@ -1,0 +1,51 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# NetBeans
+nbproject/private/
+
+# Build outputs
+target/
+build/
+out/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Java
+*.class
+
+# Maven Wrapper logs
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Archives
+*.zip
+*.tar
+*.gz
