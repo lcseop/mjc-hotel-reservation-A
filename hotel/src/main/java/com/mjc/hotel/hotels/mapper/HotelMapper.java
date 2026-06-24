@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface HotelMapper {
 
-    public List<Hotel> getHotels();
+    List<Hotel> getHotels();
 }

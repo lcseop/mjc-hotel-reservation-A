@@ -6,17 +6,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "room_tag")
+@Entity(name = "room_photo")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class RoomTag {
+@Data
+public class RoomPhoto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
-    @Column(length = 15, nullable = false)
-    private String title;
+    @Column(name = "image_path", length = 255, nullable = false)
+    private String imagePath;
 }

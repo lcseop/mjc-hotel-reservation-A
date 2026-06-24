@@ -1,24 +1,22 @@
 package com.mjc.hotel.room.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
+@Entity(name = "room_type")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class Student {
+@Data
+public class RoomType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
-    private String name;
+    @Column(length = 15, nullable = false)
+    private String title;
 }
