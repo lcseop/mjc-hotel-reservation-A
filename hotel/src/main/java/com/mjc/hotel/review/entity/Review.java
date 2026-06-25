@@ -46,8 +46,8 @@ public class Review extends BaseEntity {
     private String content;
 
     @Column(name = "like_count", nullable = false)
-    private int likeCount; //null 못들어가게 기본형
+    private int likeCount = 0; //null 못들어가게 기본형
 
     @Column(name = "dislike_count", nullable = false)
-    private int dislikeCount;
+    private int dislikeCount = 0;
 }
