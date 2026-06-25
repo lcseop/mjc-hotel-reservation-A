@@ -19,8 +19,7 @@ public class EmailLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "email_log_id")
-    private Long emailLogId;
+    private Long sid;
 
     // reservation_id FK → Reservation 객체 참조
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +31,7 @@ public class EmailLog {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EmailStatus status;
+    private EmailStatus emailStatus;
 
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)
