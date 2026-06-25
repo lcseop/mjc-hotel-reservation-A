@@ -1,10 +1,42 @@
 package com.mjc.hotel.hotels.mapper;
 
+import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
+import com.mjc.hotel.hotels.entity.HotelAmenities;
+import com.mjc.hotel.hotels.entity.HotelPhoto;
+import com.mjc.hotel.hotels.entity.HotelType;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-public interface HotelMapper {
+@Component
+public class HotelMapper {
 
-    List<Hotel> getHotels();
+    public static Hotel clone(HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo, HotelAmenities amenities) {
+        if (hotel == null || photo == null || amenities == null
+                || type == null || hotel.getHotelName() == null
+                || hotel.getHotelPrice() == null || hotel.getLocation() == null) {
+            return null;
+        }
+        if (sid && hotel.getSid() == null) {
+            return null;
+        }
+        Hotel clone = Hotel
+                .builder()
+                .photo(photo)
+                .amenities(amenities)
+                .type(type)
+                .hotelName(hotel.getHotelName())
+                .hotelPrice(hotel.getHotelPrice())
+                .location(hotel.getLocation())
+                .starRating(hotel.getStarRating())
+                .description(hotel.getDescription())
+                .build();
+
+        if (sid) {
+            clone.setSid(hotel.getSid());
+        }
+
+        return clone;
+    }
 }

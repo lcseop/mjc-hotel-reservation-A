@@ -1,6 +1,7 @@
 package com.mjc.hotel.room.entity;
 
 import com.mjc.hotel.hotels.entity.Hotel;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class Room {
+public class Room extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
