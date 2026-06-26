@@ -26,7 +26,7 @@ public class EmailLog {
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
-    @Column(name = "receipient_email", length = 100, nullable = false)
+    @Column(name = "recipient_email", length = 100, nullable = false)
     private String recipientEmail;
 
     @Enumerated(EnumType.STRING)

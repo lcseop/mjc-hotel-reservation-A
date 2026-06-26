@@ -47,20 +47,18 @@ public class EmailLogService {
     }
 
     public List<EmailLogResponse> getLogsByReservation(Long reservationSid) {
-        List<EmailLog> allLogs = emailLogRepository.findAll();
-        List<EmailLogResponse> resultList = new ArrayList<>();
+        List<EmailLog> logs = emailLogRepository.findByReservation_Sid(reservationSid);
 
-        for(EmailLog log : allLogs) {
-            if(log.getReservation().getSid().equals(reservationSid)) {
-                EmailLogResponse response = new EmailLogResponse();
-                response.setSid(log.getSid());
-                response.setReservationSid(log.getReservation().getSid());
-                response.setEmailStatus(log.getEmailStatus().name());
-                response.setSentAt(log.getSentAt());
-
-                resultList.add(response);
-            }
-        }
-        return resultList;
+        return logs.stream()
+                .map(log -> {
+                    EmailLogResponse response = new EmailLogResponse();
+                    response.setSid(log.getSid());
+                    response.setReservationSid(log.getReservation().getSid());
+                    response.setRecipientEmail(log.getRecipientEmail());
+                    response.setEmailStatus(log.getEmailStatus().name());
+                    response.setSentAt(log.getSentAt());
+                    return response;
+                })
+                .toList();
     }
 }

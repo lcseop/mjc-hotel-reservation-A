@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vi/email-logs")
+@RequestMapping("/api/v1/email-logs")
 @RequiredArgsConstructor
 public class EmailLogController {
 
