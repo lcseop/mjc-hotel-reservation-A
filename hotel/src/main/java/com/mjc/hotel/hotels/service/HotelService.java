@@ -21,19 +21,16 @@ public class HotelService {
     @Autowired
     private HotelRepository hotelRepository;
     @Autowired
-    private HotelAmenitiesRepository hotelAmenitiesRepository;
-    @Autowired
     private HotelPhotoRepository hotelPhotoRepository;
     @Autowired
     private HotelTypeRepository hotelTypeRepository;
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
-        HotelAmenities amenities = hotelAmenitiesRepository.findById(hotel.getAmenitiesId()).orElseThrow();
         HotelPhoto photo = hotelPhotoRepository.findById(hotel.getPhotoId()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(hotel.getTypeId()).orElseThrow();
 
-        Hotel insert = HotelMapper.clone(hotel, false, type, photo, amenities);
+        Hotel insert = HotelMapper.clone(hotel, false, type, photo);
 
         Hotel saved = hotelRepository.save(insert);
 
@@ -42,8 +39,6 @@ public class HotelService {
                 .sid(saved.getSid())
                 .typeTitle(type.getTitle())
                 .photoPath(photo.getImagePath())
-                .amenitiesTitle(amenities.getTitle())
-                .amenitiesDescription(amenities.getDescription())
                 .hotelName(saved.getHotelName())
                 .hotelPrice(saved.getHotelPrice())
                 .location(saved.getLocation())

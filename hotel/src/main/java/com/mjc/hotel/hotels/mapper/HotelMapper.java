@@ -12,8 +12,8 @@ import java.util.List;
 @Component
 public class HotelMapper {
 
-    public static Hotel clone(HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo, HotelAmenities amenities) {
-        if (hotel == null || photo == null || amenities == null
+    public static Hotel clone(HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo) {
+        if (hotel == null || photo == null
                 || type == null || hotel.getHotelName() == null
                 || hotel.getHotelPrice() == null || hotel.getLocation() == null) {
             return null;
@@ -24,7 +24,6 @@ public class HotelMapper {
         Hotel clone = Hotel
                 .builder()
                 .photo(photo)
-                .amenities(amenities)
                 .type(type)
                 .hotelName(hotel.getHotelName())
                 .hotelPrice(hotel.getHotelPrice())

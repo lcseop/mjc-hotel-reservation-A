@@ -56,7 +56,6 @@ public class HotelServiceTest {
                 .builder()
                 .type(hotelType)
                 .photo(hotelPhoto)
-                .amenities(hotelAmenities)
                 .hotelName("골든 서울 호텔")
                 .hotelPrice(300000)
                 .location("서울 강서구 염창동 공항대로 663")
@@ -65,6 +64,65 @@ public class HotelServiceTest {
                 .build();
 
         hotelRepository.save(hotel);
+    }
 
+    @Test
+    @Commit
+    public void amenitiesAdd() {
+        HotelAmenities hotelAmenities = HotelAmenities
+                .builder()
+                .title("루프탑 수영장")
+                .description("연중무휴 운영")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("피트니스 센터")
+                .description("24시간 이용")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("럭셔리 스파")
+                .description("예약 후 이용")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("미슐랭 레스토랑")
+                .description("조식·중식·석식 운영")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("발렛 파킹")
+                .description("유료 · 24시간")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("24시간 컨시어지")
+                .description("한·영·일 지원")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
+
+        hotelAmenities = HotelAmenities
+                .builder()
+                .title("루프탑 바")
+                .description("PM 6 ~ AM 2")
+                .build();
+
+        hotelAmenitiesRepository.save(hotelAmenities);
     }
 }

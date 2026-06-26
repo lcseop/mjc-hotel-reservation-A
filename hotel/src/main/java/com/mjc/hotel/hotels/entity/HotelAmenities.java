@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
+// 호텔 편의 시설
+// 예시 : 무료 와이파이, 전 객실 이용 가능
 public class HotelAmenities extends BaseEntity {
 
     @Id
