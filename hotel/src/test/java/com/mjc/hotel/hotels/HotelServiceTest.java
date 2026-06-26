@@ -1,13 +1,7 @@
 package com.mjc.hotel.hotels;
 
-import com.mjc.hotel.hotels.entity.Hotel;
-import com.mjc.hotel.hotels.entity.HotelAmenities;
-import com.mjc.hotel.hotels.entity.HotelPhoto;
-import com.mjc.hotel.hotels.entity.HotelType;
-import com.mjc.hotel.hotels.repository.HotelAmenitiesRepository;
-import com.mjc.hotel.hotels.repository.HotelPhotoRepository;
-import com.mjc.hotel.hotels.repository.HotelRepository;
-import com.mjc.hotel.hotels.repository.HotelTypeRepository;
+import com.mjc.hotel.hotels.entity.*;
+import com.mjc.hotel.hotels.repository.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +14,8 @@ public class HotelServiceTest {
     private HotelRepository hotelRepository;
     @Autowired
     private HotelAmenitiesRepository hotelAmenitiesRepository;
+    @Autowired
+    private HotelInAmenitiesRepository hotelInAmenitiesRepository;
     @Autowired
     private HotelPhotoRepository hotelPhotoRepository;
     @Autowired
@@ -124,5 +120,27 @@ public class HotelServiceTest {
                 .build();
 
         hotelAmenitiesRepository.save(hotelAmenities);
+    }
+
+    @Test
+    @Commit
+    public void hotelInAmenitiesAdd() {
+        Hotel hotel = Hotel
+                .builder()
+                .sid(1L)
+                .build();
+
+        HotelAmenities hotelAmenities = HotelAmenities
+                .builder()
+                .sid(1L)
+                .build();
+
+        HotelInAmenities hotelInAmenities = HotelInAmenities
+                .builder()
+                .hotel(hotel)
+                .amenities(hotelAmenities)
+                .build();
+
+        hotelInAmenitiesRepository.save(hotelInAmenities);
     }
 }

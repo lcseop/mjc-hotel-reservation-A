@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @Transactional(readOnly = true)
 public class HotelService {
@@ -27,10 +29,11 @@ public class HotelService {
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
+        Hotel origin = hotelRepository.findById(hotel.getSid()).orElseThrow();
         HotelPhoto photo = hotelPhotoRepository.findById(hotel.getPhotoId()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(hotel.getTypeId()).orElseThrow();
 
-        Hotel insert = HotelMapper.clone(hotel, false, type, photo);
+        Hotel insert = HotelMapper.clone(origin, hotel, false, type, photo);
 
         Hotel saved = hotelRepository.save(insert);
 
@@ -45,6 +48,57 @@ public class HotelService {
                 .starRating(saved.getStarRating())
                 .description(saved.getDescription())
                 .build();
+        return dto;
+    }
+
+    @Transactional
+    public HotelResponseDto update(HotelRequestDto hotel) {
+        Hotel origin = hotelRepository.findById(hotel.getSid()).orElseThrow();
+        HotelPhoto photo = hotelPhotoRepository.findById(hotel.getPhotoId()).orElseThrow();
+        HotelType type = hotelTypeRepository.findById(hotel.getTypeId()).orElseThrow();
+
+        Hotel update = HotelMapper.clone(origin, hotel, true, type, photo);
+
+        Hotel saved = hotelRepository.save(update);
+
+        HotelResponseDto dto = HotelResponseDto
+                .builder()
+                .sid(saved.getSid())
+                .typeTitle(type.getTitle())
+                .photoPath(photo.getImagePath())
+                .hotelName(saved.getHotelName())
+                .hotelPrice(saved.getHotelPrice())
+                .location(saved.getLocation())
+                .starRating(saved.getStarRating())
+                .description(saved.getDescription())
+                .build();
+
+        return dto;
+    }
+
+    @Transactional
+    public HotelResponseDto delete(Long id) {
+        Hotel target = hotelRepository.findById(id).orElseThrow();
+        HotelPhoto photo = hotelPhotoRepository.findById(target.getPhoto().getSid()).orElseThrow();
+        HotelType type = hotelTypeRepository.findById(target.getType().getSid()).orElseThrow();
+
+        target.setDeleted(true);
+        target.setDeletedAt(LocalDateTime.now());
+
+        Hotel saved = hotelRepository.save(target);
+
+        HotelResponseDto dto = HotelResponseDto
+                .builder()
+                .sid(saved.getSid())
+                .typeTitle(type.getTitle())
+                .photoPath(photo.getImagePath())
+                .hotelName(saved.getHotelName())
+                .hotelPrice(saved.getHotelPrice())
+                .location(saved.getLocation())
+                .starRating(saved.getStarRating())
+                .description(saved.getDescription())
+                .build();
+
         return dto;
     }
 }

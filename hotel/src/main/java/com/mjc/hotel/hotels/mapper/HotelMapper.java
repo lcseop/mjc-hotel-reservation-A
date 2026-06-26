@@ -5,6 +5,8 @@ import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import com.mjc.hotel.hotels.entity.HotelType;
+import com.mjc.hotel.hotels.repository.HotelRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.List;
 @Component
 public class HotelMapper {
 
-    public static Hotel clone(HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo) {
+    public static Hotel clone(Hotel origin, HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo) {
         if (hotel == null || photo == null
                 || type == null || hotel.getHotelName() == null
                 || hotel.getHotelPrice() == null || hotel.getLocation() == null) {
@@ -34,6 +36,8 @@ public class HotelMapper {
 
         if (sid) {
             clone.setSid(hotel.getSid());
+            clone.setCreatedAt(origin.getCreatedAt());
+            clone.setUpdatedAt(origin.getUpdatedAt());
         }
 
         return clone;

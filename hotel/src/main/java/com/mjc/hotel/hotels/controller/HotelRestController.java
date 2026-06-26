@@ -34,4 +34,16 @@ public class HotelRestController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel insert success", insert)
         );
     }
+
+    @Operation(
+            summary = "호텔 데이터 수정",
+            description = "호텔 데이터를 수정합니다."
+    )
+    @PatchMapping("/edit")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> update(@RequestBody HotelRequestDto dto) {
+        HotelResponseDto update = hotelService.update(dto);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
+        );
+    }
 }
