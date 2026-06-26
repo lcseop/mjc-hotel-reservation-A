@@ -38,6 +38,8 @@ public class HotelMapper {
             clone.setSid(hotel.getSid());
             clone.setCreatedAt(origin.getCreatedAt());
             clone.setUpdatedAt(origin.getUpdatedAt());
+            clone.setDeletedAt(origin.getDeletedAt());
+            clone.setDeleted(origin.getDeleted());
         }
 
         return clone;
