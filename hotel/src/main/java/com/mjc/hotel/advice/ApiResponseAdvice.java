@@ -1,6 +1,7 @@
 package com.mjc.hotel.advice;
 
 import com.mjc.hotel.util.ApiResponse;
+import com.mjc.hotel.util.ResponseCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -40,7 +41,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         }
 
         return new ApiResponse<>(
-                true, "success", body
+                ResponseCode.SUCCESS, "success", body
         );
     }
 }
