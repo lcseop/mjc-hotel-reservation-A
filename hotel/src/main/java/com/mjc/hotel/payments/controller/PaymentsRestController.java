@@ -1,0 +1,79 @@
+package com.mjc.hotel.payments.controller;
+
+import com.mjc.hotel.payments.dto.PaymentsRequestDto;
+import com.mjc.hotel.payments.dto.PaymentsResponseDto;
+import com.mjc.hotel.payments.entity.Payments;
+import com.mjc.hotel.payments.service.PaymentsService;
+import com.mjc.hotel.util.ApiResponse;
+import com.mjc.hotel.util.ResponseCode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/payments")
+public class PaymentsRestController {
+
+    @Autowired
+    private PaymentsService paymentsService;
+
+    @PostMapping("/add")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> insert(@RequestBody PaymentsRequestDto dto) {
+        PaymentsResponseDto insert = toResponseDto(paymentsService.savePayment(dto));
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments insert success", insert)
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<PaymentsResponseDto>>> getPayments() {
+        List<PaymentsResponseDto> payments = paymentsService.getPayments().stream()
+                .map(this::toResponseDto)
+                .toList();
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", payments)
+        );
+    }
+
+    @GetMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> getPayment(@PathVariable Long paymentId) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", toResponseDto(paymentsService.getPayment(paymentId)))
+        );
+    }
+
+    @PutMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> update(
+            @PathVariable Long paymentId,
+            @RequestBody PaymentsRequestDto dto
+    ) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", toResponseDto(paymentsService.updatePayment(paymentId, dto)))
+        );
+    }
+
+    @DeleteMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long paymentId) {
+        paymentsService.deletePayment(paymentId);
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments delete success", null)
+        );
+    }
+
+    private PaymentsResponseDto toResponseDto(Payments payment) {
+        return PaymentsResponseDto.builder()
+                .paymentId(payment.getPaymentId())
+                .reservationId(payment.getReservation().getSid())
+                .memberId(payment.getMember().getMemberId())
+                .paymentAmount(payment.getPaymentAmount())
+                .paymentMethod(payment.getPaymentMethod())
+                .paymentStatus(payment.getPaymentStatus())
+                .transactionNo(payment.getTransactionNo())
+                .paidAt(payment.getPaidAt())
+                .point(payment.getPoint())
+                .build();
+    }
+}
