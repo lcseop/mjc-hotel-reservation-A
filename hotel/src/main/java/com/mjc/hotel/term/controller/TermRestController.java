@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/term")
 @RequiredArgsConstructor
-public class TermController {
+public class TermRestController {
 
     private final TermService termService;
 
