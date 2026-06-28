@@ -11,11 +11,13 @@ import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.ReviewCategoryRequest;
 import com.mjc.hotel.review.request.ReviewCreateRequest;
 import com.mjc.hotel.review.request.ReviewTagRequest;
+import com.mjc.hotel.review.request.ReviewUpdateRequest;
 import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,5 +144,63 @@ public class ReviewService {
             }
         }
         return tags;
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
+        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getReviewId()).orElseThrow();
+
+        Review review = Review.builder()
+                .reviewId(updateBefore.getReviewId())
+                .hotel(updateBefore.getHotel())
+                .member(updateBefore.getMember())
+                .reservation(updateBefore.getReservation())
+                .rating(reviewUpdateRequest.getRating())
+                .travelType(reviewUpdateRequest.getTravelType())
+                .content(reviewUpdateRequest.getContent())
+                .likeCount(updateBefore.getLikeCount())
+                .dislikeCount(updateBefore.getDislikeCount())
+                .build();
+
+        Review updateAfter = reviewRepository.save(review);
+
+        reviewCategoryRepository.deleteByReviewReviewId(review.getReviewId());
+
+        ReviewResponse result = ReviewResponse.builder()
+                .reviewId(updateAfter.getReviewId())
+                .hotelId(updateAfter.getHotel().getSid())
+                .memberId(updateAfter.getMember().getMemberId())
+                .reservationId(updateAfter.getReservation().getSid())
+                .rating(updateAfter.getRating())
+                .travelType(updateAfter.getTravelType())
+                .content(updateAfter.getContent())
+                .likeCount(updateAfter.getLikeCount())
+                .dislikeCount(updateAfter.getDislikeCount())
+//                .categories(
+//                        categories.stream()
+//                                .map(reviewCategory -> ReviewCategoryResponse.builder()
+//                                        .reviewCategoryId(reviewCategory.getReviewCategoryId())
+//                                        .reviewCategoryMasterId(reviewCategory.getReviewCategoryMaster().getReviewCategoryMasterId())
+//                                        .reviewId(reviewCategory.getReview().getReviewId())
+//                                        .rating(reviewCategory.getRating())
+//                                        .build())
+//                                .toList()
+//                )
+//                .tags(
+//                        tags.stream()
+//                                .map(reviewTag -> ReviewTagResponse.builder()
+//                                        .reviewId(reviewTag.getReview().getReviewId())
+//                                        .reviewTageMapId(reviewTag.getReviewTagMaster().getReviewTagMasterId())
+//                                        .build()
+//                                )
+//                                .toList()
+//                )
+                .createdAt(updateAfter.getCreatedAt())
+                .updatedAt(updateAfter.getUpdatedAt())
+                .deletedAt(updateAfter.getDeletedAt())
+                .deleted(updateAfter.getDeleted())
+                .build();
+
+        return result;
     }
 }
