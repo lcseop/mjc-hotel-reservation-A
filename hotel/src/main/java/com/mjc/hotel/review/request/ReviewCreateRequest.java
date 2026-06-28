@@ -6,12 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ReviewRequest {
-
+public class ReviewCreateRequest {
     private Long hotelId;
 
     private Long memberId;
@@ -24,7 +25,7 @@ public class ReviewRequest {
 
     private String content;
 
-    private int likeCount = 0;
+    private List<ReviewCategoryRequest> categories;
 
-    private int dislikeCount = 0;
+    private List<ReviewTagRequest> tags;
 }
