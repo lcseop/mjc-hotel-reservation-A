@@ -23,14 +23,14 @@ public class PromotionService {
 
     @Transactional
     public PromotionDto insert(PromotionDto promotionDto) {
-        PromotionPackage promotionPackage = promotionPackageRepository.findById(promotionDto.getId()).orElseThrow();
-        Flat flat = flatRepository.findById(promotionDto.getId()).orElseThrow();
-        DiscountRate discountRate = discountRateRepository.findById(promotionDto.getId()).orElseThrow();
-        Condition condition = conditionRepository.findById(promotionDto.getId())
+        PromotionPackage promotionPackage = promotionPackageRepository.findById(promotionDto.getSid()).orElseThrow();
+        Flat flat = flatRepository.findById(promotionDto.getSid()).orElseThrow();
+        DiscountRate discountRate = discountRateRepository.findById(promotionDto.getSid()).orElseThrow();
+        Condition condition = conditionRepository.findById(promotionDto.getSid())
                 .orElseThrow(() -> new IllegalArgumentException("조건 정보를 찾을 수 없습니다."));
 
         Promotion promotion = Promotion.builder()
-                .id(promotionDto.getId())
+                .sid(promotionDto.getSid())
                 .roomType(promotionDto.getRoomType())
                 .promotionName(promotionDto.getPromotionName())
                 .starRating(promotionDto.getStarRating())
@@ -41,7 +41,7 @@ public class PromotionService {
         Promotion saved =  promotionRepository.save(promotion);
 
         return PromotionDto.builder()
-                .id(saved.getId())
+                .sid(saved.getSid())
                 .roomType(saved.getRoomType())
                 .promotionName(saved.getPromotionName())
                 .starRating(saved.getStarRating())
@@ -52,19 +52,19 @@ public class PromotionService {
 
     @Transactional
     public PromotionDto update(PromotionDto promotionDto) {
-        Promotion promotion = promotionRepository.findById(promotionDto.getId())
+        Promotion promotion = promotionRepository.findById(promotionDto.getSid())
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로모션이 없습니다."));
 
-        Flat flat = flatRepository.findById(promotionDto.getId()).orElseThrow();
-        DiscountRate discountRate = discountRateRepository.findById(promotionDto.getId()).orElseThrow();
-        Condition condition = conditionRepository.findById(promotionDto.getId()).orElseThrow();
+        Flat flat = flatRepository.findById(promotionDto.getSid()).orElseThrow();
+        DiscountRate discountRate = discountRateRepository.findById(promotionDto.getSid()).orElseThrow();
+        Condition condition = conditionRepository.findById(promotionDto.getSid()).orElseThrow();
 
         promotion.update(promotionDto.getPromotionName(), promotionDto.getRoomType());
 
         Promotion saved = promotionRepository.save(promotion);
 
         return PromotionDto.builder()
-                .id(saved.getId())
+                .sid(saved.getSid())
                 .roomType(saved.getRoomType())
                 .promotionName(saved.getPromotionName())
                 .starRating(saved.getStarRating())
@@ -80,7 +80,7 @@ public class PromotionService {
         promotionRepository.delete(promotion);
 
         return PromotionDto.builder()
-                .id(promotion.getId())
+                .sid(promotion.getSid())
                 .roomType(promotion.getRoomType())
                 .promotionName(promotion.getPromotionName())
                 .starRating(promotion.getStarRating())

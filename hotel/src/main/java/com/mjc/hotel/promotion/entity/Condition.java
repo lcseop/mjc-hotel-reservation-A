@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "condition")
+@Entity(name = "promotion_condition")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -21,6 +21,6 @@ public class Condition {
     private Promotion promotion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="condition")
+    @Column(name="condition_type")
     private ConditionType conditiontype;
 }

@@ -46,6 +46,7 @@ public class PromotionServiceTest {
 
         PromotionPackage promotionPackage = PromotionPackage
                 .builder()
+                .promotion(promotion)
                 .type("패키지")
                 .sale(20)
                 .build();
@@ -53,6 +54,7 @@ public class PromotionServiceTest {
 
         Flat flat = Flat
                 .builder()
+                .promotion(promotion)
                 .type("정액할인")
                 .sale(30000)
                 .build();
@@ -60,6 +62,7 @@ public class PromotionServiceTest {
 
         DiscountRate discountRate = DiscountRate
                 .builder()
+                .promotion(promotion)
                 .type("할인율")
                 .sale(30)
                 .build();
@@ -68,7 +71,8 @@ public class PromotionServiceTest {
 
         Condition condition = Condition
                 .builder()
-                .conditiontype(ACTIVE)
+                .promotion(promotion)
+                .conditiontype(ConditionType.ACTIVE)
                 .build();
         conditionRepository.save(condition);
     }

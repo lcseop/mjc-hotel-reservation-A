@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PromotionDto {
-    private Long id;
+    private Long sid;
     private RoomType roomType ;
     private String promotionName;
     private Integer starRating;

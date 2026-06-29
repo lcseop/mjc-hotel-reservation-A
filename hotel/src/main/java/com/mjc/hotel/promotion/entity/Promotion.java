@@ -18,7 +18,7 @@ public class Promotion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long sid;
 
     @ManyToOne
     @JoinColumn(name = "type_id")
