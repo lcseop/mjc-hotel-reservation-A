@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,9 +69,12 @@ public class ReviewService {
 
         return result;
     }
+
     @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
         Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getReviewId()).orElseThrow();
+
+        if(Boolean.TRUE.equals(updateBefore.getDeleted())) return null;
 
         Review review = Review.builder()
                 .reviewId(updateBefore.getReviewId())
@@ -102,6 +106,9 @@ public class ReviewService {
 
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findById(reviewId).orElseThrow();
+
+        if(Boolean.TRUE.equals(review.getDeleted())) return null;
+
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
 
@@ -110,8 +117,24 @@ public class ReviewService {
         return result;
     }
 
+    public ReviewResponse deleteReviewId(Long reviewId) {
+        Review find = reviewRepository.findById(reviewId).orElseThrow();
+
+        find.setDeletedAt(LocalDateTime.now());
+        find.setDeleted(true);
+
+        Review save = reviewRepository.save(find);
+
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+
+        ReviewResponse result = toReviewResponse(save,categories,tags);
+
+        return result;
+    }
+
     private ReviewResponse toReviewResponse(Review reviewResult, List<ReviewCategory> categories, List<ReviewTag> tags) {
-        ReviewResponse result = ReviewResponse.builder()
+        return  ReviewResponse.builder()
                 .reviewId(reviewResult.getReviewId())
                 .hotelId(reviewResult.getHotel().getSid())
                 .memberId(reviewResult.getMember().getMemberId())
@@ -145,7 +168,6 @@ public class ReviewService {
                 .deletedAt(reviewResult.getDeletedAt())
                 .deleted(reviewResult.getDeleted())
                 .build();
-        return result;
     }
 
     private List<ReviewCategory> insertReviewCategories(List<ReviewCategoryRequest> categories, Review review) {
