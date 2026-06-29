@@ -32,6 +32,8 @@ public class HotelMapper {
                 .location(hotel.getLocation())
                 .starRating(hotel.getStarRating())
                 .description(hotel.getDescription())
+                .latitude(hotel.getLatitude())
+                .longitude(hotel.getLongitude())
                 .build();
 
         if (sid) {
