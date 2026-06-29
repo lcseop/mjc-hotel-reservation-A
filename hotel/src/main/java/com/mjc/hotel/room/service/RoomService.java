@@ -99,7 +99,10 @@ public class RoomService {
 
     public List<RoomResponseDto> findByHotelId(Long id) {
         Hotel hotel = hotelRepository.findById(id).orElseThrow();
-        List<Room> rooms = roomRepository.findByHotelId(hotel);
+        if (hotel.getDeleted() != null && hotel.getDeleted()) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, hotel.getHotelName() + " is not found");
+        }
+        List<Room> rooms = roomRepository.findActiveRooms(hotel);
 
         return rooms.stream()
                 .map(RoomMapper::response)
