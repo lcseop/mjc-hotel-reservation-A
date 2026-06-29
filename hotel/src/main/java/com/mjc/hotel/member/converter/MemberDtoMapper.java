@@ -53,7 +53,7 @@ public class MemberDtoMapper {
         return MemberTermAgreement.builder()
                 .term(term)
                 .isAgreed(dto.getIsAgreed())
-                .agreedAt(Boolean.TRUE.equals(dto.getIsAgreed()) ? LocalDateTime.now() : null)
+                .agreedAt(LocalDateTime.now())
                 .build();
     }
 
