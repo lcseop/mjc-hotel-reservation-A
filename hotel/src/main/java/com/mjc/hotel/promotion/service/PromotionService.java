@@ -23,19 +23,27 @@ public class PromotionService {
     private ConditionRepository conditionRepository;
 
     public PromotionDto insert(PromotionDto promotionDto) {
-        Condition condition = conditionRepository.findById(promotionDto.getConditionId())
+        Condition condition = conditionRepository.findById(promotionDto.getId())
                 .orElseThrow(() -> new IllegalArgumentException("조건 정보를 찾을 수 없습니다."));
 
         Promotion promotion = Promotion.builder()
                 .id(promotionDto.getId())
-                .roomType()
-                // DTO로부터 필요한 데이터들을 엔티티에 세팅
+                .roomType(promotionDto.getRoomType())
+                .promotionName(promotionDto.getPromotionName())
+                .starRating(promotionDto.getStarRating())
+                .howLong(promotionDto.getHowLong())
+                .totalAmount(promotionDto.getTotalAmount())
                 .build();
 
         Promotion saved =  promotionRepository.save(promotion);
 
         return PromotionDto.builder()
                 .id(saved.getId())
+                .roomType(saved.getRoomType())
+                .promotionName(saved.getPromotionName())
+                .starRating(saved.getStarRating())
+                .howLong(saved.getHowLong())
+                .totalAmount(saved.getTotalAmount())
                 .build();
     }
 }
