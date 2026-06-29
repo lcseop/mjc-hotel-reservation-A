@@ -82,7 +82,7 @@ public class ReservationServiceTest {
                 .builder()
                 .reservation(reservation)
                 .recipientEmail("recipientEmail")
-                .emailStatus(EmailLog.EmailStatus.SEND)
+                .emailStatus(EmailStatus.SEND)
                 .sentAt(LocalDateTime.now())
                 .build();
 

@@ -30,16 +30,11 @@ public class EmailLog {
     private String recipientEmail;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "email_status", nullable = false)
     private EmailStatus emailStatus;
 
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)
     private LocalDateTime sentAt;
 
-    public enum EmailStatus {
-        PENDING,
-        SEND,
-        FAILED
-    }
 }
