@@ -1,6 +1,7 @@
 package com.mjc.hotel.promotion.entity;
 
 import com.mjc.hotel.room.entity.RoomType;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class Promotion {
+public class Promotion extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,15 +28,9 @@ public class Promotion {
     @Column(length = 50, name="promotion_name")
     private String promotionName;
 
-    @Column(name="star_rating")
-    private Integer starRating;
+    @Column(name="start_date")
+    private LocalDateTime startDate;
 
-    @Column(name="how_long")
-    private LocalDateTime howLong;
-
-    @Column(name="total_amount")
-    private Integer totalAmount;
-
-    public void update(String promotionName, RoomType roomType) {
-    }
+    @Column(name="end_date")
+    private LocalDateTime endDate;
 }

@@ -13,9 +13,8 @@ import java.time.LocalDateTime;
 @Setter
 public class PromotionDto {
     private Long sid;
-    private RoomType roomType ;
+    private Long roomTypeId ;
     private String promotionName;
-    private Integer starRating;
-    private LocalDateTime howLong;
-    private Integer totalAmount;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 }

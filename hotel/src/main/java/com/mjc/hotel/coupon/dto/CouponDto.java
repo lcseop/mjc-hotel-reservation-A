@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class CouponDto {
-    private Long id;
+    private Long sid;
     private String couponName;
     private CouponDiscountType discountType;
     private Double discountValue;
