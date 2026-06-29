@@ -19,28 +19,22 @@ public class EmailLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "email_log_id")
-    private Long emailLogId;
+    private Long sid;
 
     // reservation_id FK → Reservation 객체 참조
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
-    @Column(name = "receipient_email", length = 100, nullable = false)
+    @Column(name = "recipient_email", length = 100, nullable = false)
     private String recipientEmail;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EmailStatus status;
+    @Column(name = "email_status", nullable = false)
+    private EmailStatus emailStatus;
 
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)
     private LocalDateTime sentAt;
 
-    public enum EmailStatus {
-        PENDING,
-        SEND,
-        FAILED
-    }
 }

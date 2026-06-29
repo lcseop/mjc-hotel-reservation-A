@@ -1,5 +1,6 @@
 package com.mjc.hotel.hotels.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class Hotel {
+public class Hotel extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +25,6 @@ public class Hotel {
     @JoinColumn(name = "photo_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private HotelPhoto photo;
-
-    @JoinColumn(name = "amenities_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private HotelAmenities amenities;
 
     @Column(name = "hotel_name", length = 50, nullable = false)
     private String hotelName;
