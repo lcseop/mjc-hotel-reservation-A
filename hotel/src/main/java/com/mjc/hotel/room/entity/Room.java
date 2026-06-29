@@ -1,6 +1,7 @@
 package com.mjc.hotel.room.entity;
 
 import com.mjc.hotel.hotels.entity.Hotel;
+import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,4 +53,25 @@ public class Room extends BaseEntity {
 
     @Column(name = "maximum_people", nullable = false)
     private Integer maximumPeople;
+
+    @Column(name = "check_in_time")
+    private Integer checkInTime;
+
+    @Column(name = "check_out_time")
+    private Integer checkOutTime;
+
+    @Column(length = 20)
+    private String parking;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoomPetAndSmokeEnum pet;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoomPetAndSmokeEnum smoke;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "id_card", nullable = false)
+    private RoomIdCardEnum idCard;
 }
