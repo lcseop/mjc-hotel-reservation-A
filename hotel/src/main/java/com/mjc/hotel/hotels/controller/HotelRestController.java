@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.controller;
 
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
+import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.service.HotelService;
@@ -27,11 +28,47 @@ public class HotelRestController {
             summary = "호텔 데이터 생성",
             description = "호텔 데이터를 만듭니다."
     )
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<ApiResponse<HotelResponseDto>> insert(@RequestBody HotelRequestDto dto) {
         HotelResponseDto insert = hotelService.insert(dto);
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel insert success", insert)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 수정",
+            description = "호텔 데이터를 수정합니다."
+    )
+    @PatchMapping
+    public ResponseEntity<ApiResponse<HotelResponseDto>> update(@RequestBody HotelRequestDto dto) {
+        HotelResponseDto update = hotelService.update(dto);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 삭제",
+            description = "호텔 데이터를 삭제합니다."
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> delete(@PathVariable Long id) {
+        HotelResponseDto delete = hotelService.delete(id);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel delete success", delete)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 검색",
+            description = "호텔 데이터를 필터에 맞추어 검색합니다."
+    )
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<Hotel>>> search(@RequestBody HotelSearchRequestDto dto) {
+        List<Hotel> search = hotelService.search(dto);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
         );
     }
 }
