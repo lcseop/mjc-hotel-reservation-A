@@ -3,6 +3,7 @@ package com.mjc.hotel.member.controller;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberRequestDto;
 import com.mjc.hotel.member.dto.MemberResponseDto;
+import com.mjc.hotel.member.dto.MemberSignupRequestDto;
 import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
@@ -27,6 +28,14 @@ public class MemberRestController {
         MemberResponseDto insert = memberDtoMapper.toResponseDto(memberService.saveMember(memberDtoMapper.toEntity(dto)));
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "member insert success", insert)
+        );
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<MemberResponseDto>> signup(@RequestBody MemberSignupRequestDto dto) {
+        MemberResponseDto signup = memberDtoMapper.toResponseDto(memberService.signup(dto));
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "member signup success", signup)
         );
     }
 

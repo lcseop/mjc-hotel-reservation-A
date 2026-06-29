@@ -1,15 +1,20 @@
 package com.mjc.hotel.member.service;
 
+import com.mjc.hotel.member.converter.MemberDtoMapper;
+import com.mjc.hotel.member.dto.MemberSignupRequestDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
 import com.mjc.hotel.member.repository.MemberAuthAccountRepository;
 import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.member.repository.MemberTermAgreementRepository;
+import com.mjc.hotel.term.entity.Term;
+import com.mjc.hotel.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -20,6 +25,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberAuthAccountRepository memberAuthAccountRepository;
     private final MemberTermAgreementRepository memberTermAgreementRepository;
+    private final TermRepository termRepository;
+    private final MemberDtoMapper memberDtoMapper;
 
     public List<Member> getMembers() {
         return memberRepository.findAll();
@@ -70,6 +77,27 @@ public class MemberService {
         }
 
         return savedMember;
+    }
+
+    @Transactional
+    public Member signup(MemberSignupRequestDto request) {
+        List<MemberTermAgreement> termAgreements = Collections.emptyList();
+
+        if (request.getTermAgreements() != null) {
+            termAgreements = request.getTermAgreements().stream()
+                    .map(termAgreementRequest -> {
+                        Term term = termRepository.findById(termAgreementRequest.getTermId())
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termId=" + termAgreementRequest.getTermId()));
+                        return memberDtoMapper.toTermAgreement(termAgreementRequest, term);
+                    })
+                    .toList();
+        }
+
+        return createMember(
+                memberDtoMapper.toEntity(request),
+                memberDtoMapper.toAuthAccount(request.getAuthAccount()),
+                termAgreements
+        );
     }
 
     @Transactional
