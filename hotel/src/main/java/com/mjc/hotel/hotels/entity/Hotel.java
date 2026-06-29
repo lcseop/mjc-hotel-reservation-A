@@ -41,4 +41,12 @@ public class Hotel extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
+
+
 }
