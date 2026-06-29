@@ -2,6 +2,7 @@ package com.mjc.hotel.payments.service;
 
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.payments.converter.PaymentsDtoMapper;
 import com.mjc.hotel.payments.dto.PaymentsRequestDto;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
@@ -21,6 +22,7 @@ public class PaymentsService {
     private final PaymentsRepository paymentsRepository;
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
+    private final PaymentsDtoMapper paymentsDtoMapper;
 
     public List<Payments> getPayments() {
         return paymentsRepository.findAll();
@@ -33,7 +35,9 @@ public class PaymentsService {
 
     @Transactional
     public Payments savePayment(PaymentsRequestDto dto) {
-        return paymentsRepository.save(toEntity(dto));
+        return paymentsRepository.save(
+                paymentsDtoMapper.toEntity(dto, getReservation(dto.getReservationId()), getMember(dto.getMemberId()))
+        );
     }
 
     @Transactional
@@ -58,19 +62,6 @@ public class PaymentsService {
     @Transactional
     public void deletePayment(Long paymentId) {
         paymentsRepository.deleteById(paymentId);
-    }
-
-    private Payments toEntity(PaymentsRequestDto dto) {
-        return Payments.builder()
-                .reservation(getReservation(dto.getReservationId()))
-                .member(getMember(dto.getMemberId()))
-                .paymentAmount(dto.getPaymentAmount())
-                .paymentMethod(dto.getPaymentMethod())
-                .paymentStatus(dto.getPaymentStatus())
-                .transactionNo(dto.getTransactionNo())
-                .paidAt(dto.getPaidAt())
-                .point(dto.getPoint())
-                .build();
     }
 
     private Reservation getReservation(Long reservationId) {

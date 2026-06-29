@@ -1,5 +1,6 @@
 package com.mjc.hotel.term.service;
 
+import com.mjc.hotel.term.converter.TermDtoMapper;
 import com.mjc.hotel.term.dto.TermRequestDto;
 import com.mjc.hotel.term.dto.TermResponseDto;
 import com.mjc.hotel.term.entity.Term;
@@ -16,28 +17,21 @@ import java.util.List;
 public class TermService {
 
     private final TermRepository termRepository;
+    private final TermDtoMapper termDtoMapper;
 
     @Transactional
     public TermResponseDto insert(TermRequestDto request) {
-        Term term = Term.builder()
-                .termType(request.getTermType())
-                .title(request.getTitle())
-                .version(request.getVersion())
-                .isRequired(request.getIsRequired())
-                .effectiveAt(request.getEffectiveAt())
-                .build();
-
-        return toResponseDto(termRepository.save(term));
+        return termDtoMapper.toResponseDto(termRepository.save(termDtoMapper.toEntity(request)));
     }
 
     public List<TermResponseDto> getTerms() {
         return termRepository.findAll().stream()
-                .map(this::toResponseDto)
+                .map(termDtoMapper::toResponseDto)
                 .toList();
     }
 
     public TermResponseDto getTerm(Long termId) {
-        return toResponseDto(findTerm(termId));
+        return termDtoMapper.toResponseDto(findTerm(termId));
     }
 
     @Transactional
@@ -49,7 +43,7 @@ public class TermService {
         term.setIsRequired(request.getIsRequired());
         term.setEffectiveAt(request.getEffectiveAt());
 
-        return toResponseDto(term);
+        return termDtoMapper.toResponseDto(term);
     }
 
     @Transactional
@@ -60,16 +54,5 @@ public class TermService {
     private Term findTerm(Long termId) {
         return termRepository.findById(termId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termId=" + termId));
-    }
-
-    private TermResponseDto toResponseDto(Term term) {
-        return TermResponseDto.builder()
-                .termId(term.getTermId())
-                .termType(term.getTermType())
-                .title(term.getTitle())
-                .version(term.getVersion())
-                .isRequired(term.getIsRequired())
-                .effectiveAt(term.getEffectiveAt())
-                .build();
     }
 }

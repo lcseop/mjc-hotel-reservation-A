@@ -1,8 +1,8 @@
 package com.mjc.hotel.payments.controller;
 
+import com.mjc.hotel.payments.converter.PaymentsDtoMapper;
 import com.mjc.hotel.payments.dto.PaymentsRequestDto;
 import com.mjc.hotel.payments.dto.PaymentsResponseDto;
-import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.service.PaymentsService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
@@ -19,9 +19,12 @@ public class PaymentsRestController {
     @Autowired
     private PaymentsService paymentsService;
 
+    @Autowired
+    private PaymentsDtoMapper paymentsDtoMapper;
+
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> insert(@RequestBody PaymentsRequestDto dto) {
-        PaymentsResponseDto insert = toResponseDto(paymentsService.savePayment(dto));
+        PaymentsResponseDto insert = paymentsDtoMapper.toResponseDto(paymentsService.savePayment(dto));
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments insert success", insert)
         );
@@ -30,7 +33,7 @@ public class PaymentsRestController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<PaymentsResponseDto>>> getPayments() {
         List<PaymentsResponseDto> payments = paymentsService.getPayments().stream()
-                .map(this::toResponseDto)
+                .map(paymentsDtoMapper::toResponseDto)
                 .toList();
 
         return ResponseEntity.ok(
@@ -41,7 +44,7 @@ public class PaymentsRestController {
     @GetMapping("/{paymentId}")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> getPayment(@PathVariable Long paymentId) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", toResponseDto(paymentsService.getPayment(paymentId)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", paymentsDtoMapper.toResponseDto(paymentsService.getPayment(paymentId)))
         );
     }
 
@@ -51,7 +54,7 @@ public class PaymentsRestController {
             @RequestBody PaymentsRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", toResponseDto(paymentsService.updatePayment(paymentId, dto)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(paymentId, dto)))
         );
     }
 
@@ -61,19 +64,5 @@ public class PaymentsRestController {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments delete success", null)
         );
-    }
-
-    private PaymentsResponseDto toResponseDto(Payments payment) {
-        return PaymentsResponseDto.builder()
-                .paymentId(payment.getPaymentId())
-                .reservationId(payment.getReservation().getSid())
-                .memberId(payment.getMember().getMemberId())
-                .paymentAmount(payment.getPaymentAmount())
-                .paymentMethod(payment.getPaymentMethod())
-                .paymentStatus(payment.getPaymentStatus())
-                .transactionNo(payment.getTransactionNo())
-                .paidAt(payment.getPaidAt())
-                .point(payment.getPoint())
-                .build();
     }
 }

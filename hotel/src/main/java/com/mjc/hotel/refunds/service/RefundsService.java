@@ -4,6 +4,7 @@ import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.refunds.converter.RefundsDtoMapper;
 import com.mjc.hotel.refunds.dto.RefundsRequestDto;
 import com.mjc.hotel.refunds.entity.Refunds;
 import com.mjc.hotel.refunds.repository.RefundsRepository;
@@ -21,6 +22,7 @@ public class RefundsService {
     private final RefundsRepository refundsRepository;
     private final PaymentsRepository paymentsRepository;
     private final MemberRepository memberRepository;
+    private final RefundsDtoMapper refundsDtoMapper;
 
     public List<Refunds> getRefunds() {
         return refundsRepository.findAll();
@@ -33,7 +35,9 @@ public class RefundsService {
 
     @Transactional
     public Refunds saveRefund(RefundsRequestDto dto) {
-        return refundsRepository.save(toEntity(dto));
+        return refundsRepository.save(
+                refundsDtoMapper.toEntity(dto, getPayment(dto.getPaymentId()), getMember(dto.getMemberId()))
+        );
     }
 
     @Transactional
@@ -57,22 +61,6 @@ public class RefundsService {
     @Transactional
     public void deleteRefund(Long refundId) {
         refundsRepository.deleteById(refundId);
-    }
-
-    private Refunds toEntity(RefundsRequestDto dto) {
-        return Refunds.builder()
-                .payment(getPayment(dto.getPaymentId()))
-                .member(getMember(dto.getMemberId()))
-                .pgTransactionKey(dto.getPgTransactionKey())
-                .idempotencyKey(dto.getIdempotencyKey())
-                .refundAmount(dto.getRefundAmount())
-                .reason(dto.getReason())
-                .status(dto.getStatus())
-                .requestedAt(dto.getRequestedAt())
-                .completedAt(dto.getCompletedAt())
-                .failedAt(dto.getFailedAt())
-                .failureReason(dto.getFailureReason())
-                .build();
     }
 
     private Payments getPayment(Long paymentId) {

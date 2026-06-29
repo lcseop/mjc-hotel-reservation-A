@@ -1,8 +1,8 @@
 package com.mjc.hotel.member.controller;
 
+import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberRequestDto;
 import com.mjc.hotel.member.dto.MemberResponseDto;
-import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
@@ -19,9 +19,12 @@ public class MemberRestController {
     @Autowired
     private MemberService memberService;
 
+    @Autowired
+    private MemberDtoMapper memberDtoMapper;
+
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<MemberResponseDto>> insert(@RequestBody MemberRequestDto dto) {
-        MemberResponseDto insert = toResponseDto(memberService.saveMember(toEntity(dto)));
+        MemberResponseDto insert = memberDtoMapper.toResponseDto(memberService.saveMember(memberDtoMapper.toEntity(dto)));
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "member insert success", insert)
         );
@@ -30,7 +33,7 @@ public class MemberRestController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<MemberResponseDto>>> getMembers() {
         List<MemberResponseDto> members = memberService.getMembers().stream()
-                .map(this::toResponseDto)
+                .map(memberDtoMapper::toResponseDto)
                 .toList();
 
         return ResponseEntity.ok(
@@ -41,7 +44,7 @@ public class MemberRestController {
     @GetMapping("/{memberId}")
     public ResponseEntity<ApiResponse<MemberResponseDto>> getMember(@PathVariable Long memberId) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member select success", toResponseDto(memberService.getMember(memberId)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "member select success", memberDtoMapper.toResponseDto(memberService.getMember(memberId)))
         );
     }
 
@@ -51,7 +54,7 @@ public class MemberRestController {
             @RequestBody MemberRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", toResponseDto(memberService.updateMember(memberId, toEntity(dto))))
+                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(memberId, memberDtoMapper.toEntity(dto))))
         );
     }
 
@@ -61,30 +64,5 @@ public class MemberRestController {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "member delete success", null)
         );
-    }
-
-    private Member toEntity(MemberRequestDto dto) {
-        return Member.builder()
-                .name(dto.getName())
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
-                .status(dto.getStatus())
-                .role(dto.getRole())
-                .emailVerified(dto.getEmailVerified())
-                .phoneVerified(dto.getPhoneVerified())
-                .build();
-    }
-
-    private MemberResponseDto toResponseDto(Member member) {
-        return MemberResponseDto.builder()
-                .memberId(member.getMemberId())
-                .name(member.getName())
-                .phone(member.getPhone())
-                .email(member.getEmail())
-                .status(member.getStatus())
-                .role(member.getRole())
-                .emailVerified(member.getEmailVerified())
-                .phoneVerified(member.getPhoneVerified())
-                .build();
     }
 }
