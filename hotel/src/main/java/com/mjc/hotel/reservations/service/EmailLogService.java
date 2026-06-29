@@ -1,7 +1,7 @@
 package com.mjc.hotel.reservations.service;
 
-import com.mjc.hotel.reservations.dto.EmailLogRequest;
-import com.mjc.hotel.reservations.dto.EmailLogResponse;
+import com.mjc.hotel.reservations.dto.EmailLogRequestDto;
+import com.mjc.hotel.reservations.dto.EmailLogResponseDto;
 import com.mjc.hotel.reservations.entity.EmailLog;
 import com.mjc.hotel.reservations.entity.EmailStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
@@ -19,7 +19,7 @@ public class EmailLogService {
     private final EmailLogRepository emailLogRepository;
     private final ReservationRepository reservationRepository;
 
-    public EmailLogResponse sendEmailAndLog(EmailLogRequest request) {
+    public EmailLogResponseDto sendEmailAndLog(EmailLogRequestDto request) {
         Reservation reservation = reservationRepository.findById(request.getReservationSid())
                 .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
 
@@ -36,7 +36,7 @@ public class EmailLogService {
 
         EmailLog saveLog = emailLogRepository.save(emailLog);
 
-        EmailLogResponse response = new EmailLogResponse();
+        EmailLogResponseDto response = new EmailLogResponseDto();
         response.setSid(saveLog.getSid());
         response.setReservationSid(reservation.getSid());
         response.setRecipientEmail(saveLog.getRecipientEmail());
@@ -46,12 +46,12 @@ public class EmailLogService {
         return response;
     }
 
-    public List<EmailLogResponse> getLogsByReservation(Long reservationSid) {
+    public List<EmailLogResponseDto> getLogsByReservation(Long reservationSid) {
         List<EmailLog> logs = emailLogRepository.findByReservation_Sid(reservationSid);
 
         return logs.stream()
                 .map(log -> {
-                    EmailLogResponse response = new EmailLogResponse();
+                    EmailLogResponseDto response = new EmailLogResponseDto();
                     response.setSid(log.getSid());
                     response.setReservationSid(log.getReservation().getSid());
                     response.setRecipientEmail(log.getRecipientEmail());
