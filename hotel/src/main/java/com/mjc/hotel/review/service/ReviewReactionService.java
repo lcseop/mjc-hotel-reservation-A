@@ -44,13 +44,7 @@ public class ReviewReactionService {
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
-        ReviewReactionResponse result = ReviewReactionResponse.builder()
-                .reviewId(save.getReview().getReviewId())
-                .memberId(save.getMember().getMemberId())
-                .reactionType(save.getReactionType())
-                .createdAt(save.getCreatedAt())
-                .updatedAt(save.getUpdatedAt())
-                .build();
+        ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
 
@@ -96,13 +90,7 @@ public class ReviewReactionService {
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
-        ReviewReactionResponse result = ReviewReactionResponse.builder()
-                .reviewId(save.getReview().getReviewId())
-                .memberId(save.getMember().getMemberId())
-                .reactionType(save.getReactionType())
-                .createdAt(save.getCreatedAt())
-                .updatedAt(save.getUpdatedAt())
-                .build();
+        ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
 
@@ -111,6 +99,11 @@ public class ReviewReactionService {
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
+        ReviewReactionResponse result = this.toReviewReactionResponse(find);
+        return result;
+    }
+
+    private ReviewReactionResponse toReviewReactionResponse(ReviewReaction find) {
         ReviewReactionResponse result = ReviewReactionResponse.builder()
                 .reviewId(find.getReview().getReviewId())
                 .memberId(find.getMember().getMemberId())
