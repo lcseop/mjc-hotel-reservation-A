@@ -60,11 +60,11 @@ public class ReviewReactionService {
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
         Review review = reviewRepository.findById(find.getReview().getReviewId()).orElseThrow();
-        //좋아요에서 취소상태
+        //좋아요에서 취소상태 (삭제)
         if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
             review.decreaseLike();
         }
-        //싫어요에서 취소상태
+        //싫어요에서 취소상태 (삭제)
         if(find.getReactionType() == ReactionType.BAD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
             review.decreaseDislike();
         }
