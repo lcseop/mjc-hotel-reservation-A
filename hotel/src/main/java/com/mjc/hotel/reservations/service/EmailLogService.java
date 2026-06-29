@@ -3,13 +3,13 @@ package com.mjc.hotel.reservations.service;
 import com.mjc.hotel.reservations.dto.EmailLogRequest;
 import com.mjc.hotel.reservations.dto.EmailLogResponse;
 import com.mjc.hotel.reservations.entity.EmailLog;
+import com.mjc.hotel.reservations.entity.EmailStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.EmailLogRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,9 +23,9 @@ public class EmailLogService {
         Reservation reservation = reservationRepository.findById(request.getReservationSid())
                 .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
 
-        EmailLog.EmailStatus status = EmailLog.EmailStatus.SEND;
+        EmailStatus status = EmailStatus.SEND;
         if(request.getRecipientEmail() == null || !request.getRecipientEmail().contains("@")) {
-            status = EmailLog.EmailStatus.FAILED;
+            status = EmailStatus.FAILED;
         }
 
         EmailLog emailLog = EmailLog.builder()
