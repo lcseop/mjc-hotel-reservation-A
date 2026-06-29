@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.service;
 
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
+import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -111,5 +113,9 @@ public class HotelService {
                 .build();
 
         return dto;
+    }
+
+    public List<Hotel> search(HotelSearchRequestDto dto) {
+        return hotelRepository.search(dto);
     }
 }

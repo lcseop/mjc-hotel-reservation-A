@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 // 예시 : 무료 와이파이, 전 객실 이용 가능
 public class HotelAmenities extends BaseEntity {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;

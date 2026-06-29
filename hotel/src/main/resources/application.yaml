@@ -31,3 +31,6 @@ server:
 
 file:
   upload-dir: uploads
+
+springdoc:
+  enable-querydsl: false

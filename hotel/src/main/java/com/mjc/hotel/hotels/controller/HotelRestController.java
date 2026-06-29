@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.controller;
 
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
+import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.service.HotelService;
@@ -56,6 +57,18 @@ public class HotelRestController {
         HotelResponseDto delete = hotelService.delete(id);
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel delete success", delete)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 검색",
+            description = "호텔 데이터를 필터에 맞추어 검색합니다."
+    )
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<Hotel>>> search(@RequestBody HotelSearchRequestDto dto) {
+        List<Hotel> search = hotelService.search(dto);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
         );
     }
 }
