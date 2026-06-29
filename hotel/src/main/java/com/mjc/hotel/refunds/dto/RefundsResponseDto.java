@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class RefundsResponseDto {
-    private Long refundId;
-    private Long paymentId;
-    private Long memberId;
+    private Long sid;
     private String pgTransactionKey;
     private String idempotencyKey;
     private BigDecimal refundAmount;

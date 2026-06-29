@@ -46,10 +46,10 @@ public class TermRestController {
             summary = "약관 단건 조회",
             description = "약관 데이터를 하나 조회합니다."
     )
-    @GetMapping("/{termId}")
-    public ResponseEntity<ApiResponse<TermResponseDto>> getTerm(@PathVariable Long termId) {
+    @GetMapping("/{sid}")
+    public ResponseEntity<ApiResponse<TermResponseDto>> getTerm(@PathVariable Long sid) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "term select success", termService.getTerm(termId))
+                new ApiResponse<>(ResponseCode.SUCCESS, "term select success", termService.getTerm(sid))
         );
     }
 
@@ -57,13 +57,13 @@ public class TermRestController {
             summary = "약관 데이터 수정",
             description = "약관 데이터를 수정합니다."
     )
-    @PutMapping("/{termId}")
+    @PutMapping("/{sid}")
     public ResponseEntity<ApiResponse<TermResponseDto>> update(
-            @PathVariable Long termId,
+            @PathVariable Long sid,
             @RequestBody TermRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "term update success", termService.updateTerm(termId, dto))
+                new ApiResponse<>(ResponseCode.SUCCESS, "term update success", termService.updateTerm(sid, dto))
         );
     }
 
@@ -71,9 +71,9 @@ public class TermRestController {
             summary = "약관 데이터 삭제",
             description = "약관 데이터를 삭제합니다."
     )
-    @DeleteMapping("/{termId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long termId) {
-        termService.deleteTerm(termId);
+    @DeleteMapping("/{sid}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
+        termService.deleteTerm(sid);
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "term delete success", null)
         );

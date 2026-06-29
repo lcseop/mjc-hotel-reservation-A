@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TermResponseDto {
-    private Long termId;
+    private Long sid;
     private String termType;
     private String title;
     private String version;

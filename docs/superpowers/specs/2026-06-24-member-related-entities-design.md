@@ -34,7 +34,7 @@
 
 | Java 필드 | DB 컬럼 | Java 타입 | 제약 및 매핑 |
 |---|---|---|---|
-| `termId` | `term_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
+| `sid` | `term_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
 | `termType` | `term_type` | `String` | 최대 30자 |
 | `title` | `title` | `String` | 최대 100자 |
 | `version` | `version` | `String` | 최대 20자 |

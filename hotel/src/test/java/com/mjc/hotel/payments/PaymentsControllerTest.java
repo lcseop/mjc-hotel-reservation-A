@@ -84,12 +84,12 @@ public class PaymentsControllerTest {
 
         mockMvc.perform(post("/api/payments/add")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toPaymentJson(reservation.getSid(), member.getMemberId())))
+                        .content(toPaymentJson(reservation.getSid(), member.getSid())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("payments insert success"))
-                .andExpect(jsonPath("$.data.paymentId", notNullValue()))
-                .andExpect(jsonPath("$.data.memberId").value(member.getMemberId()))
+                .andExpect(jsonPath("$.data.sid", notNullValue()))
+                .andExpect(jsonPath("$.data.sid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.reservationId").value(reservation.getSid()))
                 .andExpect(jsonPath("$.data.paymentStatus").value("COMPLETED"));
     }
@@ -111,11 +111,11 @@ public class PaymentsControllerTest {
                 .point(1800)
                 .build());
 
-        mockMvc.perform(get("/api/payments/{paymentId}", payment.getPaymentId()))
+        mockMvc.perform(get("/api/payments/{sid}", payment.getSid()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("payments select success"))
-                .andExpect(jsonPath("$.data.paymentId").value(payment.getPaymentId()))
+                .andExpect(jsonPath("$.data.sid").value(payment.getSid()))
                 .andExpect(jsonPath("$.data.transactionNo").value("TXN-PAYMENT-API-READ"))
                 .andExpect(jsonPath("$.data.paidAt").value("2026-06-29T10:15:30"));
     }
@@ -136,14 +136,14 @@ public class PaymentsControllerTest {
                 .point(1800)
                 .build());
 
-        mockMvc.perform(put("/api/payments/{paymentId}", payment.getPaymentId())
+        mockMvc.perform(put("/api/payments/{sid}", payment.getSid())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toPaymentUpdateJson()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("payments update success"))
-                .andExpect(jsonPath("$.data.paymentId").value(payment.getPaymentId()))
-                .andExpect(jsonPath("$.data.memberId").value(member.getMemberId()))
+                .andExpect(jsonPath("$.data.sid").value(payment.getSid()))
+                .andExpect(jsonPath("$.data.sid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.reservationId").value(reservation.getSid()))
                 .andExpect(jsonPath("$.data.paymentAmount").value(170000.00))
                 .andExpect(jsonPath("$.data.paymentStatus").value("COMPLETED"))
@@ -222,11 +222,11 @@ public class PaymentsControllerTest {
                 .build());
     }
 
-    private String toPaymentJson(Long reservationId, Long memberId) {
+    private String toPaymentJson(Long reservationId, Long sid) {
         return """
                 {
                   "reservationId": %d,
-                  "memberId": %d,
+                  "sid": %d,
                   "paymentAmount": 180000.00,
                   "paymentMethod": "CARD",
                   "paymentStatus": "COMPLETED",
@@ -234,7 +234,7 @@ public class PaymentsControllerTest {
                   "paidAt": "%s",
                   "point": 1800
                 }
-                """.formatted(reservationId, memberId, LocalDateTime.now());
+                """.formatted(reservationId, sid, LocalDateTime.now());
     }
 
     private String toPaymentUpdateJson() {

@@ -50,26 +50,26 @@ public class MemberRestController {
         );
     }
 
-    @GetMapping("/{memberId}")
-    public ResponseEntity<ApiResponse<MemberResponseDto>> getMember(@PathVariable Long memberId) {
+    @GetMapping("/{sid}")
+    public ResponseEntity<ApiResponse<MemberResponseDto>> getMember(@PathVariable Long sid) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member select success", memberDtoMapper.toResponseDto(memberService.getMember(memberId)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "member select success", memberDtoMapper.toResponseDto(memberService.getMember(sid)))
         );
     }
 
-    @PutMapping("/{memberId}")
+    @PutMapping("/{sid}")
     public ResponseEntity<ApiResponse<MemberResponseDto>> update(
-            @PathVariable Long memberId,
+            @PathVariable Long sid,
             @RequestBody MemberRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(memberId, memberDtoMapper.toEntity(dto))))
+                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(sid, memberDtoMapper.toEntity(dto))))
         );
     }
 
-    @DeleteMapping("/{memberId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long memberId) {
-        memberService.deleteMember(memberId);
+    @DeleteMapping("/{sid}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
+        memberService.deleteMember(sid);
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "member delete success", null)
         );

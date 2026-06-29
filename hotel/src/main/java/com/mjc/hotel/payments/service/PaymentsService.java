@@ -28,26 +28,26 @@ public class PaymentsService {
         return paymentsRepository.findAll();
     }
 
-    public Payments getPayment(Long paymentId) {
-        return paymentsRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다. paymentId=" + paymentId));
+    public Payments getPayment(Long sid) {
+        return paymentsRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다. sid=" + sid));
     }
 
     @Transactional
     public Payments savePayment(PaymentsRequestDto dto) {
         return paymentsRepository.save(
-                paymentsDtoMapper.toEntity(dto, getReservation(dto.getReservationId()), getMember(dto.getMemberId()))
+                paymentsDtoMapper.toEntity(dto, getReservation(dto.getReservationId()), getMember(dto.getSid()))
         );
     }
 
     @Transactional
-    public Payments updatePayment(Long paymentId, PaymentsRequestDto dto) {
-        Payments payment = getPayment(paymentId);
+    public Payments updatePayment(Long sid, PaymentsRequestDto dto) {
+        Payments payment = getPayment(sid);
         if (dto.getReservationId() != null) {
             payment.setReservation(getReservation(dto.getReservationId()));
         }
-        if (dto.getMemberId() != null) {
-            payment.setMember(getMember(dto.getMemberId()));
+        if (dto.getSid() != null) {
+            payment.setMember(getMember(dto.getSid()));
         }
         payment.setPaymentAmount(dto.getPaymentAmount());
         payment.setPaymentMethod(dto.getPaymentMethod());
@@ -60,8 +60,8 @@ public class PaymentsService {
     }
 
     @Transactional
-    public void deletePayment(Long paymentId) {
-        paymentsRepository.deleteById(paymentId);
+    public void deletePayment(Long sid) {
+        paymentsRepository.deleteById(sid);
     }
 
     private Reservation getReservation(Long reservationId) {
@@ -69,8 +69,8 @@ public class PaymentsService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 예약입니다. reservationId=" + reservationId));
     }
 
-    private Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. memberId=" + memberId));
+    private Member getMember(Long sid) {
+        return memberRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));
     }
 }

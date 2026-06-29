@@ -31,12 +31,12 @@ public class TermServiceTest {
     public void insertTermTest() {
         TermResponseDto response = termService.insert(buildRequest("SERVICE", "서비스 이용약관", "1.0", true));
 
-        assertThat(response.getTermId()).isNotNull();
+        assertThat(response.getSid()).isNotNull();
         assertThat(response.getTermType()).isEqualTo("SERVICE");
         assertThat(response.getTitle()).isEqualTo("서비스 이용약관");
         assertThat(response.getVersion()).isEqualTo("1.0");
         assertThat(response.getIsRequired()).isTrue();
-        assertThat(termRepository.findById(response.getTermId())).isPresent();
+        assertThat(termRepository.findById(response.getSid())).isPresent();
     }
 
     @DisplayName("약관 목록과 단건 약관을 조회한다")
@@ -45,9 +45,9 @@ public class TermServiceTest {
         TermResponseDto savedTerm = termService.insert(buildRequest("PRIVACY", "개인정보 처리방침", "1.0", true));
 
         assertThat(termService.getTerms())
-                .extracting(TermResponseDto::getTermId)
-                .contains(savedTerm.getTermId());
-        assertThat(termService.getTerm(savedTerm.getTermId()).getTitle()).isEqualTo("개인정보 처리방침");
+                .extracting(TermResponseDto::getSid)
+                .contains(savedTerm.getSid());
+        assertThat(termService.getTerm(savedTerm.getSid()).getTitle()).isEqualTo("개인정보 처리방침");
     }
 
     @DisplayName("약관 정보를 수정한다")
@@ -56,11 +56,11 @@ public class TermServiceTest {
         TermResponseDto savedTerm = termService.insert(buildRequest("SERVICE", "수정 전 약관", "1.0", true));
 
         TermResponseDto updatedTerm = termService.updateTerm(
-                savedTerm.getTermId(),
+                savedTerm.getSid(),
                 buildRequest("SERVICE", "수정 후 약관", "2.0", false)
         );
 
-        assertThat(updatedTerm.getTermId()).isEqualTo(savedTerm.getTermId());
+        assertThat(updatedTerm.getSid()).isEqualTo(savedTerm.getSid());
         assertThat(updatedTerm.getTitle()).isEqualTo("수정 후 약관");
         assertThat(updatedTerm.getVersion()).isEqualTo("2.0");
         assertThat(updatedTerm.getIsRequired()).isFalse();
@@ -68,7 +68,7 @@ public class TermServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(termService.getTerm(savedTerm.getTermId()).getTitle()).isEqualTo("수정 후 약관");
+        assertThat(termService.getTerm(savedTerm.getSid()).getTitle()).isEqualTo("수정 후 약관");
     }
 
     @DisplayName("약관을 삭제한다")
@@ -76,11 +76,11 @@ public class TermServiceTest {
     public void deleteTermTest() {
         TermResponseDto savedTerm = termService.insert(buildRequest("MARKETING", "마케팅 수신 동의", "1.0", false));
 
-        termService.deleteTerm(savedTerm.getTermId());
+        termService.deleteTerm(savedTerm.getSid());
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(termRepository.findById(savedTerm.getTermId())).isEmpty();
+        assertThat(termRepository.findById(savedTerm.getSid())).isEmpty();
     }
 
     private TermRequestDto buildRequest(String termType, String title, String version, Boolean isRequired) {

@@ -47,7 +47,7 @@ public class ReviewServiceTest {
 
         Member member = Member
                 .builder()
-                .memberId(1L)
+                .sid(1L)
                 .build();
 
         Reservation reservation = Reservation
@@ -159,7 +159,7 @@ public class ReviewServiceTest {
 
         Member member = Member
                 .builder()
-                .memberId(1L)
+                .sid(1L)
                 .build();
 
         ReviewReaction reviewReaction = ReviewReaction.builder()

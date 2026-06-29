@@ -58,18 +58,18 @@ public class MemberServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(savedMember.getMemberId()).isNotNull();
-        assertThat(memberRepository.findById(savedMember.getMemberId())).isPresent();
+        assertThat(savedMember.getSid()).isNotNull();
+        assertThat(memberRepository.findById(savedMember.getSid())).isPresent();
         assertThat(memberAuthAccountRepository.findAll())
                 .anySatisfy(savedAuthAccount -> {
-                    assertThat(savedAuthAccount.getMember().getMemberId()).isEqualTo(savedMember.getMemberId());
+                    assertThat(savedAuthAccount.getMember().getSid()).isEqualTo(savedMember.getSid());
                     assertThat(savedAuthAccount.getProvider()).isEqualTo("LOCAL");
                     assertThat(savedAuthAccount.getProviderUserId()).isEqualTo("member-test@mjc.com");
                 });
         assertThat(memberTermAgreementRepository.findAll())
                 .anySatisfy(savedAgreement -> {
-                    assertThat(savedAgreement.getMember().getMemberId()).isEqualTo(savedMember.getMemberId());
-                    assertThat(savedAgreement.getTerm().getTermId()).isEqualTo(term.getTermId());
+                    assertThat(savedAgreement.getMember().getSid()).isEqualTo(savedMember.getSid());
+                    assertThat(savedAgreement.getTerm().getSid()).isEqualTo(term.getSid());
                     assertThat(savedAgreement.getIsAgreed()).isTrue();
                 });
     }
@@ -80,9 +80,9 @@ public class MemberServiceTest {
         Member savedMember = memberService.saveMember(buildMember("회원 조회", "read-member@mjc.com"));
 
         assertThat(memberService.getMembers())
-                .extracting(Member::getMemberId)
-                .contains(savedMember.getMemberId());
-        assertThat(memberService.getMember(savedMember.getMemberId()).getEmail()).isEqualTo("read-member@mjc.com");
+                .extracting(Member::getSid)
+                .contains(savedMember.getSid());
+        assertThat(memberService.getMember(savedMember.getSid()).getEmail()).isEqualTo("read-member@mjc.com");
     }
 
     @DisplayName("회원 정보를 수정한다")
@@ -99,9 +99,9 @@ public class MemberServiceTest {
                 .phoneVerified(true)
                 .build();
 
-        Member updatedMember = memberService.updateMember(savedMember.getMemberId(), updateRequest);
+        Member updatedMember = memberService.updateMember(savedMember.getSid(), updateRequest);
 
-        assertThat(updatedMember.getMemberId()).isEqualTo(savedMember.getMemberId());
+        assertThat(updatedMember.getSid()).isEqualTo(savedMember.getSid());
         assertThat(updatedMember.getName()).isEqualTo("회원 수정 후");
         assertThat(updatedMember.getPhone()).isEqualTo("010-9999-8888");
         assertThat(updatedMember.getEmail()).isEqualTo("after-update@mjc.com");
@@ -113,7 +113,7 @@ public class MemberServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        Member foundMember = memberService.getMember(savedMember.getMemberId());
+        Member foundMember = memberService.getMember(savedMember.getSid());
         assertThat(foundMember.getEmail()).isEqualTo("after-update@mjc.com");
     }
 
@@ -122,11 +122,13 @@ public class MemberServiceTest {
     public void deleteMemberTest() {
         Member savedMember = memberService.saveMember(buildMember("회원 삭제", "delete-member@mjc.com"));
 
-        memberService.deleteMember(savedMember.getMemberId());
+        memberService.deleteMember(savedMember.getSid());
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(memberRepository.findById(savedMember.getMemberId())).isEmpty();
+        Member deletedMember = memberRepository.findById(savedMember.getSid()).orElseThrow();
+        assertThat(deletedMember.getDeleted()).isTrue();
+        assertThat(deletedMember.getDeletedAt()).isNotNull();
     }
 
     private Member buildMember(String name, String email) {

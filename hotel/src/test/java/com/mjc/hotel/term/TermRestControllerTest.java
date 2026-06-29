@@ -41,7 +41,7 @@ public class TermRestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("term insert success"))
-                .andExpect(jsonPath("$.data.termId", notNullValue()))
+                .andExpect(jsonPath("$.data.sid", notNullValue()))
                 .andExpect(jsonPath("$.data.title").value("서비스 이용약관"));
     }
 
@@ -50,11 +50,11 @@ public class TermRestControllerTest {
     public void getTermApiTest() throws Exception {
         TermResponseDto savedTerm = termService.insert(buildRequest("PRIVACY", "개인정보 처리방침", "1.0", true));
 
-        mockMvc.perform(get("/api/term/{termId}", savedTerm.getTermId()))
+        mockMvc.perform(get("/api/term/{sid}", savedTerm.getSid()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("term select success"))
-                .andExpect(jsonPath("$.data.termId").value(savedTerm.getTermId()))
+                .andExpect(jsonPath("$.data.sid").value(savedTerm.getSid()))
                 .andExpect(jsonPath("$.data.title").value("개인정보 처리방침"));
     }
 

@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,7 +55,7 @@ public class MemberControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("member insert success"))
-                .andExpect(jsonPath("$.data.memberId", notNullValue()))
+                .andExpect(jsonPath("$.data.sid", notNullValue()))
                 .andExpect(jsonPath("$.data.email").value("create-member-api@mjc.com"));
     }
 
@@ -66,11 +67,11 @@ public class MemberControllerTest {
 
         mockMvc.perform(post("/api/member/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toSignupJson(serviceTerm.getTermId(), marketingTerm.getTermId())))
+                        .content(toSignupJson(serviceTerm.getSid(), marketingTerm.getSid())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("member signup success"))
-                .andExpect(jsonPath("$.data.memberId", notNullValue()))
+                .andExpect(jsonPath("$.data.sid", notNullValue()))
                 .andExpect(jsonPath("$.data.email").value("signup-member-api@mjc.com"));
 
         assertThat(memberAuthAccountRepository.findAll())
@@ -81,12 +82,12 @@ public class MemberControllerTest {
                 });
         assertThat(memberTermAgreementRepository.findAll())
                 .anySatisfy(agreement -> {
-                    assertThat(agreement.getTerm().getTermId()).isEqualTo(serviceTerm.getTermId());
+                    assertThat(agreement.getTerm().getSid()).isEqualTo(serviceTerm.getSid());
                     assertThat(agreement.getIsAgreed()).isTrue();
                     assertThat(agreement.getMember().getEmail()).isEqualTo("signup-member-api@mjc.com");
                 })
                 .anySatisfy(agreement -> {
-                    assertThat(agreement.getTerm().getTermId()).isEqualTo(marketingTerm.getTermId());
+                    assertThat(agreement.getTerm().getSid()).isEqualTo(marketingTerm.getSid());
                     assertThat(agreement.getIsAgreed()).isFalse();
                     assertThat(agreement.getMember().getEmail()).isEqualTo("signup-member-api@mjc.com");
                 });
@@ -95,14 +96,33 @@ public class MemberControllerTest {
     @DisplayName("회원 단건 조회 API는 ApiResponse 형식으로 조회 결과를 반환한다")
     @Test
     public void getMemberApiTest() throws Exception {
-        Long memberId = memberService.saveMember(buildMember("회원 조회", "read-member-api@mjc.com")).getMemberId();
+        Long sid = memberService.saveMember(buildMember("회원 조회", "read-member-api@mjc.com")).getSid();
 
-        mockMvc.perform(get("/api/member/{memberId}", memberId))
+        mockMvc.perform(get("/api/member/{sid}", sid))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("member select success"))
-                .andExpect(jsonPath("$.data.memberId").value(memberId))
+                .andExpect(jsonPath("$.data.sid").value(sid))
                 .andExpect(jsonPath("$.data.email").value("read-member-api@mjc.com"));
+    }
+
+    @DisplayName("회원 삭제 API는 회원을 물리 삭제하지 않고 삭제 표시 후 조회할 수 있게 한다")
+    @Test
+    public void deleteMemberApiSoftDeleteTest() throws Exception {
+        Long sid = memberService.saveMember(buildMember("회원 삭제", "soft-delete-member-api@mjc.com")).getSid();
+
+        mockMvc.perform(delete("/api/member/{sid}", sid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("member delete success"));
+
+        mockMvc.perform(get("/api/member/{sid}", sid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.sid").value(sid))
+                .andExpect(jsonPath("$.data.email").value("soft-delete-member-api@mjc.com"))
+                .andExpect(jsonPath("$.data.deleted").value(true))
+                .andExpect(jsonPath("$.data.deletedAt", notNullValue()));
     }
 
     private MemberRequestDto buildRequest(String name, String email) {
@@ -161,7 +181,7 @@ public class MemberControllerTest {
         );
     }
 
-    private String toSignupJson(Long serviceTermId, Long marketingTermId) {
+    private String toSignupJson(Long servicesid, Long marketingsid) {
         return """
                 {
                   "name": "회원가입 생성",
@@ -178,15 +198,15 @@ public class MemberControllerTest {
                   },
                   "termAgreements": [
                     {
-                      "termId": %d,
+                      "sid": %d,
                       "isAgreed": true
                     },
                     {
-                      "termId": %d,
+                      "sid": %d,
                       "isAgreed": false
                     }
                   ]
                 }
-                """.formatted(serviceTermId, marketingTermId);
+                """.formatted(servicesid, marketingsid);
     }
 }

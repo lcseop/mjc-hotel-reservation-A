@@ -20,7 +20,7 @@ public class TermDtoMapper {
 
     public TermResponseDto toResponseDto(Term term) {
         return TermResponseDto.builder()
-                .termId(term.getTermId())
+                .sid(term.getSid())
                 .termType(term.getTermType())
                 .title(term.getTitle())
                 .version(term.getVersion())

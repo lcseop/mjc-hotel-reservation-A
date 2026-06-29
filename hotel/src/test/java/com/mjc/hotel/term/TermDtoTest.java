@@ -28,7 +28,7 @@ public class TermDtoTest {
                 LocalDateTime.class
         );
 
-        assertField(TermRequestDto.class, "termId", Long.class);
+        assertField(TermRequestDto.class, "sid", Long.class);
         assertField(TermRequestDto.class, "termType", String.class);
         assertField(TermRequestDto.class, "title", String.class);
         assertField(TermRequestDto.class, "version", String.class);
@@ -49,7 +49,7 @@ public class TermDtoTest {
                 LocalDateTime.class
         );
 
-        assertField(TermResponseDto.class, "termId", Long.class);
+        assertField(TermResponseDto.class, "sid", Long.class);
         assertField(TermResponseDto.class, "termType", String.class);
         assertField(TermResponseDto.class, "title", String.class);
         assertField(TermResponseDto.class, "version", String.class);

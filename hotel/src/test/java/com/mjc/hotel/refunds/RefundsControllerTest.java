@@ -89,13 +89,13 @@ public class RefundsControllerTest {
 
         mockMvc.perform(post("/api/refunds/add")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toRefundJson(payment.getPaymentId(), member.getMemberId())))
+                        .content(toRefundJson(payment.getSid(), member.getSid())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds insert success"))
-                .andExpect(jsonPath("$.data.refundId", notNullValue()))
-                .andExpect(jsonPath("$.data.paymentId").value(payment.getPaymentId()))
-                .andExpect(jsonPath("$.data.memberId").value(member.getMemberId()))
+                .andExpect(jsonPath("$.data.sid", notNullValue()))
+                .andExpect(jsonPath("$.data.sid").value(payment.getSid()))
+                .andExpect(jsonPath("$.data.sid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.status").value("REQUESTED"));
     }
 
@@ -116,11 +116,11 @@ public class RefundsControllerTest {
                 .completedAt(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(get("/api/refunds/{refundId}", refund.getRefundId()))
+        mockMvc.perform(get("/api/refunds/{sid}", refund.getSid()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds select success"))
-                .andExpect(jsonPath("$.data.refundId").value(refund.getRefundId()))
+                .andExpect(jsonPath("$.data.sid").value(refund.getSid()))
                 .andExpect(jsonPath("$.data.pgTransactionKey").value("PG-REFUND-API-READ"));
     }
 
@@ -141,13 +141,13 @@ public class RefundsControllerTest {
                 .requestedAt(requestedAt)
                 .build());
 
-        mockMvc.perform(put("/api/refunds/{refundId}", refund.getRefundId())
+        mockMvc.perform(put("/api/refunds/{sid}", refund.getSid())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toRefundCompleteJson(payment.getPaymentId(), member.getMemberId(), requestedAt)))
+                        .content(toRefundCompleteJson(payment.getSid(), member.getSid(), requestedAt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds update success"))
-                .andExpect(jsonPath("$.data.refundId").value(refund.getRefundId()))
+                .andExpect(jsonPath("$.data.sid").value(refund.getSid()))
                 .andExpect(jsonPath("$.data.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.completedAt", notNullValue()));
     }
@@ -239,11 +239,11 @@ public class RefundsControllerTest {
                 .build());
     }
 
-    private String toRefundJson(Long paymentId, Long memberId) {
+    private String toRefundJson(Long sid, Long sid) {
         return """
                 {
-                  "paymentId": %d,
-                  "memberId": %d,
+                  "sid": %d,
+                  "sid": %d,
                   "pgTransactionKey": "PG-REFUND-API-CREATE",
                   "idempotencyKey": "IDEMPOTENCY-REFUND-API-CREATE",
                   "refundAmount": 50000.00,
@@ -251,14 +251,14 @@ public class RefundsControllerTest {
                   "status": "REQUESTED",
                   "requestedAt": "%s"
                 }
-                """.formatted(paymentId, memberId, LocalDateTime.now());
+                """.formatted(sid, sid, LocalDateTime.now());
     }
 
-    private String toRefundCompleteJson(Long paymentId, Long memberId, LocalDateTime requestedAt) {
+    private String toRefundCompleteJson(Long sid, Long sid, LocalDateTime requestedAt) {
         return """
                 {
-                  "paymentId": %d,
-                  "memberId": %d,
+                  "sid": %d,
+                  "sid": %d,
                   "pgTransactionKey": "PG-REFUND-API-COMPLETE-AFTER",
                   "idempotencyKey": "IDEMPOTENCY-REFUND-API-COMPLETE",
                   "refundAmount": 50000.00,
@@ -269,6 +269,6 @@ public class RefundsControllerTest {
                   "failedAt": null,
                   "failureReason": null
                 }
-                """.formatted(paymentId, memberId, requestedAt);
+                """.formatted(sid, sid, requestedAt);
     }
 }

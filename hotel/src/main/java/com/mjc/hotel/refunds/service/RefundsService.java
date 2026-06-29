@@ -28,23 +28,23 @@ public class RefundsService {
         return refundsRepository.findAll();
     }
 
-    public Refunds getRefund(Long refundId) {
-        return refundsRepository.findById(refundId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 환불입니다. refundId=" + refundId));
+    public Refunds getRefund(Long sid) {
+        return refundsRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 환불입니다. sid=" + sid));
     }
 
     @Transactional
     public Refunds saveRefund(RefundsRequestDto dto) {
         return refundsRepository.save(
-                refundsDtoMapper.toEntity(dto, getPayment(dto.getPaymentId()), getMember(dto.getMemberId()))
+                refundsDtoMapper.toEntity(dto, getPayment(dto.getSid()), getMember(dto.getSid()))
         );
     }
 
     @Transactional
-    public Refunds updateRefund(Long refundId, RefundsRequestDto dto) {
-        Refunds refund = getRefund(refundId);
-        refund.setPayment(getPayment(dto.getPaymentId()));
-        refund.setMember(getMember(dto.getMemberId()));
+    public Refunds updateRefund(Long sid, RefundsRequestDto dto) {
+        Refunds refund = getRefund(sid);
+        refund.setPayment(getPayment(dto.getSid()));
+        refund.setMember(getMember(dto.getSid()));
         refund.setPgTransactionKey(dto.getPgTransactionKey());
         refund.setIdempotencyKey(dto.getIdempotencyKey());
         refund.setRefundAmount(dto.getRefundAmount());
@@ -59,17 +59,17 @@ public class RefundsService {
     }
 
     @Transactional
-    public void deleteRefund(Long refundId) {
-        refundsRepository.deleteById(refundId);
+    public void deleteRefund(Long sid) {
+        refundsRepository.deleteById(sid);
     }
 
-    private Payments getPayment(Long paymentId) {
-        return paymentsRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다. paymentId=" + paymentId));
+    private Payments getPayment(Long sid) {
+        return paymentsRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다. sid=" + sid));
     }
 
-    private Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. memberId=" + memberId));
+    private Member getMember(Long sid) {
+        return memberRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));
     }
 }

@@ -30,13 +30,13 @@ public class TermService {
                 .toList();
     }
 
-    public TermResponseDto getTerm(Long termId) {
-        return termDtoMapper.toResponseDto(findTerm(termId));
+    public TermResponseDto getTerm(Long sid) {
+        return termDtoMapper.toResponseDto(findTerm(sid));
     }
 
     @Transactional
-    public TermResponseDto updateTerm(Long termId, TermRequestDto request) {
-        Term term = findTerm(termId);
+    public TermResponseDto updateTerm(Long sid, TermRequestDto request) {
+        Term term = findTerm(sid);
         term.setTermType(request.getTermType());
         term.setTitle(request.getTitle());
         term.setVersion(request.getVersion());
@@ -47,12 +47,12 @@ public class TermService {
     }
 
     @Transactional
-    public void deleteTerm(Long termId) {
-        termRepository.deleteById(termId);
+    public void deleteTerm(Long sid) {
+        termRepository.deleteById(sid);
     }
 
-    private Term findTerm(Long termId) {
-        return termRepository.findById(termId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termId=" + termId));
+    private Term findTerm(Long sid) {
+        return termRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + sid));
     }
 }

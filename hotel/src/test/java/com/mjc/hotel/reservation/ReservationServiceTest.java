@@ -39,7 +39,7 @@ public class ReservationServiceTest {
 
     public void reservationTest() {
 
-        Member member = Member.builder().memberId(1L).build();
+        Member member = Member.builder().sid(1L).build();
         Room room = Room.builder().sid(1L).build();
         CouponIssue couponIssue = CouponIssue.builder().sid(1L).build();
 

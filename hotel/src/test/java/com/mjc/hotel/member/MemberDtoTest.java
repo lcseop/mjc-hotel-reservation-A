@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,10 +52,12 @@ public class MemberDtoTest {
                 MemberStatus.class,
                 MemberRole.class,
                 Boolean.class,
-                Boolean.class
+                Boolean.class,
+                Boolean.class,
+                LocalDateTime.class
         );
 
-        assertField(MemberResponseDto.class, "memberId", Long.class);
+        assertField(MemberResponseDto.class, "sid", Long.class);
         assertField(MemberResponseDto.class, "name", String.class);
         assertField(MemberResponseDto.class, "phone", String.class);
         assertField(MemberResponseDto.class, "email", String.class);
@@ -62,6 +65,8 @@ public class MemberDtoTest {
         assertField(MemberResponseDto.class, "role", MemberRole.class);
         assertField(MemberResponseDto.class, "emailVerified", Boolean.class);
         assertField(MemberResponseDto.class, "phoneVerified", Boolean.class);
+        assertField(MemberResponseDto.class, "deleted", Boolean.class);
+        assertField(MemberResponseDto.class, "deletedAt", LocalDateTime.class);
     }
 
     private void assertCommonDtoShape(Class<?> dtoClass, Class<?>... constructorTypes) throws NoSuchMethodException {

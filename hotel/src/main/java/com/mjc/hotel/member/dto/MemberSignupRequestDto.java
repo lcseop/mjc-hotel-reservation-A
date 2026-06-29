@@ -47,7 +47,7 @@ public class MemberSignupRequestDto {
     @Getter
     @Setter
     public static class TermAgreementRequest {
-        private Long termId;
+        private Long sid;
         private Boolean isAgreed;
     }
 }

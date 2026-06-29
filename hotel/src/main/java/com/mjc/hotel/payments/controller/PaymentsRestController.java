@@ -41,26 +41,26 @@ public class PaymentsRestController {
         );
     }
 
-    @GetMapping("/{paymentId}")
-    public ResponseEntity<ApiResponse<PaymentsResponseDto>> getPayment(@PathVariable Long paymentId) {
+    @GetMapping("/{sid}")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> getPayment(@PathVariable Long sid) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", paymentsDtoMapper.toResponseDto(paymentsService.getPayment(paymentId)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", paymentsDtoMapper.toResponseDto(paymentsService.getPayment(sid)))
         );
     }
 
-    @PutMapping("/{paymentId}")
+    @PutMapping("/{sid}")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> update(
-            @PathVariable Long paymentId,
+            @PathVariable Long sid,
             @RequestBody PaymentsRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(paymentId, dto)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(sid, dto)))
         );
     }
 
-    @DeleteMapping("/{paymentId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long paymentId) {
-        paymentsService.deletePayment(paymentId);
+    @DeleteMapping("/{sid}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
+        paymentsService.deletePayment(sid);
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments delete success", null)
         );

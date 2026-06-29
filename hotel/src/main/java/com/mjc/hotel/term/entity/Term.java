@@ -23,8 +23,7 @@ public class Term {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "term_id")
-    private Long termId;
+    private Long sid;
 
     @Column(name = "term_type", length = 30)
     private String termType;

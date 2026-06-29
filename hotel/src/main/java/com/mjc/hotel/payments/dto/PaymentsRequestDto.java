@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PaymentsRequestDto {
+    private Long sid;
     private Long reservationId;
-    private Long memberId;
     private BigDecimal paymentAmount;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;

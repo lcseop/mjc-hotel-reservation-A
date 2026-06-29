@@ -45,7 +45,7 @@ class TermMappingTests {
         assertNotNull(type.getAnnotation(Entity.class));
         assertEquals("terms", type.getAnnotation(Table.class).name());
 
-        Field id = field("termId");
+        Field id = field("sid");
         assertNotNull(id.getAnnotation(Id.class));
         assertEquals(GenerationType.IDENTITY, id.getAnnotation(GeneratedValue.class).strategy());
         assertEquals("term_id", id.getAnnotation(Column.class).name());
@@ -121,7 +121,7 @@ public class Term {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "term_id")
-    private Long termId;
+    private Long sid;
 
     @Column(name = "term_type", length = 30)
     private String termType;
