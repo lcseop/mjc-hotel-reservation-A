@@ -35,4 +35,7 @@ public class Promotion {
 
     @Column(name="total_amount")
     private Integer totalAmount;
+
+    public void update(String promotionName, RoomType roomType) {
+    }
 }
