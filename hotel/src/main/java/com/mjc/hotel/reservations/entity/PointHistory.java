@@ -1,5 +1,6 @@
 package com.mjc.hotel.reservations.entity;
 
+import com.mjc.hotel.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,31 +11,36 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "email_logs")
+@Table(name = "point_history")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class EmailLog {
+
+public class PointHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
-    // reservation_id FK → Reservation 객체 참조
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
-    @Column(name = "recipient_email", length = 100, nullable = false)
-    private String recipientEmail;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
+    @Column(nullable = false)
+    private Integer amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "email_status", nullable = false)
-    private EmailStatus emailStatus;
+    @Column(nullable = false)
+    private PointStatus pointStatus;
 
     @CreationTimestamp
-    @Column(name = "sent_at", updatable = false)
-    private LocalDateTime sentAt;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
 }
