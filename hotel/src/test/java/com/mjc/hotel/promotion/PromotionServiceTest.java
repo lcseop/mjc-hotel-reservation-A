@@ -1,9 +1,6 @@
 package com.mjc.hotel.promotion;
 
-import com.mjc.hotel.promotion.entity.DiscountRate;
-import com.mjc.hotel.promotion.entity.Flat;
-import com.mjc.hotel.promotion.entity.Promotion;
-import com.mjc.hotel.promotion.entity.PromotionPackage;
+import com.mjc.hotel.promotion.entity.*;
 import com.mjc.hotel.promotion.repository.*;
 import com.mjc.hotel.room.entity.RoomType;
 import org.junit.jupiter.api.Test;
@@ -12,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 
 import java.time.LocalDateTime;
+
+import static com.mjc.hotel.promotion.entity.ConditionType.ACTIVE;
 
 @SpringBootTest
 public class PromotionServiceTest {
@@ -66,5 +65,11 @@ public class PromotionServiceTest {
                 .build();
         discountRateRepository.save(discountRate);
 
+
+        Condition condition = Condition
+                .builder()
+                .conditiontype(ACTIVE)
+                .build();
+        conditionRepository.save(condition);
     }
 }

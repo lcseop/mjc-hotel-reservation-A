@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class DiscountRate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long sid;
 
     @JoinColumn(name="promotion_id",  nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
