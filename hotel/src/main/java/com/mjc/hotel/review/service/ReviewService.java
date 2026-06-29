@@ -7,6 +7,7 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.*;
+import com.mjc.hotel.review.entity.composite_key.ReviewTagId;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.ReviewCategoryRequest;
 import com.mjc.hotel.review.request.ReviewCreateRequest;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,11 +62,79 @@ public class ReviewService {
 
         Review reviewResult = reviewRepository.save(review);
 
-        List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest, reviewResult);
+        List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest.getCategories(), reviewResult);
+        List<ReviewTag> tags = this.insertReviewTags(reviewRequest.getTags(), reviewResult);
 
-        List<ReviewTag> tags = this.insertReviewTags(reviewRequest, reviewResult);
+        ReviewResponse result = toReviewResponse(reviewResult,categories, tags);
 
-        ReviewResponse result = ReviewResponse.builder()
+        return result;
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
+        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getReviewId()).orElseThrow();
+
+        if(Boolean.TRUE.equals(updateBefore.getDeleted())) return null;
+
+        Review review = Review.builder()
+                .reviewId(updateBefore.getReviewId())
+                .hotel(updateBefore.getHotel())
+                .member(updateBefore.getMember())
+                .reservation(updateBefore.getReservation())
+                .rating(reviewUpdateRequest.getRating())
+                .travelType(reviewUpdateRequest.getTravelType())
+                .content(reviewUpdateRequest.getContent())
+                .likeCount(updateBefore.getLikeCount())
+                .dislikeCount(updateBefore.getDislikeCount())
+                .build();
+
+        Review updateAfter = reviewRepository.save(review);
+
+        //기존 리뷰에 있던 항목별 평점(청결도, 서비스 등등)을 리뷰ID로 삭제
+        //ex) 사용자가 청결도 리뷰를 삭제하고 위치 리뷰를 추가하는 식으로 리뷰를 수정할 수 있음 그러면 기존 리뷰에 딸린 항목별 리뷰를 삭제하고 새로 넣는게 좋다고 봄.
+        reviewCategoryRepository.deleteByReviewReviewId(reviewUpdateRequest.getReviewId());
+        //마찬가지로 기존 리뷰에 딸린 장단점 항목을 삭제하고 새로 넣음
+        reviewTagRepository.deleteByReviewReviewId(reviewUpdateRequest.getReviewId());
+
+        List<ReviewCategory> categories = this.insertReviewCategories(reviewUpdateRequest.getCategories(), updateAfter);
+        List<ReviewTag> tags = this.insertReviewTags(reviewUpdateRequest.getTags(), updateAfter);
+
+        ReviewResponse result = toReviewResponse(updateAfter,categories, tags);
+
+        return result;
+    }
+
+    public ReviewResponse findByReviewId(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId).orElseThrow();
+
+        if(Boolean.TRUE.equals(review.getDeleted())) return null;
+
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+
+        ReviewResponse result = toReviewResponse(review,categories,tags);
+
+        return result;
+    }
+
+    public ReviewResponse deleteReviewId(Long reviewId) {
+        Review find = reviewRepository.findById(reviewId).orElseThrow();
+
+        find.setDeletedAt(LocalDateTime.now());
+        find.setDeleted(true);
+
+        Review save = reviewRepository.save(find);
+
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+
+        ReviewResponse result = toReviewResponse(save,categories,tags);
+
+        return result;
+    }
+
+    private ReviewResponse toReviewResponse(Review reviewResult, List<ReviewCategory> categories, List<ReviewTag> tags) {
+        return  ReviewResponse.builder()
                 .reviewId(reviewResult.getReviewId())
                 .hotelId(reviewResult.getHotel().getSid())
                 .memberId(reviewResult.getMember().getMemberId())
@@ -98,109 +168,50 @@ public class ReviewService {
                 .deletedAt(reviewResult.getDeletedAt())
                 .deleted(reviewResult.getDeleted())
                 .build();
-
-        return result;
     }
 
-    private List<ReviewCategory> insertReviewCategories(ReviewCreateRequest reviewRequest, Review reviewResult) {
-        List<ReviewCategory> categories = new ArrayList<>();
+    private List<ReviewCategory> insertReviewCategories(List<ReviewCategoryRequest> categories, Review review) {
+        List<ReviewCategory> results = new ArrayList<>();
+        if(categories != null && !categories.isEmpty()){
 
-        if(reviewRequest.getCategories() != null && !reviewRequest.getCategories().isEmpty()){
-
-            for(ReviewCategoryRequest reviewCategoryRequest : reviewRequest.getCategories()){
+            for(ReviewCategoryRequest reviewCategoryRequest : categories){
                 ReviewCategoryMaster reviewCategoryMaster = reviewCategoryMasterRepository
                         .findById(reviewCategoryRequest.getCategoryId())
                         .orElseThrow();
 
                 ReviewCategory reviewCategory = ReviewCategory.builder()
-                        .review(reviewResult)
+                        .review(review)
                         .reviewCategoryMaster(reviewCategoryMaster)
                         .rating(reviewCategoryRequest.getRating())
                         .build();
 
                 ReviewCategory categoryResult = reviewCategoryRepository.save(reviewCategory);
 
-                categories.add(categoryResult);
+                results.add(categoryResult);
             }
         }
 
-        return categories;
+        return results;
     }
 
-    private List<ReviewTag> insertReviewTags(ReviewCreateRequest reviewRequest, Review reviewResult) {
-        List<ReviewTag> tags = new ArrayList<>();
-        if(reviewRequest.getTags() != null && !reviewRequest.getTags().isEmpty()) {
-            for(ReviewTagRequest reviewTagRequest : reviewRequest.getTags()) {
+    private List<ReviewTag> insertReviewTags(List<ReviewTagRequest> tags , Review review) {
+        List<ReviewTag> results = new ArrayList<>();
+        if(tags != null && !tags.isEmpty()) {
+            for(ReviewTagRequest reviewTagRequest : tags) {
                 ReviewTagMaster reviewTagMaster = reviewTagMasterRepository.findById(reviewTagRequest.getTagId()).orElseThrow();
 
                 ReviewTag reviewTag = ReviewTag.builder()
-                        .review(reviewResult)
+                        .review(review)
                         .reviewTagMaster(reviewTagMaster)
                         .build();
 
                 ReviewTag tagResult = reviewTagRepository.save(reviewTag);
 
-                tags.add(tagResult);
+                results.add(tagResult);
             }
         }
-        return tags;
+        return results;
     }
 
-    @Transactional
-    public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
-        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getReviewId()).orElseThrow();
 
-        Review review = Review.builder()
-                .reviewId(updateBefore.getReviewId())
-                .hotel(updateBefore.getHotel())
-                .member(updateBefore.getMember())
-                .reservation(updateBefore.getReservation())
-                .rating(reviewUpdateRequest.getRating())
-                .travelType(reviewUpdateRequest.getTravelType())
-                .content(reviewUpdateRequest.getContent())
-                .likeCount(updateBefore.getLikeCount())
-                .dislikeCount(updateBefore.getDislikeCount())
-                .build();
-
-        Review updateAfter = reviewRepository.save(review);
-
-        reviewCategoryRepository.deleteByReviewReviewId(review.getReviewId());
-
-        ReviewResponse result = ReviewResponse.builder()
-                .reviewId(updateAfter.getReviewId())
-                .hotelId(updateAfter.getHotel().getSid())
-                .memberId(updateAfter.getMember().getMemberId())
-                .reservationId(updateAfter.getReservation().getSid())
-                .rating(updateAfter.getRating())
-                .travelType(updateAfter.getTravelType())
-                .content(updateAfter.getContent())
-                .likeCount(updateAfter.getLikeCount())
-                .dislikeCount(updateAfter.getDislikeCount())
-//                .categories(
-//                        categories.stream()
-//                                .map(reviewCategory -> ReviewCategoryResponse.builder()
-//                                        .reviewCategoryId(reviewCategory.getReviewCategoryId())
-//                                        .reviewCategoryMasterId(reviewCategory.getReviewCategoryMaster().getReviewCategoryMasterId())
-//                                        .reviewId(reviewCategory.getReview().getReviewId())
-//                                        .rating(reviewCategory.getRating())
-//                                        .build())
-//                                .toList()
-//                )
-//                .tags(
-//                        tags.stream()
-//                                .map(reviewTag -> ReviewTagResponse.builder()
-//                                        .reviewId(reviewTag.getReview().getReviewId())
-//                                        .reviewTageMapId(reviewTag.getReviewTagMaster().getReviewTagMasterId())
-//                                        .build()
-//                                )
-//                                .toList()
-//                )
-                .createdAt(updateAfter.getCreatedAt())
-                .updatedAt(updateAfter.getUpdatedAt())
-                .deletedAt(updateAfter.getDeletedAt())
-                .deleted(updateAfter.getDeleted())
-                .build();
-
-        return result;
-    }
 }
