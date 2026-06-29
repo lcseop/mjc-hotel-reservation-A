@@ -17,4 +17,6 @@ public class HotelRequestDto {
     private String location;
     private Integer starRating;
     private String description;
+    private Double latitude;
+    private Double longitude;
 }

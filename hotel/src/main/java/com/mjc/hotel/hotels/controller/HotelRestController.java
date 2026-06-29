@@ -11,6 +11,9 @@ import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +46,7 @@ public class HotelRestController {
     @PatchMapping
     public ResponseEntity<ApiResponse<HotelResponseDto>> update(@RequestBody HotelRequestDto dto) {
         HotelResponseDto update = hotelService.update(dto);
-        return ResponseEntity.status(201).body(
+        return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
         );
     }
@@ -55,7 +58,7 @@ public class HotelRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<HotelResponseDto>> delete(@PathVariable Long id) {
         HotelResponseDto delete = hotelService.delete(id);
-        return ResponseEntity.status(201).body(
+        return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel delete success", delete)
         );
     }
@@ -65,9 +68,10 @@ public class HotelRestController {
             description = "호텔 데이터를 필터에 맞추어 검색합니다."
     )
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<Hotel>>> search(@RequestBody HotelSearchRequestDto dto) {
-        List<Hotel> search = hotelService.search(dto);
-        return ResponseEntity.status(201).body(
+    public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
+                                                           @PageableDefault(size = 5) Pageable pageable) {
+        Page<HotelResponseDto> search = hotelService.search(dto, pageable);
+        return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
         );
     }

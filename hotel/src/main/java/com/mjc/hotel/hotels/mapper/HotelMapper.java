@@ -1,11 +1,14 @@
 package com.mjc.hotel.hotels.mapper;
 
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
+import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import com.mjc.hotel.hotels.entity.HotelType;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.room.dto.RoomResponseDto;
+import com.mjc.hotel.room.entity.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +35,8 @@ public class HotelMapper {
                 .location(hotel.getLocation())
                 .starRating(hotel.getStarRating())
                 .description(hotel.getDescription())
+                .latitude(hotel.getLatitude())
+                .longitude(hotel.getLongitude())
                 .build();
 
         if (sid) {
@@ -43,5 +48,21 @@ public class HotelMapper {
         }
 
         return clone;
+    }
+
+    public static HotelResponseDto response(Hotel hotel) {
+        return HotelResponseDto
+                .builder()
+                .sid(hotel.getSid())
+                .typeTitle(hotel.getType().getTitle())
+                .photoPath(hotel.getPhoto().getImagePath())
+                .hotelName(hotel.getHotelName())
+                .hotelPrice(hotel.getHotelPrice())
+                .location(hotel.getLocation())
+                .starRating(hotel.getStarRating())
+                .description(hotel.getDescription())
+                .latitude(hotel.getLatitude())
+                .longitude(hotel.getLongitude())
+                .build();
     }
 }
