@@ -1,5 +1,6 @@
 package com.mjc.hotel.hotels.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class HotelAmenities {
+// 호텔 편의 시설
+// 예시 : 무료 와이파이, 전 객실 이용 가능
+public class HotelAmenities extends BaseEntity {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -20,6 +20,15 @@ public class ReviewPhoto {
     @JoinColumn(name = "review_id")
     private Review review;
 
+    @Column(name = "original_file_name")
+    private String originalFileName;
+
+    @Column(name = "stored_file_name")
+    private String storedFileName;
+
+    @Column(name = "file_path")
+    private String filePath;
+
     @Column(name = "image_path", length = 255, nullable = false)
     private String imagePath;
 }
