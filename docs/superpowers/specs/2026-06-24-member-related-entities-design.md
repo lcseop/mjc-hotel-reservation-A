@@ -49,7 +49,7 @@
 
 | Java 필드 | DB 컬럼 | Java 타입 | 제약 및 매핑 |
 |---|---|---|---|
-| `agreementId` | `agreement_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
+| `sid` | `agreement_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
 | `member` | `member_id` | `Member` | LAZY `@ManyToOne` 외래키 |
 | `term` | `term_id` | `Term` | LAZY `@ManyToOne` 외래키 |
 | `isAgreed` | `is_agreed` | `Boolean` | `TINYINT(1)` 대응 |
@@ -64,7 +64,7 @@
 
 | Java 필드 | DB 컬럼 | Java 타입 | 제약 및 매핑 |
 |---|---|---|---|
-| `authAccountId` | `auth_account_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
+| `sid` | `auth_account_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
 | `member` | `member_id` | `Member` | LAZY `@ManyToOne` 외래키 |
 | `provider` | `provider` | `String` | 최대 20자 |
 | `providerUserId` | `provider_user_id` | `String` | 최대 255자 |

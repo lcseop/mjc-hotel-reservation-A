@@ -1,5 +1,6 @@
 package com.mjc.hotel.term.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class Term {
+public class Term extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
