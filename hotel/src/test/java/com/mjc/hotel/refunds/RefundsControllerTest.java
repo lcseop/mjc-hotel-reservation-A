@@ -16,6 +16,7 @@ import com.mjc.hotel.payments.entity.PaymentMethod;
 import com.mjc.hotel.payments.entity.PaymentStatus;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.refunds.entity.RefundStatus;
 import com.mjc.hotel.refunds.entity.Refunds;
 import com.mjc.hotel.refunds.repository.RefundsRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
@@ -44,6 +45,7 @@ import java.time.LocalDateTime;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -109,7 +111,7 @@ public class RefundsControllerTest {
                 .idempotencyKey("IDEMPOTENCY-REFUND-API-READ")
                 .refundAmount(new BigDecimal("50000.00"))
                 .reason("테스트 환불 조회")
-                .status("COMPLETED")
+                .status(RefundStatus.COMPLETED)
                 .requestedAt(LocalDateTime.now().minusMinutes(5))
                 .completedAt(LocalDateTime.now())
                 .build());
@@ -120,6 +122,34 @@ public class RefundsControllerTest {
                 .andExpect(jsonPath("$.message").value("refunds select success"))
                 .andExpect(jsonPath("$.data.refundId").value(refund.getRefundId()))
                 .andExpect(jsonPath("$.data.pgTransactionKey").value("PG-REFUND-API-READ"));
+    }
+
+    @DisplayName("환불 수정 API는 완료 상태로 변경할 때 완료 일시를 자동으로 기록한다")
+    @Test
+    public void updateRefundApiSetsCompletedAtTest() throws Exception {
+        Member member = saveMember("환불 완료 회원", "complete-refund-api@mjc.com");
+        Payments payment = savePayment(member);
+        LocalDateTime requestedAt = LocalDateTime.of(2026, 6, 29, 9, 0, 0);
+        Refunds refund = refundsRepository.save(Refunds.builder()
+                .payment(payment)
+                .member(member)
+                .pgTransactionKey("PG-REFUND-API-COMPLETE-BEFORE")
+                .idempotencyKey("IDEMPOTENCY-REFUND-API-COMPLETE")
+                .refundAmount(new BigDecimal("50000.00"))
+                .reason("테스트 환불 완료")
+                .status(RefundStatus.REQUESTED)
+                .requestedAt(requestedAt)
+                .build());
+
+        mockMvc.perform(put("/api/refunds/{refundId}", refund.getRefundId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toRefundCompleteJson(payment.getPaymentId(), member.getMemberId(), requestedAt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("refunds update success"))
+                .andExpect(jsonPath("$.data.refundId").value(refund.getRefundId()))
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.data.completedAt", notNullValue()));
     }
 
     private Member saveMember(String name, String email) {
@@ -222,5 +252,23 @@ public class RefundsControllerTest {
                   "requestedAt": "%s"
                 }
                 """.formatted(paymentId, memberId, LocalDateTime.now());
+    }
+
+    private String toRefundCompleteJson(Long paymentId, Long memberId, LocalDateTime requestedAt) {
+        return """
+                {
+                  "paymentId": %d,
+                  "memberId": %d,
+                  "pgTransactionKey": "PG-REFUND-API-COMPLETE-AFTER",
+                  "idempotencyKey": "IDEMPOTENCY-REFUND-API-COMPLETE",
+                  "refundAmount": 50000.00,
+                  "reason": "테스트 환불 완료",
+                  "status": "COMPLETED",
+                  "requestedAt": "%s",
+                  "completedAt": null,
+                  "failedAt": null,
+                  "failureReason": null
+                }
+                """.formatted(paymentId, memberId, requestedAt);
     }
 }

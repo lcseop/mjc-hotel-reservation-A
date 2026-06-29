@@ -1,5 +1,6 @@
 package com.mjc.hotel.refunds.dto;
 
+import com.mjc.hotel.refunds.entity.RefundStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ public class RefundsRequestDto {
     private String idempotencyKey;
     private BigDecimal refundAmount;
     private String reason;
-    private String status;
+    private RefundStatus status;
     private LocalDateTime requestedAt;
     private LocalDateTime completedAt;
     private LocalDateTime failedAt;

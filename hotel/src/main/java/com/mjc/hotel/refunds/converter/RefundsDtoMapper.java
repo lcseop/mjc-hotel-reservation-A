@@ -4,13 +4,18 @@ import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.refunds.dto.RefundsRequestDto;
 import com.mjc.hotel.refunds.dto.RefundsResponseDto;
+import com.mjc.hotel.refunds.entity.RefundStatus;
 import com.mjc.hotel.refunds.entity.Refunds;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 public class RefundsDtoMapper {
 
     public Refunds toEntity(RefundsRequestDto dto, Payments payment, Member member) {
+        LocalDateTime requestedAt = dto.getRequestedAt() != null ? dto.getRequestedAt() : LocalDateTime.now();
+
         return Refunds.builder()
                 .payment(payment)
                 .member(member)
@@ -19,11 +24,47 @@ public class RefundsDtoMapper {
                 .refundAmount(dto.getRefundAmount())
                 .reason(dto.getReason())
                 .status(dto.getStatus())
-                .requestedAt(dto.getRequestedAt())
-                .completedAt(dto.getCompletedAt())
-                .failedAt(dto.getFailedAt())
+                .requestedAt(requestedAt)
+                .completedAt(resolveCompletedAt(dto, null))
+                .failedAt(resolveFailedAt(dto, null))
                 .failureReason(dto.getFailureReason())
                 .build();
+    }
+
+    public LocalDateTime resolveRequestedAt(RefundsRequestDto dto, LocalDateTime currentRequestedAt) {
+        if (dto.getRequestedAt() != null) {
+            return dto.getRequestedAt();
+        }
+        if (currentRequestedAt != null) {
+            return currentRequestedAt;
+        }
+        return LocalDateTime.now();
+    }
+
+    public LocalDateTime resolveCompletedAt(RefundsRequestDto dto, LocalDateTime currentCompletedAt) {
+        if (dto.getCompletedAt() != null) {
+            return dto.getCompletedAt();
+        }
+        if (currentCompletedAt != null) {
+            return currentCompletedAt;
+        }
+        if (dto.getStatus() == RefundStatus.COMPLETED) {
+            return LocalDateTime.now();
+        }
+        return null;
+    }
+
+    public LocalDateTime resolveFailedAt(RefundsRequestDto dto, LocalDateTime currentFailedAt) {
+        if (dto.getFailedAt() != null) {
+            return dto.getFailedAt();
+        }
+        if (currentFailedAt != null) {
+            return currentFailedAt;
+        }
+        if (dto.getStatus() == RefundStatus.FAILED) {
+            return LocalDateTime.now();
+        }
+        return null;
     }
 
     public RefundsResponseDto toResponseDto(Refunds refund) {

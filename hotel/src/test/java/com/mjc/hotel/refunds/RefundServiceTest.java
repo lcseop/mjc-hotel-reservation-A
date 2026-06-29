@@ -16,6 +16,7 @@ import com.mjc.hotel.payments.entity.PaymentMethod;
 import com.mjc.hotel.payments.entity.PaymentStatus;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.refunds.entity.RefundStatus;
 import com.mjc.hotel.refunds.entity.Refunds;
 import com.mjc.hotel.refunds.repository.RefundsRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
@@ -180,7 +181,7 @@ public class RefundServiceTest {
                 .idempotencyKey("IDEMPOTENCY-TEST-20260625-001")
                 .refundAmount(new BigDecimal("50000.00"))
                 .reason("테스트 부분 환불")
-                .status("COMPLETED")
+                .status(RefundStatus.COMPLETED)
                 .requestedAt(LocalDateTime.now().minusMinutes(5))
                 .completedAt(LocalDateTime.now())
                 .build();

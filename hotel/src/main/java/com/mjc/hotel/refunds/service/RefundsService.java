@@ -50,9 +50,9 @@ public class RefundsService {
         refund.setRefundAmount(dto.getRefundAmount());
         refund.setReason(dto.getReason());
         refund.setStatus(dto.getStatus());
-        refund.setRequestedAt(dto.getRequestedAt());
-        refund.setCompletedAt(dto.getCompletedAt());
-        refund.setFailedAt(dto.getFailedAt());
+        refund.setRequestedAt(refundsDtoMapper.resolveRequestedAt(dto, refund.getRequestedAt()));
+        refund.setCompletedAt(refundsDtoMapper.resolveCompletedAt(dto, refund.getCompletedAt()));
+        refund.setFailedAt(refundsDtoMapper.resolveFailedAt(dto, refund.getFailedAt()));
         refund.setFailureReason(dto.getFailureReason());
 
         return refund;
