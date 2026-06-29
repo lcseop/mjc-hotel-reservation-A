@@ -27,6 +27,15 @@ public class ReviewReactionService {
         Review review = reviewRepository.findById(reviewReactionRequest.getReviewId()).orElseThrow();
         Member member = memberRepository.findById(reviewReactionRequest.getMemberId()).orElseThrow();
 
+        if(reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+            review.increaseLike();
+            reviewRepository.save(review);
+        }
+        else if(reviewReactionRequest.getReactionType() == ReactionType.BAD){
+            review.increaseDislike();
+            reviewRepository.save(review);
+        }
+
         ReviewReaction reviewReaction = ReviewReaction.builder()
                 .review(review)
                 .member(member)
@@ -50,8 +59,37 @@ public class ReviewReactionService {
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
+        Review review = reviewRepository.findById(find.getReview().getReviewId()).orElseThrow();
+        //좋아요에서 취소상태
+        if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
+            review.decreaseLike();
+        }
+        //싫어요에서 취소상태
+        if(find.getReactionType() == ReactionType.BAD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
+            review.decreaseDislike();
+        }
+        //좋아요에서 싫어요
+        if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.BAD){
+            review.decreaseLike();
+            review.increaseDislike();
+        }
+        //싫어요에서 좋아요
+        if(find.getReactionType() == ReactionType.BAD && reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+            review.increaseLike();
+            review.decreaseDislike();
+        }
+        //취소상태에서 좋아요
+        if(find.getReactionType() == ReactionType.NONE && reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+            review.increaseLike();
+        }
+        //취소상태에서 싫어요
+        if(find.getReactionType() == ReactionType.NONE && reviewReactionRequest.getReactionType() == ReactionType.BAD){
+            review.increaseDislike();
+        }
+        reviewRepository.save(review);
+
         ReviewReaction reviewReaction = ReviewReaction.builder()
-                .review(find.getReview())
+                .review(review)
                 .member(find.getMember())
                 .reactionType(reviewReactionRequest.getReactionType())
                 .build();
