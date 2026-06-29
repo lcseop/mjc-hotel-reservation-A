@@ -50,4 +50,20 @@ public class Review extends BaseEntity {
 
     @Column(name = "dislike_count", nullable = false)
     private int dislikeCount;
+
+    public void increaseLike() {
+        this.likeCount++;
+    }
+
+    public void decreaseLike() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
+
+    public void increaseDislike() {
+        this.dislikeCount++;
+    }
+
+    public void decreaseDislike() {
+        if (this.dislikeCount > 0) this.dislikeCount--;
+    }
 }
