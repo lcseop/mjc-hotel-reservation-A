@@ -99,6 +99,7 @@ public class PaymentsControllerTest {
     public void getPaymentApiTest() throws Exception {
         Member member = saveMember("결제 조회 회원", "read-payment-api@mjc.com");
         Reservation reservation = saveReservation(member);
+        LocalDateTime paidAt = LocalDateTime.of(2026, 6, 29, 10, 15, 30);
         Payments payment = paymentsRepository.save(Payments.builder()
                 .reservation(reservation)
                 .member(member)
@@ -106,7 +107,7 @@ public class PaymentsControllerTest {
                 .paymentMethod(PaymentMethod.CARD)
                 .paymentStatus(PaymentStatus.COMPLETED)
                 .transactionNo("TXN-PAYMENT-API-READ")
-                .paidAt(LocalDateTime.now())
+                .paidAt(paidAt)
                 .point(1800)
                 .build());
 
@@ -115,7 +116,8 @@ public class PaymentsControllerTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("payments select success"))
                 .andExpect(jsonPath("$.data.paymentId").value(payment.getPaymentId()))
-                .andExpect(jsonPath("$.data.transactionNo").value("TXN-PAYMENT-API-READ"));
+                .andExpect(jsonPath("$.data.transactionNo").value("TXN-PAYMENT-API-READ"))
+                .andExpect(jsonPath("$.data.paidAt").value("2026-06-29T10:15:30"));
     }
 
     @DisplayName("결제 수정 API는 예약과 회원 ID를 생략해도 기존 관계를 유지하고 수정 결과를 반환한다")

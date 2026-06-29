@@ -7,6 +7,8 @@ import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.reservations.entity.Reservation;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class PaymentsDtoMapper {
 
@@ -18,7 +20,7 @@ public class PaymentsDtoMapper {
                 .paymentMethod(dto.getPaymentMethod())
                 .paymentStatus(dto.getPaymentStatus())
                 .transactionNo(dto.getTransactionNo())
-                .paidAt(dto.getPaidAt())
+                .paidAt(LocalDateTime.now())
                 .point(dto.getPoint())
                 .build();
     }
