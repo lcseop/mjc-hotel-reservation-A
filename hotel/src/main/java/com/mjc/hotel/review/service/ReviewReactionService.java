@@ -39,6 +39,8 @@ public class ReviewReactionService {
                 .reviewId(save.getReview().getReviewId())
                 .memberId(save.getMember().getMemberId())
                 .reactionType(save.getReactionType())
+                .createdAt(save.getCreatedAt())
+                .updatedAt(save.getUpdatedAt())
                 .build();
         return result;
     }
@@ -60,6 +62,8 @@ public class ReviewReactionService {
                 .reviewId(save.getReview().getReviewId())
                 .memberId(save.getMember().getMemberId())
                 .reactionType(save.getReactionType())
+                .createdAt(save.getCreatedAt())
+                .updatedAt(save.getUpdatedAt())
                 .build();
         return result;
     }
@@ -73,6 +77,8 @@ public class ReviewReactionService {
                 .reviewId(find.getReview().getReviewId())
                 .memberId(find.getMember().getMemberId())
                 .reactionType(find.getReactionType())
+                .createdAt(find.getCreatedAt())
+                .updatedAt(find.getUpdatedAt())
                 .build();
         return result;
     }
