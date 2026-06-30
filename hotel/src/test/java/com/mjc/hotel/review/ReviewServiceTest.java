@@ -85,11 +85,11 @@ public class ReviewServiceTest {
     @Commit
     public void insertReviewCategory(){
         Review review = Review.builder()
-                .reviewId(1L)
+                .sid(1L)
                 .build();
 
         ReviewCategoryMaster reviewCategoryMaster = ReviewCategoryMaster.builder()
-                .reviewCategoryMasterId(1L)
+                .sid(1L)
                 .reviewCategoryName("청결도")
                 .build();
 
@@ -118,11 +118,11 @@ public class ReviewServiceTest {
     @Commit
     public void insertReviewTag(){
         Review review = Review.builder()
-                .reviewId(1L)
+                .sid(1L)
                 .build();
 
         ReviewTagMaster reviewTagMaster = ReviewTagMaster.builder()
-                .reviewTagMasterId(1L)
+                .sid(1L)
                 .build();
 
         ReviewTag reviewTag = ReviewTag.builder()
@@ -138,12 +138,15 @@ public class ReviewServiceTest {
     @Commit
     public void insertReviewPhoto(){
         Review review = Review.builder()
-                .reviewId(1L)
+                .sid(1L)
                 .build();
 
         ReviewPhoto reviewPhoto = ReviewPhoto.builder()
                 .review(review)
-                .imagePath("이미지 경로")
+                .originalFileName("원래 사진 이름")
+                .storedFileName("저장될 사진 이름")
+                .filePath("이미지 경로")
+                .imagePath("클라이언트 접근 URL")
                 .build();
 
         reviewPhotoRepository.save(reviewPhoto);
@@ -154,7 +157,7 @@ public class ReviewServiceTest {
     @Commit
     public void insertReviewReaction(){
         Review review = Review.builder()
-                .reviewId(1L)
+                .sid(1L)
                 .build();
 
         Member member = Member
@@ -176,7 +179,7 @@ public class ReviewServiceTest {
     @Commit
     public void insertReviewAnswer(){
         Review review = Review.builder()
-                .reviewId(1L)
+                .sid(1L)
                 .build();
 
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
