@@ -169,6 +169,262 @@
       ]
     },
     {
+      "name": "Member Auth Account",
+      "item": [
+        {
+          "name": "로그인_인증_정보_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"provider\": \"LOCAL\",\n  \"providerUserId\": \"member@example.com\",\n  \"passwordHash\": \"password-hash\",\n  \"lastLoginAt\": \"2026-06-30T15:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-auth-accounts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-auth-accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "로그인_인증_정보_단건_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-auth-accounts/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-auth-accounts",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원별_로그인_인증_정보_목록_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member/1/auth-accounts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "1",
+                "auth-accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "로그인_인증_정보_수정",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"provider\": \"KAKAO\",\n  \"providerUserId\": \"kakao-member-id\",\n  \"passwordHash\": \"updated-password-hash\",\n  \"lastLoginAt\": \"2026-06-30T15:10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-auth-accounts/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-auth-accounts",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "로그인_인증_정보_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-auth-accounts/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-auth-accounts",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Member Term Agreement",
+      "item": [
+        {
+          "name": "회원_약관_동의_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": true,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_단건_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원별_약관_동의_목록_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member/1/term-agreements",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "1",
+                "term-agreements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_수정",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": false,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": \"2026-06-30T15:10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Term",
       "item": [
         {

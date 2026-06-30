@@ -1,7 +1,9 @@
 package com.mjc.hotel.member.service;
 
 import com.mjc.hotel.member.converter.MemberDtoMapper;
+import com.mjc.hotel.member.dto.MemberAuthAccountRequestDto;
 import com.mjc.hotel.member.dto.MemberSignupRequestDto;
+import com.mjc.hotel.member.dto.MemberTermAgreementRequestDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
@@ -35,6 +37,24 @@ public class MemberService {
     public Member getMember(Long sid) {
         return memberRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));
+    }
+
+    public MemberAuthAccount getAuthAccount(Long sid) {
+        return findAuthAccount(sid);
+    }
+
+    public List<MemberAuthAccount> getAuthAccountsByMember(Long memberSid) {
+        getMember(memberSid);
+        return memberAuthAccountRepository.findByMember_Sid(memberSid);
+    }
+
+    public MemberTermAgreement getTermAgreement(Long sid) {
+        return findTermAgreement(sid);
+    }
+
+    public List<MemberTermAgreement> getTermAgreementsByMember(Long memberSid) {
+        getMember(memberSid);
+        return memberTermAgreementRepository.findByMember_Sid(memberSid);
     }
 
     @Transactional
@@ -101,6 +121,43 @@ public class MemberService {
     }
 
     @Transactional
+    public MemberAuthAccount createAuthAccount(MemberAuthAccountRequestDto request) {
+        Member member = getMember(request.getMemberSid());
+        return memberAuthAccountRepository.save(memberDtoMapper.toAuthAccount(request, member));
+    }
+
+    @Transactional
+    public MemberAuthAccount updateAuthAccount(Long sid, MemberAuthAccountRequestDto request) {
+        MemberAuthAccount authAccount = findAuthAccount(sid);
+        authAccount.setMember(getMember(request.getMemberSid()));
+        authAccount.setProvider(request.getProvider());
+        authAccount.setProviderUserId(request.getProviderUserId());
+        authAccount.setPasswordHash(request.getPasswordHash());
+        authAccount.setLastLoginAt(request.getLastLoginAt());
+
+        return authAccount;
+    }
+
+    @Transactional
+    public MemberTermAgreement createTermAgreement(MemberTermAgreementRequestDto request) {
+        Member member = getMember(request.getMemberSid());
+        Term term = findTerm(request.getTermSid());
+        return memberTermAgreementRepository.save(memberDtoMapper.toTermAgreement(request, member, term));
+    }
+
+    @Transactional
+    public MemberTermAgreement updateTermAgreement(Long sid, MemberTermAgreementRequestDto request) {
+        MemberTermAgreement termAgreement = findTermAgreement(sid);
+        termAgreement.setMember(getMember(request.getMemberSid()));
+        termAgreement.setTerm(findTerm(request.getTermSid()));
+        termAgreement.setIsAgreed(request.getIsAgreed());
+        termAgreement.setAgreedAt(request.getAgreedAt());
+        termAgreement.setWithdrawnAt(request.getWithdrawnAt());
+
+        return termAgreement;
+    }
+
+    @Transactional
     public void deleteMember(Long sid) {
         Member member = getMember(sid);
         member.markDeleted();
@@ -126,5 +183,10 @@ public class MemberService {
     private MemberTermAgreement findTermAgreement(Long sid) {
         return memberTermAgreementRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원 약관 동의입니다. sid=" + sid));
+    }
+
+    private Term findTerm(Long sid) {
+        return termRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + sid));
     }
 }

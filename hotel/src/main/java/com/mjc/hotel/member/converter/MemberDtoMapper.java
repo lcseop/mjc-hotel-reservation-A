@@ -1,8 +1,12 @@
 package com.mjc.hotel.member.converter;
 
 import com.mjc.hotel.member.dto.MemberRequestDto;
+import com.mjc.hotel.member.dto.MemberAuthAccountRequestDto;
+import com.mjc.hotel.member.dto.MemberAuthAccountResponseDto;
 import com.mjc.hotel.member.dto.MemberResponseDto;
 import com.mjc.hotel.member.dto.MemberSignupRequestDto;
+import com.mjc.hotel.member.dto.MemberTermAgreementRequestDto;
+import com.mjc.hotel.member.dto.MemberTermAgreementResponseDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
@@ -23,6 +27,7 @@ public class MemberDtoMapper {
                 .role(dto.getRole())
                 .emailVerified(dto.getEmailVerified())
                 .phoneVerified(dto.getPhoneVerified())
+                .point(dto.getPoint())
                 .build();
     }
 
@@ -57,6 +62,26 @@ public class MemberDtoMapper {
                 .build();
     }
 
+    public MemberAuthAccount toAuthAccount(MemberAuthAccountRequestDto dto, Member member) {
+        return MemberAuthAccount.builder()
+                .member(member)
+                .provider(dto.getProvider())
+                .providerUserId(dto.getProviderUserId())
+                .passwordHash(dto.getPasswordHash())
+                .lastLoginAt(dto.getLastLoginAt())
+                .build();
+    }
+
+    public MemberTermAgreement toTermAgreement(MemberTermAgreementRequestDto dto, Member member, Term term) {
+        return MemberTermAgreement.builder()
+                .member(member)
+                .term(term)
+                .isAgreed(dto.getIsAgreed())
+                .agreedAt(dto.getAgreedAt() != null ? dto.getAgreedAt() : LocalDateTime.now())
+                .withdrawnAt(dto.getWithdrawnAt())
+                .build();
+    }
+
     public MemberResponseDto toResponseDto(Member member) {
         return MemberResponseDto.builder()
                 .sid(member.getSid())
@@ -69,6 +94,32 @@ public class MemberDtoMapper {
                 .phoneVerified(member.getPhoneVerified())
                 .deleted(Boolean.TRUE.equals(member.getDeleted()))
                 .deletedAt(member.getDeletedAt())
+                .build();
+    }
+
+    public MemberAuthAccountResponseDto toAuthAccountResponseDto(MemberAuthAccount authAccount) {
+        return MemberAuthAccountResponseDto.builder()
+                .sid(authAccount.getSid())
+                .memberSid(authAccount.getMember().getSid())
+                .provider(authAccount.getProvider())
+                .providerUserId(authAccount.getProviderUserId())
+                .lastLoginAt(authAccount.getLastLoginAt())
+                .createdAt(authAccount.getCreatedAt())
+                .deleted(Boolean.TRUE.equals(authAccount.getDeleted()))
+                .deletedAt(authAccount.getDeletedAt())
+                .build();
+    }
+
+    public MemberTermAgreementResponseDto toTermAgreementResponseDto(MemberTermAgreement termAgreement) {
+        return MemberTermAgreementResponseDto.builder()
+                .sid(termAgreement.getSid())
+                .memberSid(termAgreement.getMember().getSid())
+                .termSid(termAgreement.getTerm().getSid())
+                .isAgreed(termAgreement.getIsAgreed())
+                .agreedAt(termAgreement.getAgreedAt())
+                .withdrawnAt(termAgreement.getWithdrawnAt())
+                .deleted(Boolean.TRUE.equals(termAgreement.getDeleted()))
+                .deletedAt(termAgreement.getDeletedAt())
                 .build();
     }
 }
