@@ -184,6 +184,11 @@ public class RefundsControllerTest {
         Refunds deletedRefund = refundsRepository.findById(refund.getSid()).orElseThrow();
         assertThat(deletedRefund.getDeleted()).isTrue();
         assertThat(deletedRefund.getDeletedAt()).isNotNull();
+
+        mockMvc.perform(get("/api/refunds/{sid}", refund.getSid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deleted").value(true))
+                .andExpect(jsonPath("$.data.deletedAt", notNullValue()));
     }
 
     private Member saveMember(String name, String email) {

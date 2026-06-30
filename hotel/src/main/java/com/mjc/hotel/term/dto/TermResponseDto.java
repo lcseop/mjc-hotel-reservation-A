@@ -17,4 +17,6 @@ public class TermResponseDto {
     private String version;
     private Boolean isRequired;
     private LocalDateTime effectiveAt;
+    private Boolean deleted;
+    private LocalDateTime deletedAt;
 }

@@ -46,6 +46,8 @@ public class TermDtoTest {
                 String.class,
                 String.class,
                 Boolean.class,
+                LocalDateTime.class,
+                Boolean.class,
                 LocalDateTime.class
         );
 
@@ -55,6 +57,8 @@ public class TermDtoTest {
         assertField(TermResponseDto.class, "version", String.class);
         assertField(TermResponseDto.class, "isRequired", Boolean.class);
         assertField(TermResponseDto.class, "effectiveAt", LocalDateTime.class);
+        assertField(TermResponseDto.class, "deleted", Boolean.class);
+        assertField(TermResponseDto.class, "deletedAt", LocalDateTime.class);
     }
 
     private void assertCommonDtoShape(Class<?> dtoClass, Class<?>... constructorTypes) throws NoSuchMethodException {

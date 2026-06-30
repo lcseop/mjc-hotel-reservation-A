@@ -22,4 +22,6 @@ public class PaymentsResponseDto {
     private String transactionNo;
     private LocalDateTime paidAt;
     private Integer point;
+    private Boolean deleted;
+    private LocalDateTime deletedAt;
 }

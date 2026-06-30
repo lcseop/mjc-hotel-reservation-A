@@ -26,6 +26,8 @@ public class TermDtoMapper {
                 .version(term.getVersion())
                 .isRequired(term.getIsRequired())
                 .effectiveAt(term.getEffectiveAt())
+                .deleted(Boolean.TRUE.equals(term.getDeleted()))
+                .deletedAt(term.getDeletedAt())
                 .build();
     }
 }

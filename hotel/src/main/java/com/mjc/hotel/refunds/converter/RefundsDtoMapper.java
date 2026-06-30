@@ -81,6 +81,8 @@ public class RefundsDtoMapper {
                 .completedAt(refund.getCompletedAt())
                 .failedAt(refund.getFailedAt())
                 .failureReason(refund.getFailureReason())
+                .deleted(Boolean.TRUE.equals(refund.getDeleted()))
+                .deletedAt(refund.getDeletedAt())
                 .build();
     }
 }

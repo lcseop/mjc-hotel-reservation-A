@@ -36,6 +36,8 @@ public class PaymentsDtoMapper {
                 .transactionNo(payment.getTransactionNo())
                 .paidAt(payment.getPaidAt())
                 .point(payment.getPoint())
+                .deleted(Boolean.TRUE.equals(payment.getDeleted()))
+                .deletedAt(payment.getDeletedAt())
                 .build();
     }
 }

@@ -197,6 +197,11 @@ public class PaymentsControllerTest {
         Payments deletedPayment = paymentsRepository.findById(payment.getSid()).orElseThrow();
         assertThat(deletedPayment.getDeleted()).isTrue();
         assertThat(deletedPayment.getDeletedAt()).isNotNull();
+
+        mockMvc.perform(get("/api/payments/{sid}", payment.getSid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deleted").value(true))
+                .andExpect(jsonPath("$.data.deletedAt", notNullValue()));
     }
 
     private Member saveMember(String name, String email) {

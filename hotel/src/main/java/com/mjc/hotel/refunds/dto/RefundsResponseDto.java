@@ -23,4 +23,6 @@ public class RefundsResponseDto {
     private LocalDateTime completedAt;
     private LocalDateTime failedAt;
     private String failureReason;
+    private Boolean deleted;
+    private LocalDateTime deletedAt;
 }

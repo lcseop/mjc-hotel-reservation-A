@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -56,6 +57,22 @@ public class TermRestControllerTest {
                 .andExpect(jsonPath("$.message").value("term select success"))
                 .andExpect(jsonPath("$.data.sid").value(savedTerm.getSid()))
                 .andExpect(jsonPath("$.data.title").value("개인정보 처리방침"));
+    }
+
+    @DisplayName("삭제된 약관 조회 API는 삭제 상태를 반환한다")
+    @Test
+    public void getDeletedTermApiTest() throws Exception {
+        TermResponseDto savedTerm = termService.insert(buildRequest("MARKETING", "마케팅 수신 동의", "1.0", false));
+
+        mockMvc.perform(delete("/api/term/{sid}", savedTerm.getSid()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/term/{sid}", savedTerm.getSid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.sid").value(savedTerm.getSid()))
+                .andExpect(jsonPath("$.data.deleted").value(true))
+                .andExpect(jsonPath("$.data.deletedAt", notNullValue()));
     }
 
     private TermRequestDto buildRequest(String termType, String title, String version, Boolean isRequired) {
