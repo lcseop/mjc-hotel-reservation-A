@@ -29,7 +29,7 @@ public class PaymentsDtoMapper {
         return PaymentsResponseDto.builder()
                 .sid(payment.getSid())
                 .reservationId(payment.getReservation().getSid())
-                .sid(payment.getMember().getSid())
+                .memberSid(payment.getMember().getSid())
                 .paymentAmount(payment.getPaymentAmount())
                 .paymentMethod(payment.getPaymentMethod())
                 .paymentStatus(payment.getPaymentStatus())

@@ -464,7 +464,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"sid\": 1,\n    \"sid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-001\",\n    \"idempotencyKey\": \"IDEMPOTENCY-001\",\n    \"refundAmount\": 50000.00,\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": null,\n    \"completedAt\": null,\n    \"failedAt\": null\n}",
+              "raw": "{\n    \"paymentSid\": 1,\n    \"memberSid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-001\",\n    \"idempotencyKey\": \"IDEMPOTENCY-001\",\n    \"refundAmount\": 50000.00,\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": null,\n    \"completedAt\": null,\n    \"failedAt\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -535,7 +535,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"sid\": 1,\n    \"sid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 완료\",\n    \"status\": \"COMPLETED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }",
+              "raw": "{\n    \"paymentSid\": 1,\n    \"memberSid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 완료\",\n    \"status\": \"COMPLETED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -565,7 +565,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"sid\": 1,\n    \"sid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 사유 수정\",\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }"
+              "raw": "{\n    \"paymentSid\": 1,\n    \"memberSid\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 사유 수정\",\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }"
             },
             "url": {
               "raw": "http://localhost:33000/api/refunds/18",

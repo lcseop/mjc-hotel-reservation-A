@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @Setter
 public class RefundsResponseDto {
     private Long sid;
+    private Long paymentSid;
+    private Long memberSid;
     private String pgTransactionKey;
     private String idempotencyKey;
     private BigDecimal refundAmount;

@@ -36,15 +36,15 @@ public class RefundsService {
     @Transactional
     public Refunds saveRefund(RefundsRequestDto dto) {
         return refundsRepository.save(
-                refundsDtoMapper.toEntity(dto, getPayment(dto.getSid()), getMember(dto.getSid()))
+                refundsDtoMapper.toEntity(dto, getPayment(resolvePaymentSid(dto)), getMember(resolveMemberSid(dto)))
         );
     }
 
     @Transactional
     public Refunds updateRefund(Long sid, RefundsRequestDto dto) {
         Refunds refund = getRefund(sid);
-        refund.setPayment(getPayment(dto.getSid()));
-        refund.setMember(getMember(dto.getSid()));
+        refund.setPayment(getPayment(resolvePaymentSid(dto)));
+        refund.setMember(getMember(resolveMemberSid(dto)));
         refund.setPgTransactionKey(dto.getPgTransactionKey());
         refund.setIdempotencyKey(dto.getIdempotencyKey());
         refund.setRefundAmount(dto.getRefundAmount());
@@ -72,5 +72,13 @@ public class RefundsService {
     private Member getMember(Long sid) {
         return memberRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));
+    }
+
+    private Long resolvePaymentSid(RefundsRequestDto dto) {
+        return dto.getPaymentSid() != null ? dto.getPaymentSid() : dto.getSid();
+    }
+
+    private Long resolveMemberSid(RefundsRequestDto dto) {
+        return dto.getMemberSid() != null ? dto.getMemberSid() : dto.getSid();
     }
 }

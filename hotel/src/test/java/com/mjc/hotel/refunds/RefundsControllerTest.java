@@ -99,8 +99,8 @@ public class RefundsControllerTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds insert success"))
                 .andExpect(jsonPath("$.data.sid", notNullValue()))
-                .andExpect(jsonPath("$.data.sid").value(payment.getSid()))
-                .andExpect(jsonPath("$.data.sid").value(member.getSid()))
+                .andExpect(jsonPath("$.data.paymentSid").value(payment.getSid()))
+                .andExpect(jsonPath("$.data.memberSid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.status").value("REQUESTED"));
     }
 
@@ -126,6 +126,8 @@ public class RefundsControllerTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds select success"))
                 .andExpect(jsonPath("$.data.sid").value(refund.getSid()))
+                .andExpect(jsonPath("$.data.paymentSid").value(payment.getSid()))
+                .andExpect(jsonPath("$.data.memberSid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.pgTransactionKey").value("PG-REFUND-API-READ"));
     }
 
@@ -153,6 +155,8 @@ public class RefundsControllerTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("refunds update success"))
                 .andExpect(jsonPath("$.data.sid").value(refund.getSid()))
+                .andExpect(jsonPath("$.data.paymentSid").value(payment.getSid()))
+                .andExpect(jsonPath("$.data.memberSid").value(member.getSid()))
                 .andExpect(jsonPath("$.data.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.completedAt", notNullValue()));
     }
@@ -281,8 +285,8 @@ public class RefundsControllerTest {
     private String toRefundJson(Long paymentSid, Long memberSid) {
         return """
                 {
-                  "sid": %d,
-                  "sid": %d,
+                  "paymentSid": %d,
+                  "memberSid": %d,
                   "pgTransactionKey": "PG-REFUND-API-CREATE",
                   "idempotencyKey": "IDEMPOTENCY-REFUND-API-CREATE",
                   "refundAmount": 50000.00,
@@ -296,8 +300,8 @@ public class RefundsControllerTest {
     private String toRefundCompleteJson(Long paymentSid, Long memberSid, LocalDateTime requestedAt) {
         return """
                 {
-                  "sid": %d,
-                  "sid": %d,
+                  "paymentSid": %d,
+                  "memberSid": %d,
                   "pgTransactionKey": "PG-REFUND-API-COMPLETE-AFTER",
                   "idempotencyKey": "IDEMPOTENCY-REFUND-API-COMPLETE",
                   "refundAmount": 50000.00,

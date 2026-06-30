@@ -70,8 +70,8 @@ public class RefundsDtoMapper {
     public RefundsResponseDto toResponseDto(Refunds refund) {
         return RefundsResponseDto.builder()
                 .sid(refund.getSid())
-                .sid(refund.getPayment().getSid())
-                .sid(refund.getMember().getSid())
+                .paymentSid(refund.getPayment().getSid())
+                .memberSid(refund.getMember().getSid())
                 .pgTransactionKey(refund.getPgTransactionKey())
                 .idempotencyKey(refund.getIdempotencyKey())
                 .refundAmount(refund.getRefundAmount())

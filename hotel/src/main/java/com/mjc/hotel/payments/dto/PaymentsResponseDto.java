@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class PaymentsResponseDto {
     private Long sid;
     private Long reservationId;
+    private Long memberSid;
     private BigDecimal paymentAmount;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
