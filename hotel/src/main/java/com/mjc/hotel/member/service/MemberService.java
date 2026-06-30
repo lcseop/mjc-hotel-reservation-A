@@ -32,9 +32,9 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    public Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. memberId=" + memberId));
+    public Member getMember(Long sid) {
+        return memberRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));
     }
 
     @Transactional
@@ -43,8 +43,8 @@ public class MemberService {
     }
 
     @Transactional
-    public Member updateMember(Long memberId, Member requestMember) {
-        Member member = getMember(memberId);
+    public Member updateMember(Long sid, Member requestMember) {
+        Member member = getMember(sid);
         member.setName(requestMember.getName());
         member.setPhone(requestMember.getPhone());
         member.setEmail(requestMember.getEmail());
@@ -86,8 +86,8 @@ public class MemberService {
         if (request.getTermAgreements() != null) {
             termAgreements = request.getTermAgreements().stream()
                     .map(termAgreementRequest -> {
-                        Term term = termRepository.findById(termAgreementRequest.getTermId())
-                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termId=" + termAgreementRequest.getTermId()));
+                        Term term = termRepository.findById(termAgreementRequest.getSid())
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + termAgreementRequest.getSid()));
                         return memberDtoMapper.toTermAgreement(termAgreementRequest, term);
                     })
                     .toList();
@@ -101,7 +101,8 @@ public class MemberService {
     }
 
     @Transactional
-    public void deleteMember(Long memberId) {
-        memberRepository.deleteById(memberId);
+    public void deleteMember(Long sid) {
+        Member member = getMember(sid);
+        member.markDeleted();
     }
 }

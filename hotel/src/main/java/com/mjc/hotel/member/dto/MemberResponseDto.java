@@ -4,6 +4,8 @@ import com.mjc.hotel.member.entity.MemberRole;
 import com.mjc.hotel.member.entity.MemberStatus;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -11,7 +13,7 @@ import lombok.*;
 @Getter
 @Setter
 public class MemberResponseDto {
-    private Long memberId;
+    private Long sid;
     private String name;
     private String phone;
     private String email;
@@ -19,4 +21,6 @@ public class MemberResponseDto {
     private MemberRole role;
     private Boolean emailVerified;
     private Boolean phoneVerified;
+    private Boolean deleted;
+    private LocalDateTime deletedAt;
 }

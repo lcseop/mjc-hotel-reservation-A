@@ -59,7 +59,7 @@ public class MemberDtoMapper {
 
     public MemberResponseDto toResponseDto(Member member) {
         return MemberResponseDto.builder()
-                .memberId(member.getMemberId())
+                .sid(member.getSid())
                 .name(member.getName())
                 .phone(member.getPhone())
                 .email(member.getEmail())
@@ -67,6 +67,8 @@ public class MemberDtoMapper {
                 .role(member.getRole())
                 .emailVerified(member.getEmailVerified())
                 .phoneVerified(member.getPhoneVerified())
+                .deleted(Boolean.TRUE.equals(member.getDeleted()))
+                .deletedAt(member.getDeletedAt())
                 .build();
     }
 }
