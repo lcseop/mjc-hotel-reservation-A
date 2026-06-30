@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class EmailLogResponse {
+public class EmailLogResponseDto {
     private Long sid;
     private Long reservationSid;
     private String recipientEmail;

@@ -1,0 +1,71 @@
+package com.mjc.hotel.reservations.controller;
+
+import com.mjc.hotel.reservations.dto.ReservationCancelDto;
+import com.mjc.hotel.reservations.dto.ReservationRequestDto;
+import com.mjc.hotel.reservations.dto.ReservationResponseDto;
+import com.mjc.hotel.reservations.service.ReservationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("api/reservation")
+@RequiredArgsConstructor
+@Tag(name = "Reservation", description = "예약 관리 API")
+public class ReservationController {
+
+    private final ReservationService reservationService;
+
+    @PostMapping
+    @Operation(summary = "예약 생성", description = "새로운 예약을 생성합니다")
+    public ResponseEntity<ReservationResponseDto> createReservation(
+            @Valid @RequestBody ReservationRequestDto requestDto) {
+        ReservationResponseDto response = reservationService.createReservation(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{reservationId}")
+    @Operation(summary = "예약 조회", description = "예약 ID로 예약 정보를 조회합니다")
+    public ResponseEntity<ReservationResponseDto> getReservation(
+            @PathVariable Long reservationId) {
+                ReservationResponseDto response = reservationService.getReservation(reservationId);
+                return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    @Operation(summary = "예약 목록 조회", description = "모든 목록을 조회합니다")
+    public ResponseEntity<List<ReservationResponseDto>> getAllReservations() {
+        List<ReservationResponseDto> response = reservationService.getAllReservations();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/cancel")
+    @Operation(summary = "예약 취소", description = "예약을 취소하고 환불을 처리합니다")
+    public ResponseEntity<Void> cancelReservation(
+            @Valid @RequestBody ReservationCancelDto cancelDto) {
+        reservationService.cancelReservation(cancelDto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{reservationId}/check-in")
+    @Operation(summary = "체크인", description = "예약에 대한 체크인을 처리합니다")
+    public ResponseEntity<ReservationResponseDto> checkIn(
+            @PathVariable Long reservationId) {
+        ReservationResponseDto response = reservationService.checkIn(reservationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{reservationId}/check-out")
+    @Operation(summary = "체크아웃", description = "예약에 대한 체크아웃을 처리합니다")
+    public ResponseEntity<ReservationResponseDto> checkOut(
+            @PathVariable Long reservationId) {
+        ReservationResponseDto response = reservationService.checkOut(reservationId);
+        return ResponseEntity.ok(response);
+    }
+}
