@@ -1,6 +1,7 @@
 package com.mjc.hotel.member.entity;
 
 import com.mjc.hotel.term.entity.Term;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,12 +24,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class MemberTermAgreement {
+public class MemberTermAgreement extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "agreement_id")
-    private Long agreementId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")

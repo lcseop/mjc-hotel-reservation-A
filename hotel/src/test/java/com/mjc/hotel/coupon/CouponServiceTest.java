@@ -37,7 +37,7 @@ public class CouponServiceTest {
 
         Member member = Member
                 .builder()
-                .memberId(1L)
+                .sid(1L)
                 .build();
 
         CouponIssue couponIssue = CouponIssue

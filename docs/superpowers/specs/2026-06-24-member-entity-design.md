@@ -16,7 +16,7 @@
 
 | Java 필드 | DB 컬럼 | Java 타입 | 제약 및 매핑 |
 |---|---|---|---|
-| `memberId` | `member_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
+| `sid` | `member_id` | `Long` | 기본키, `IDENTITY` 자동 증가 |
 | `name` | `name` | `String` | 최대 50자 |
 | `phone` | `phone` | `String` | 최대 20자 |
 | `email` | `email` | `String` | 최대 255자 |

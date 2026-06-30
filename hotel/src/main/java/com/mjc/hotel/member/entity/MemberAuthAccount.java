@@ -1,5 +1,6 @@
 package com.mjc.hotel.member.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,12 +24,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class MemberAuthAccount {
+public class MemberAuthAccount extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "auth_account_id")
-    private Long authAccountId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -45,8 +45,4 @@ public class MemberAuthAccount {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 }
