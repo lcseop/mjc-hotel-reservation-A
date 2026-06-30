@@ -20,6 +20,8 @@ import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.room.entity.Room;
+import com.mjc.hotel.room.entity.RoomIdCardEnum;
+import com.mjc.hotel.room.entity.RoomPetAndSmokeEnum;
 import com.mjc.hotel.room.entity.RoomPhoto;
 import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.entity.RoomType;
@@ -27,12 +29,12 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,112 +48,14 @@ public class PaymentServiceTest {
     private MemberRepository memberRepository;
     @Autowired
     private ReservationRepository reservationRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
-    @Autowired
-    private HotelAmenitiesRepository hotelAmenitiesRepository;
-    @Autowired
-    private HotelPhotoRepository hotelPhotoRepository;
-    @Autowired
-    private HotelTypeRepository hotelTypeRepository;
-    @Autowired
-    private RoomRepository roomRepository;
-    @Autowired
-    private RoomPhotoRepository roomPhotoRepository;
-    @Autowired
-    private RoomTagRepository roomTagRepository;
-    @Autowired
-    private RoomTypeRepository roomTypeRepository;
 
     @DisplayName("paymentTestData")
     @Test
     @Commit
     @Transactional
     public void addPaymentTest() {
-        Member member = memberRepository.save(Member
-                .builder()
-                .name("결제 테스트 회원")
-                .phone("010-1111-2222")
-                .email("payment-test@mjc.com")
-                .status(MemberStatus.ACTIVE)
-                .role(MemberRole.USER)
-                .emailVerified(true)
-                .phoneVerified(true)
-                .build());
-
-        HotelAmenities hotelAmenities = hotelAmenitiesRepository.save(HotelAmenities
-                .builder()
-                .title("와이파이")
-                .description("전 구역 가능")
-                .build());
-
-        HotelPhoto hotelPhoto = hotelPhotoRepository.save(HotelPhoto
-                .builder()
-                .imagePath("https://example.com/payment-hotel.jpg")
-                .build());
-
-        HotelType hotelType = hotelTypeRepository.save(HotelType
-                .builder()
-                .title("호텔")
-                .build());
-
-        Hotel hotel = hotelRepository.save(Hotel
-                .builder()
-                .type(hotelType)
-                .photo(hotelPhoto)
-                .hotelName("결제 테스트 호텔")
-                .hotelPrice(180000)
-                .location("서울시 테스트구")
-                .starRating(4)
-                .description("결제 테스트용 호텔")
-                .build());
-
-        RoomPhoto roomPhoto = roomPhotoRepository.save(RoomPhoto
-                .builder()
-                .imagePath("https://example.com/payment-room.jpg")
-                .build());
-
-        RoomTag roomTag = roomTagRepository.save(RoomTag
-                .builder()
-                .title("시티뷰")
-                .build());
-
-        RoomType roomType = roomTypeRepository.save(RoomType
-                .builder()
-                .title("스탠다드")
-                .build());
-
-        Room room = roomRepository.save(Room
-                .builder()
-                .hotelId(hotel)
-                .roomTagId(roomTag)
-                .roomPhotoId(roomPhoto)
-                .roomTypeId(roomType)
-                .roomName("결제 테스트 객실")
-                .roomPrice(180000)
-                .roomNumber(701)
-                .floor(7)
-                .area(28)
-                .maximumPeople(2)
-                .build());
-
-        Reservation reservation = reservationRepository.save(Reservation
-                .builder()
-                .member(member)
-                .room(room)
-                .reservationNumber("PAYMENT-RESERVATION-TEST-001")
-                .checkInDate(LocalDateTime.now().plusDays(1))
-                .checkOutDate(LocalDateTime.now().plusDays(3))
-                .adults(2)
-                .children(0)
-                .reservationStatus(ReservationStatus.CONFIRMED)
-                .totalAmount(180000)
-                .specialRequests("결제 테스트 요청")
-                .checkInQr("PAYMENT-QR-TEST")
-                .totalNights(2)
-                .guestName("결제 테스트 회원")
-                .build());
-
+        Member member = memberRepository.findById(1L).orElseThrow();
+        Reservation reservation = reservationRepository.findById(1L).orElseThrow();
         Payments payments = Payments
                 .builder()
                 .reservation(reservation)
