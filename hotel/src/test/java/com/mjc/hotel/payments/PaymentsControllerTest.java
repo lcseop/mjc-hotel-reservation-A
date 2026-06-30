@@ -16,6 +16,9 @@ import com.mjc.hotel.payments.entity.PaymentMethod;
 import com.mjc.hotel.payments.entity.PaymentStatus;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.refunds.entity.RefundStatus;
+import com.mjc.hotel.refunds.entity.Refunds;
+import com.mjc.hotel.refunds.repository.RefundsRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
@@ -27,6 +30,7 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,6 +81,10 @@ public class PaymentsControllerTest {
     private RoomTagRepository roomTagRepository;
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private RefundsRepository refundsRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     @DisplayName("결제 생성 API는 ApiResponse 형식으로 생성 결과를 반환한다")
     @Test
@@ -148,6 +158,45 @@ public class PaymentsControllerTest {
                 .andExpect(jsonPath("$.data.paymentAmount").value(170000.00))
                 .andExpect(jsonPath("$.data.paymentStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.transactionNo").value("TXN-PAYMENT-API-AFTER"));
+    }
+
+    @DisplayName("환불 이력이 있는 결제 삭제 API는 물리 삭제하지 않고 삭제 표시한다")
+    @Test
+    public void deletePaymentApiWithRefundSoftDeleteTest() throws Exception {
+        Member member = saveMember("결제 삭제 회원", "delete-payment-api@mjc.com");
+        Reservation reservation = saveReservation(member);
+        Payments payment = paymentsRepository.save(Payments.builder()
+                .reservation(reservation)
+                .member(member)
+                .paymentAmount(new BigDecimal("180000.00"))
+                .paymentMethod(PaymentMethod.CARD)
+                .paymentStatus(PaymentStatus.PARTIALLY_REFUNDED)
+                .transactionNo("TXN-PAYMENT-API-DELETE")
+                .paidAt(LocalDateTime.now())
+                .point(1800)
+                .build());
+        refundsRepository.save(Refunds.builder()
+                .payment(payment)
+                .member(member)
+                .pgTransactionKey("PG-PAYMENT-API-DELETE")
+                .idempotencyKey("IDEMPOTENCY-PAYMENT-API-DELETE")
+                .refundAmount(new BigDecimal("50000.00"))
+                .reason("결제 삭제 테스트 환불")
+                .status(RefundStatus.REQUESTED)
+                .requestedAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(delete("/api/payments/{sid}", payment.getSid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("payments delete success"));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Payments deletedPayment = paymentsRepository.findById(payment.getSid()).orElseThrow();
+        assertThat(deletedPayment.getDeleted()).isTrue();
+        assertThat(deletedPayment.getDeletedAt()).isNotNull();
     }
 
     private Member saveMember(String name, String email) {

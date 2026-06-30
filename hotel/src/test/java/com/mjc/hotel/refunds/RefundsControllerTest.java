@@ -30,6 +30,7 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -80,6 +83,8 @@ public class RefundsControllerTest {
     private RoomTagRepository roomTagRepository;
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     @DisplayName("환불 생성 API는 ApiResponse 형식으로 생성 결과를 반환한다")
     @Test
@@ -150,6 +155,35 @@ public class RefundsControllerTest {
                 .andExpect(jsonPath("$.data.sid").value(refund.getSid()))
                 .andExpect(jsonPath("$.data.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.completedAt", notNullValue()));
+    }
+
+    @DisplayName("환불 삭제 API는 물리 삭제하지 않고 삭제 표시한다")
+    @Test
+    public void deleteRefundApiSoftDeleteTest() throws Exception {
+        Member member = saveMember("환불 삭제 회원", "delete-refund-api@mjc.com");
+        Payments payment = savePayment(member);
+        Refunds refund = refundsRepository.save(Refunds.builder()
+                .payment(payment)
+                .member(member)
+                .pgTransactionKey("PG-REFUND-API-DELETE")
+                .idempotencyKey("IDEMPOTENCY-REFUND-API-DELETE")
+                .refundAmount(new BigDecimal("50000.00"))
+                .reason("테스트 환불 삭제")
+                .status(RefundStatus.REQUESTED)
+                .requestedAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(delete("/api/refunds/{sid}", refund.getSid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("refunds delete success"));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Refunds deletedRefund = refundsRepository.findById(refund.getSid()).orElseThrow();
+        assertThat(deletedRefund.getDeleted()).isTrue();
+        assertThat(deletedRefund.getDeletedAt()).isNotNull();
     }
 
     private Member saveMember(String name, String email) {
@@ -239,7 +273,7 @@ public class RefundsControllerTest {
                 .build());
     }
 
-    private String toRefundJson(Long sid, Long sid) {
+    private String toRefundJson(Long paymentSid, Long memberSid) {
         return """
                 {
                   "sid": %d,
@@ -251,10 +285,10 @@ public class RefundsControllerTest {
                   "status": "REQUESTED",
                   "requestedAt": "%s"
                 }
-                """.formatted(sid, sid, LocalDateTime.now());
+                """.formatted(paymentSid, memberSid, LocalDateTime.now());
     }
 
-    private String toRefundCompleteJson(Long sid, Long sid, LocalDateTime requestedAt) {
+    private String toRefundCompleteJson(Long paymentSid, Long memberSid, LocalDateTime requestedAt) {
         return """
                 {
                   "sid": %d,
@@ -269,6 +303,6 @@ public class RefundsControllerTest {
                   "failedAt": null,
                   "failureReason": null
                 }
-                """.formatted(sid, sid, requestedAt);
+                """.formatted(paymentSid, memberSid, requestedAt);
     }
 }

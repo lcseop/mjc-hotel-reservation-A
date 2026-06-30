@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -129,6 +130,65 @@ public class MemberServiceTest {
         Member deletedMember = memberRepository.findById(savedMember.getSid()).orElseThrow();
         assertThat(deletedMember.getDeleted()).isTrue();
         assertThat(deletedMember.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("존재하지 않는 회원 삭제는 예외를 던진다")
+    @Test
+    public void deleteMissingMemberTest() {
+        assertThatThrownBy(() -> memberService.deleteMember(0L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 회원입니다. sid=0");
+    }
+
+    @DisplayName("로그인 인증 정보를 삭제 표시한다")
+    @Test
+    public void deleteAuthAccountTest() {
+        Member savedMember = memberService.saveMember(buildMember("인증 삭제", "delete-auth@mjc.com"));
+        MemberAuthAccount authAccount = buildAuthAccount();
+        authAccount.setMember(savedMember);
+        MemberAuthAccount savedAuthAccount = memberAuthAccountRepository.save(authAccount);
+
+        memberService.deleteAuthAccount(savedAuthAccount.getSid());
+        entityManager.flush();
+        entityManager.clear();
+
+        MemberAuthAccount deletedAuthAccount = memberAuthAccountRepository.findById(savedAuthAccount.getSid()).orElseThrow();
+        assertThat(deletedAuthAccount.getDeleted()).isTrue();
+        assertThat(deletedAuthAccount.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("존재하지 않는 로그인 인증 정보 삭제는 예외를 던진다")
+    @Test
+    public void deleteMissingAuthAccountTest() {
+        assertThatThrownBy(() -> memberService.deleteAuthAccount(0L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 로그인 인증 정보입니다. sid=0");
+    }
+
+    @DisplayName("회원 약관 동의를 삭제 표시한다")
+    @Test
+    public void deleteTermAgreementTest() {
+        Member savedMember = memberService.saveMember(buildMember("동의 삭제", "delete-agreement@mjc.com"));
+        Term savedTerm = saveTerm();
+        MemberTermAgreement termAgreement = buildTermAgreement(savedTerm);
+        termAgreement.setMember(savedMember);
+        MemberTermAgreement savedTermAgreement = memberTermAgreementRepository.save(termAgreement);
+
+        memberService.deleteTermAgreement(savedTermAgreement.getSid());
+        entityManager.flush();
+        entityManager.clear();
+
+        MemberTermAgreement deletedTermAgreement = memberTermAgreementRepository.findById(savedTermAgreement.getSid()).orElseThrow();
+        assertThat(deletedTermAgreement.getDeleted()).isTrue();
+        assertThat(deletedTermAgreement.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("존재하지 않는 회원 약관 동의 삭제는 예외를 던진다")
+    @Test
+    public void deleteMissingTermAgreementTest() {
+        assertThatThrownBy(() -> memberService.deleteTermAgreement(0L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 회원 약관 동의입니다. sid=0");
     }
 
     private Member buildMember(String name, String email) {

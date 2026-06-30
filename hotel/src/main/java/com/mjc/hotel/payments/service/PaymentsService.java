@@ -61,7 +61,8 @@ public class PaymentsService {
 
     @Transactional
     public void deletePayment(Long sid) {
-        paymentsRepository.deleteById(sid);
+        Payments payment = getPayment(sid);
+        payment.markDeleted();
     }
 
     private Reservation getReservation(Long reservationId) {

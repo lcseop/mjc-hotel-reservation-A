@@ -60,7 +60,8 @@ public class RefundsService {
 
     @Transactional
     public void deleteRefund(Long sid) {
-        refundsRepository.deleteById(sid);
+        Refunds refund = getRefund(sid);
+        refund.markDeleted();
     }
 
     private Payments getPayment(Long sid) {

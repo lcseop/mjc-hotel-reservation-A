@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -80,7 +81,19 @@ public class TermServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(termRepository.findById(savedTerm.getSid())).isEmpty();
+        assertThat(termRepository.findById(savedTerm.getSid()))
+                .hasValueSatisfying(deletedTerm -> {
+                    assertThat(deletedTerm.getDeleted()).isTrue();
+                    assertThat(deletedTerm.getDeletedAt()).isNotNull();
+                });
+    }
+
+    @DisplayName("존재하지 않는 약관 삭제는 예외를 던진다")
+    @Test
+    public void deleteMissingTermTest() {
+        assertThatThrownBy(() -> termService.deleteTerm(0L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 약관입니다. sid=0");
     }
 
     private TermRequestDto buildRequest(String termType, String title, String version, Boolean isRequired) {

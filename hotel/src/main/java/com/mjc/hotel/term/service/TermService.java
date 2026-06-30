@@ -48,7 +48,8 @@ public class TermService {
 
     @Transactional
     public void deleteTerm(Long sid) {
-        termRepository.deleteById(sid);
+        Term term = findTerm(sid);
+        term.markDeleted();
     }
 
     private Term findTerm(Long sid) {

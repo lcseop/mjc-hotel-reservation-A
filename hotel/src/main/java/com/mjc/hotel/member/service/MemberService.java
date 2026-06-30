@@ -105,4 +105,26 @@ public class MemberService {
         Member member = getMember(sid);
         member.markDeleted();
     }
+
+    @Transactional
+    public void deleteAuthAccount(Long sid) {
+        MemberAuthAccount authAccount = findAuthAccount(sid);
+        authAccount.markDeleted();
+    }
+
+    @Transactional
+    public void deleteTermAgreement(Long sid) {
+        MemberTermAgreement termAgreement = findTermAgreement(sid);
+        termAgreement.markDeleted();
+    }
+
+    private MemberAuthAccount findAuthAccount(Long sid) {
+        return memberAuthAccountRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 로그인 인증 정보입니다. sid=" + sid));
+    }
+
+    private MemberTermAgreement findTermAgreement(Long sid) {
+        return memberTermAgreementRepository.findById(sid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원 약관 동의입니다. sid=" + sid));
+    }
 }
