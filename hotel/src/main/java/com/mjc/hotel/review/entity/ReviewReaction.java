@@ -3,11 +3,14 @@ package com.mjc.hotel.review.entity;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.review.entity.composite_key.ReviewReactionId;
 import com.mjc.hotel.review.entity.enums.ReactionType;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -32,9 +35,11 @@ public class ReviewReaction {
     @Column(name = "reaction_type")
     private ReactionType reactionType;
 
-    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP")
+    @CreatedDate
+    @Column(name = "create_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, nullable = true, columnDefinition = "TIMESTAMP")
+    @LastModifiedDate
+    @Column(name = "update_at", nullable = false)
     private LocalDateTime updatedAt;
 }

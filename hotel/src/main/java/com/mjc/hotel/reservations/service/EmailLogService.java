@@ -1,15 +1,15 @@
 package com.mjc.hotel.reservations.service;
 
-import com.mjc.hotel.reservations.dto.EmailLogRequest;
-import com.mjc.hotel.reservations.dto.EmailLogResponse;
+import com.mjc.hotel.reservations.dto.EmailLogRequestDto;
+import com.mjc.hotel.reservations.dto.EmailLogResponseDto;
 import com.mjc.hotel.reservations.entity.EmailLog;
+import com.mjc.hotel.reservations.entity.EmailStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.EmailLogRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,13 +19,13 @@ public class EmailLogService {
     private final EmailLogRepository emailLogRepository;
     private final ReservationRepository reservationRepository;
 
-    public EmailLogResponse sendEmailAndLog(EmailLogRequest request) {
-        Reservation reservation = reservationRepository.findById(request.getReservationSid())
+    public EmailLogResponseDto sendEmailAndLog(EmailLogRequestDto request) {
+        Reservation reservation = reservationRepository.findById(request.getSid())
                 .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
 
-        EmailLog.EmailStatus status = EmailLog.EmailStatus.SEND;
+        EmailStatus status = EmailStatus.SEND;
         if(request.getRecipientEmail() == null || !request.getRecipientEmail().contains("@")) {
-            status = EmailLog.EmailStatus.FAILED;
+            status = EmailStatus.FAILED;
         }
 
         EmailLog emailLog = EmailLog.builder()
@@ -36,7 +36,7 @@ public class EmailLogService {
 
         EmailLog saveLog = emailLogRepository.save(emailLog);
 
-        EmailLogResponse response = new EmailLogResponse();
+        EmailLogResponseDto response = new EmailLogResponseDto();
         response.setSid(saveLog.getSid());
         response.setReservationSid(reservation.getSid());
         response.setRecipientEmail(saveLog.getRecipientEmail());
@@ -46,12 +46,12 @@ public class EmailLogService {
         return response;
     }
 
-    public List<EmailLogResponse> getLogsByReservation(Long reservationSid) {
+    public List<EmailLogResponseDto> getLogsByReservation(Long reservationSid) {
         List<EmailLog> logs = emailLogRepository.findByReservation_Sid(reservationSid);
 
         return logs.stream()
                 .map(log -> {
-                    EmailLogResponse response = new EmailLogResponse();
+                    EmailLogResponseDto response = new EmailLogResponseDto();
                     response.setSid(log.getSid());
                     response.setReservationSid(log.getReservation().getSid());
                     response.setRecipientEmail(log.getRecipientEmail());

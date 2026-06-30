@@ -105,7 +105,6 @@ public class RefundServiceTest {
                 .builder()
                 .type(hotelType)
                 .photo(hotelPhoto)
-                .amenities(hotelAmenities)
                 .hotelName("환불 테스트 호텔")
                 .hotelPrice(180000)
                 .location("부산시 테스트구")

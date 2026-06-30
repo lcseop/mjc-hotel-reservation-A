@@ -99,7 +99,6 @@ public class PaymentServiceTest {
                 .builder()
                 .type(hotelType)
                 .photo(hotelPhoto)
-                .amenities(hotelAmenities)
                 .hotelName("결제 테스트 호텔")
                 .hotelPrice(180000)
                 .location("서울시 테스트구")

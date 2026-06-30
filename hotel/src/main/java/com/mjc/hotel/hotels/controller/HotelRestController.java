@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.controller;
 
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
+import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.service.HotelService;
@@ -10,6 +11,9 @@ import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,11 +31,48 @@ public class HotelRestController {
             summary = "호텔 데이터 생성",
             description = "호텔 데이터를 만듭니다."
     )
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<ApiResponse<HotelResponseDto>> insert(@RequestBody HotelRequestDto dto) {
         HotelResponseDto insert = hotelService.insert(dto);
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel insert success", insert)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 수정",
+            description = "호텔 데이터를 수정합니다."
+    )
+    @PatchMapping
+    public ResponseEntity<ApiResponse<HotelResponseDto>> update(@RequestBody HotelRequestDto dto) {
+        HotelResponseDto update = hotelService.update(dto);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 삭제",
+            description = "호텔 데이터를 삭제합니다."
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> delete(@PathVariable Long id) {
+        HotelResponseDto delete = hotelService.delete(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel delete success", delete)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 데이터 검색",
+            description = "호텔 데이터를 필터에 맞추어 검색합니다."
+    )
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
+                                                           @PageableDefault(size = 5) Pageable pageable) {
+        Page<HotelResponseDto> search = hotelService.search(dto, pageable);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
         );
     }
 }

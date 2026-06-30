@@ -166,8 +166,6 @@ public class ReviewServiceTest {
                 .review(review)
                 .member(member)
                 .reactionType(ReactionType.GOOD)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(null)
                 .build();
 
         reviewReactionRepository.save(reviewReaction);

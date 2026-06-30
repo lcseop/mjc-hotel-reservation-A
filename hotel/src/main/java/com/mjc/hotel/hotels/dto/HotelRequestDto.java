@@ -12,10 +12,11 @@ public class HotelRequestDto {
     private Long sid;
     private Long typeId;
     private Long photoId;
-    private Long amenitiesId;
     private String hotelName;
     private Integer hotelPrice;
     private String location;
     private Integer starRating;
     private String description;
+    private Double latitude;
+    private Double longitude;
 }

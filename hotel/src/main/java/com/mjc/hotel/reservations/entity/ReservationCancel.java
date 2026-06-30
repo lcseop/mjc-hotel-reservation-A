@@ -30,7 +30,7 @@ public class ReservationCancel {
     @Column(name = "cancel_reason", length = 255)
     private String cancelReason;
 
-    @Column(name = "refund_amout")
+    @Column(name = "refund_amount")
     private Integer refundAmount;
 
     @CreationTimestamp

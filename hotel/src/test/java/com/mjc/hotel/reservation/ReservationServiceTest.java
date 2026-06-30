@@ -3,9 +3,9 @@ package com.mjc.hotel.reservation;
 import com.mjc.hotel.coupon.entity.CouponIssue;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
-import com.mjc.hotel.reservations.entity.Reservation;
-import com.mjc.hotel.reservations.entity.ReservationStatus;
+import com.mjc.hotel.reservations.entity.*;
 import com.mjc.hotel.reservations.repository.EmailLogRepository;
+import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationCancelRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.room.entity.Room;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 
 
@@ -31,6 +32,8 @@ public class ReservationServiceTest {
 
     @Autowired
     private EmailLogRepository emailLogRepository;
+    @Autowired
+    private PointHistoryRepository pointHistoryRepository;
 
     @DisplayName("reservationTestDate")
     @Test
@@ -62,6 +65,40 @@ public class ReservationServiceTest {
                 .build();
 
         reservationRepository.save(reservation);
+
+
+        ReservationCancel reservationCancel = ReservationCancel
+                .builder()
+                .reservation(reservation)
+                .cancelReason("cancelreason")
+                .refundAmount(180000)
+                .cancelledAt(LocalDateTime.now())
+                .build();
+
+        reservationCancelRepository.save(reservationCancel);
+
+
+        EmailLog emailLog = EmailLog
+                .builder()
+                .reservation(reservation)
+                .recipientEmail("recipientEmail")
+                .emailStatus(EmailStatus.SEND)
+                .sentAt(LocalDateTime.now())
+                .build();
+
+        emailLogRepository.save(emailLog);
+
+
+        PointHistory pointHistory = PointHistory
+                .builder()
+                .reservation(reservation)
+                .member(member)
+                .amount(5000)
+                .pointStatus(PointStatus.USE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        pointHistoryRepository.save(pointHistory);
     }
 
 }
