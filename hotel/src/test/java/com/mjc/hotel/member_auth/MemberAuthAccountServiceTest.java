@@ -28,17 +28,7 @@ public class MemberAuthAccountServiceTest {
     @Commit
     @Transactional
     public void addMemberAuthAccountTest() {
-        Member member = memberRepository.save(Member
-                .builder()
-                .name("인증 계정 테스트 회원")
-                .phone("010-5555-6666")
-                .email("auth-account-test@mjc.com")
-                .status(MemberStatus.ACTIVE)
-                .role(MemberRole.USER)
-                .emailVerified(true)
-                .phoneVerified(true)
-                .point(500)
-                .build());
+        Member member = memberRepository.findById(1L).orElseThrow();
 
         MemberAuthAccount authAccount = MemberAuthAccount
                 .builder()

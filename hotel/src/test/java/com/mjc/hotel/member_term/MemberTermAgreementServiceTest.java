@@ -32,26 +32,9 @@ public class MemberTermAgreementServiceTest {
     @Commit
     @Transactional
     public void addMemberTermAgreementTest() {
-        Member member = memberRepository.save(Member
-                .builder()
-                .name("약관 동의 테스트 회원")
-                .phone("010-7777-8888")
-                .email("term-agreement-test@mjc.com")
-                .status(MemberStatus.ACTIVE)
-                .role(MemberRole.USER)
-                .emailVerified(true)
-                .phoneVerified(true)
-                .point(700)
-                .build());
+        Member member = memberRepository.findById(1L).orElseThrow();
 
-        Term term = termRepository.save(Term
-                .builder()
-                .termType("PRIVACY")
-                .title("개인정보 처리방침")
-                .version("1.0")
-                .isRequired(true)
-                .effectiveAt(LocalDateTime.now())
-                .build());
+        Term term = termRepository.findById(1L).orElseThrow();
 
         MemberTermAgreement termAgreement = MemberTermAgreement
                 .builder()
