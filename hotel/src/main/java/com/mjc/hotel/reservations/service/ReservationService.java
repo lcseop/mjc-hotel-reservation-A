@@ -229,7 +229,7 @@ public class ReservationService {
         return ReservationResponseDto.builder()
                 .sid(reservation.getSid())
                 .reservationNumber(reservation.getReservationNumber())
-                .memberId(reservation.getMember().getMemberId())
+                .memberId(reservation.getMember().getSid())
                 .memberName(reservation.getMember().getName())
                 .roomId(reservation.getRoom().getSid())
                 .roomNumber(reservation.getRoom().getRoomNumber())
