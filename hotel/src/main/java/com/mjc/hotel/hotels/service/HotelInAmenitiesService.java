@@ -42,7 +42,8 @@ public class HotelInAmenitiesService {
         return hotelInAmenitiesRepository.save(ame);
     }
 
-    public HotelInAmenities findByid(Long id) {
-
-    }
+//    public HotelInAmenities findById(Long id) {
+//        HotelInAmenities ame = hotelInAmenitiesRepository.findById(id).orElseThrow();
+//        if (ame.getDeleted() != null && ame.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+//    }
 }

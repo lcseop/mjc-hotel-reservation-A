@@ -21,12 +21,12 @@ public class HotelTypeService {
 
     public HotelTypeDto insert(HotelTypeDto type) {
         if (type.getTitle() == null) return null;
-        HotelTypeDto clone = HotelTypeDto
+        HotelType clone = HotelType
                 .builder()
                 .title(type.getTitle())
                 .build();
 
-        return hotelTypeRepository.save(clone);
+        return toDto(hotelTypeRepository.save(clone), false);
     }
 
     public HotelType update(HotelType type) {
@@ -47,6 +47,21 @@ public class HotelTypeService {
         HotelType type = hotelTypeRepository.findById(id).orElseThrow();
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         return type;
+    }
+
+    private HotelTypeDto toDto(HotelType type, boolean sid) {
+        if (sid) {
+            return HotelTypeDto
+                    .builder()
+                    .sid(type.getSid())
+                    .title(type.getTitle())
+                    .build();
+        } else {
+            return HotelTypeDto
+                    .builder()
+                    .title(type.getTitle())
+                    .build();
+        }
     }
 
 
