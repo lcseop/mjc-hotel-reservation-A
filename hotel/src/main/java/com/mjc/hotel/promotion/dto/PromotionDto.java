@@ -17,4 +17,5 @@ public class PromotionDto {
     private String promotionName;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private String status;
 }
