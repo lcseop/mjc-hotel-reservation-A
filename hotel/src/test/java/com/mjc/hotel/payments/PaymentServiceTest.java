@@ -20,6 +20,8 @@ import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.room.entity.Room;
+import com.mjc.hotel.room.entity.RoomIdCardEnum;
+import com.mjc.hotel.room.entity.RoomPetAndSmokeEnum;
 import com.mjc.hotel.room.entity.RoomPhoto;
 import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.entity.RoomType;
@@ -27,12 +29,12 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -77,6 +79,7 @@ public class PaymentServiceTest {
                 .role(MemberRole.USER)
                 .emailVerified(true)
                 .phoneVerified(true)
+                .point(1800)
                 .build());
 
         HotelAmenities hotelAmenities = hotelAmenitiesRepository.save(HotelAmenities
@@ -133,6 +136,12 @@ public class PaymentServiceTest {
                 .floor(7)
                 .area(28)
                 .maximumPeople(2)
+                .checkInTime(15)
+                .checkOutTime(11)
+                .parking("가능")
+                .pet(RoomPetAndSmokeEnum.BAN)
+                .smoke(RoomPetAndSmokeEnum.BAN)
+                .idCard(RoomIdCardEnum.ESSENTIAL)
                 .build());
 
         Reservation reservation = reservationRepository.save(Reservation

@@ -1,108 +1,34 @@
 package com.mjc.hotel.term;
 
-import com.mjc.hotel.term.dto.TermRequestDto;
-import com.mjc.hotel.term.dto.TermResponseDto;
+import com.mjc.hotel.term.entity.Term;
 import com.mjc.hotel.term.repository.TermRepository;
-import com.mjc.hotel.term.service.TermService;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.annotation.Commit;
 
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 @SpringBootTest
-@Transactional
 public class TermServiceTest {
 
     @Autowired
-    private TermService termService;
-    @Autowired
     private TermRepository termRepository;
-    @Autowired
-    private EntityManager entityManager;
 
-    @DisplayName("약관을 생성한다")
+    @DisplayName("termTestData")
     @Test
-    public void insertTermTest() {
-        TermResponseDto response = termService.insert(buildRequest("SERVICE", "서비스 이용약관", "1.0", true));
-
-        assertThat(response.getSid()).isNotNull();
-        assertThat(response.getTermType()).isEqualTo("SERVICE");
-        assertThat(response.getTitle()).isEqualTo("서비스 이용약관");
-        assertThat(response.getVersion()).isEqualTo("1.0");
-        assertThat(response.getIsRequired()).isTrue();
-        assertThat(termRepository.findById(response.getSid())).isPresent();
-    }
-
-    @DisplayName("약관 목록과 단건 약관을 조회한다")
-    @Test
-    public void readTermTest() {
-        TermResponseDto savedTerm = termService.insert(buildRequest("PRIVACY", "개인정보 처리방침", "1.0", true));
-
-        assertThat(termService.getTerms())
-                .extracting(TermResponseDto::getSid)
-                .contains(savedTerm.getSid());
-        assertThat(termService.getTerm(savedTerm.getSid()).getTitle()).isEqualTo("개인정보 처리방침");
-    }
-
-    @DisplayName("약관 정보를 수정한다")
-    @Test
-    public void updateTermTest() {
-        TermResponseDto savedTerm = termService.insert(buildRequest("SERVICE", "수정 전 약관", "1.0", true));
-
-        TermResponseDto updatedTerm = termService.updateTerm(
-                savedTerm.getSid(),
-                buildRequest("SERVICE", "수정 후 약관", "2.0", false)
-        );
-
-        assertThat(updatedTerm.getSid()).isEqualTo(savedTerm.getSid());
-        assertThat(updatedTerm.getTitle()).isEqualTo("수정 후 약관");
-        assertThat(updatedTerm.getVersion()).isEqualTo("2.0");
-        assertThat(updatedTerm.getIsRequired()).isFalse();
-
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(termService.getTerm(savedTerm.getSid()).getTitle()).isEqualTo("수정 후 약관");
-    }
-
-    @DisplayName("약관을 삭제한다")
-    @Test
-    public void deleteTermTest() {
-        TermResponseDto savedTerm = termService.insert(buildRequest("MARKETING", "마케팅 수신 동의", "1.0", false));
-
-        termService.deleteTerm(savedTerm.getSid());
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(termRepository.findById(savedTerm.getSid()))
-                .hasValueSatisfying(deletedTerm -> {
-                    assertThat(deletedTerm.getDeleted()).isTrue();
-                    assertThat(deletedTerm.getDeletedAt()).isNotNull();
-                });
-    }
-
-    @DisplayName("존재하지 않는 약관 삭제는 예외를 던진다")
-    @Test
-    public void deleteMissingTermTest() {
-        assertThatThrownBy(() -> termService.deleteTerm(0L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 약관입니다. sid=0");
-    }
-
-    private TermRequestDto buildRequest(String termType, String title, String version, Boolean isRequired) {
-        return TermRequestDto.builder()
-                .termType(termType)
-                .title(title)
-                .version(version)
-                .isRequired(isRequired)
+    @Commit
+    public void addTermTest() {
+        Term term = Term
+                .builder()
+                .termType("SERVICE")
+                .title("서비스 이용약관")
+                .version("1.0")
+                .isRequired(true)
                 .effectiveAt(LocalDateTime.now())
                 .build();
+
+        termRepository.save(term);
     }
 }

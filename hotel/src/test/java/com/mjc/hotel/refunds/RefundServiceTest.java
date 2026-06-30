@@ -23,6 +23,8 @@ import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.room.entity.Room;
+import com.mjc.hotel.room.entity.RoomIdCardEnum;
+import com.mjc.hotel.room.entity.RoomPetAndSmokeEnum;
 import com.mjc.hotel.room.entity.RoomPhoto;
 import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.entity.RoomType;
@@ -30,12 +32,12 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,15 +47,12 @@ public class RefundServiceTest {
 
     @Autowired
     private PaymentsRepository paymentsRepository;
-
     @Autowired
     private RefundsRepository refundsRepository;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
     private ReservationRepository reservationRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
     @Autowired
     private HotelAmenitiesRepository hotelAmenitiesRepository;
     @Autowired
@@ -83,6 +82,7 @@ public class RefundServiceTest {
                 .role(MemberRole.USER)
                 .emailVerified(true)
                 .phoneVerified(true)
+                .point(1800)
                 .build());
 
         HotelAmenities hotelAmenities = hotelAmenitiesRepository.save(HotelAmenities
@@ -139,6 +139,12 @@ public class RefundServiceTest {
                 .floor(9)
                 .area(35)
                 .maximumPeople(3)
+                .checkInTime(15)
+                .checkOutTime(11)
+                .parking("가능")
+                .pet(RoomPetAndSmokeEnum.LIMITED)
+                .smoke(RoomPetAndSmokeEnum.BAN)
+                .idCard(RoomIdCardEnum.ESSENTIAL)
                 .build());
 
         Reservation reservation = reservationRepository.save(Reservation
@@ -158,7 +164,7 @@ public class RefundServiceTest {
                 .guestName("환불 테스트 회원")
                 .build());
 
-        Payments payments = Payments
+        Payments payments = paymentsRepository.save(Payments
                 .builder()
                 .reservation(reservation)
                 .member(member)
@@ -168,9 +174,7 @@ public class RefundServiceTest {
                 .transactionNo("TXN-TEST-20260625-REFUND-001")
                 .paidAt(LocalDateTime.now())
                 .point(1800)
-                .build();
-
-        paymentsRepository.save(payments);
+                .build());
 
         Refunds refunds = Refunds
                 .builder()
