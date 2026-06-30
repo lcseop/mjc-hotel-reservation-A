@@ -102,7 +102,7 @@ public class ReservationService {
             PointHistory pointHistory = PointHistory.builder()
                     .reservation(savedReservation)
                     .member(member)
-                    .amount(usePoint)
+                    .amount(-usePoint)
                     .pointStatus(PointStatus.USE)
                     .build();
             pointHistoryRepository.save(pointHistory);
@@ -166,7 +166,7 @@ public class ReservationService {
                 .collect(Collectors.toList());
 
         for(PointHistory history : useHistories) {
-            member.setPoint(member.getPoint() + history.getAmount());
+            member.setPoint(member.getPoint() - history.getAmount());
         }
 
         List<PointHistory> earnHistories = pointHistoryRepository.findAll().stream()
