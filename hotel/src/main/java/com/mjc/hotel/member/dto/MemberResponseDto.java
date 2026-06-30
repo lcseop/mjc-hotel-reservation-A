@@ -23,4 +23,5 @@ public class MemberResponseDto {
     private Boolean phoneVerified;
     private Boolean deleted;
     private LocalDateTime deletedAt;
+    private Integer point;
 }
