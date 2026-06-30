@@ -2,24 +2,31 @@ package com.mjc.hotel.promotion.service;
 
 import com.mjc.hotel.promotion.dto.PromotionDto;
 import com.mjc.hotel.promotion.entity.*;
+import com.mjc.hotel.promotion.mapper.PromotionMapper;
 import com.mjc.hotel.promotion.repository.*;
 import com.mjc.hotel.room.entity.RoomType;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PromotionService {
     @Autowired
     private PromotionRepository promotionRepository;
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private ConditionRepository conditionRepository;
 
     @Transactional
     public PromotionDto insert(PromotionDto promotionDto) {
@@ -96,5 +103,14 @@ public class PromotionService {
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PromotionDto> getPromotionByStatus(ConditionType type) {
+        List<Condition> conditions = conditionRepository.findByConditiontype(type);
+
+        return conditions.stream()
+                .map(c -> PromotionMapper.toDto(c.getPromotion(), c)) // 람다 변수명을 c로 간단히 수정
+                .collect(Collectors.toList());
     }
 }

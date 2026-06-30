@@ -33,9 +33,8 @@ public class PromotionServiceTest {
         Promotion promotion = Promotion
                 .builder()
                 .promotionName("promotionName")
-                .starRating(0)
-                .howLong(LocalDateTime.now())
-                .totalAmount(3)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now())
                 .build();
         promotionRepository.save(promotion);
 
