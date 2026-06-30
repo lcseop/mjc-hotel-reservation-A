@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class ReviewAnswerResponse {
-    private Long reviewAnswerId;
+    private Long sid;
 
     private Long reviewId;
 

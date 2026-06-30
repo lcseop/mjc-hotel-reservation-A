@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ReviewPhoto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewPhotoId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")

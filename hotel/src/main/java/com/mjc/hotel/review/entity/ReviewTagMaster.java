@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class ReviewTagMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewTagMasterId;
+    private Long sid;
 
     @Column(name = "review_tag_name", nullable = false, length = 10,unique = true)
     private String reviewTagName;

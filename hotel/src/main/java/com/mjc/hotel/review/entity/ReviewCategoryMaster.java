@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ReviewCategoryMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewCategoryMasterId;
+    private Long sid;
 
     @Column(name = "review_category_name", nullable = false, length = 10, unique = true)
     private String reviewCategoryName;
