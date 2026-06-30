@@ -18,7 +18,7 @@ public class ReservationResponseDto {
     private Long memberId;
     private String memberName;
     private Long roomId;
-    private String roomNumber;
+    private Integer roomNumber;
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;
     private Integer adults;

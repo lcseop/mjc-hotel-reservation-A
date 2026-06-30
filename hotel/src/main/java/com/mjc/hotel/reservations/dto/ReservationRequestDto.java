@@ -15,13 +15,25 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReservationRequestDto {
 
+    @NotNull(message = "예약 ID는 필수입니다")
+    private Long sid;
+
+    @NotNull(message = "회원 ID는 필수입니다")
+    private Long memberId;
+
+    @NotNull(message = "객실 ID는 필수입니다")
+    private Integer roomTagId;
+
+    @NotNull(message = "쿠폰 ID는 양수여야 합니다")
+    private Long coupon;
+
     @NotNull(message = "체크인 날짜는 필수입니다")
     @Future(message = "체크인 날짜는 현재 이후여야 합니다")
     private LocalDateTime checkInDate;
 
     @NotNull(message = "체크아웃 날짜는 필수입니다")
     @Future(message = "체크아웃 날짜는 현재 이후여야 합니다")
-    private Integer checkOutDate;
+    private LocalDateTime checkOutDate;
 
     @NotNull(message = "성인 수는 필수입니다")
     @Min(value = 1, message = "성인은 최소 1명 이상이어야 합니다")

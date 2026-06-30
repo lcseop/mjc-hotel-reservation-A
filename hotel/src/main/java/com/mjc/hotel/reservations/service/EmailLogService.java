@@ -20,7 +20,7 @@ public class EmailLogService {
     private final ReservationRepository reservationRepository;
 
     public EmailLogResponseDto sendEmailAndLog(EmailLogRequestDto request) {
-        Reservation reservation = reservationRepository.findById(request.getReservationSid())
+        Reservation reservation = reservationRepository.findById(request.getSid())
                 .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
 
         EmailStatus status = EmailStatus.SEND;
