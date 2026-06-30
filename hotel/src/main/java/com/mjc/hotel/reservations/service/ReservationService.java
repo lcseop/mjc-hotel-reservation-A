@@ -194,7 +194,7 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
         if(reservation.getReservationStatus() != ReservationStatus.CONFIRMED) {
-            throw new IllegalArgumentException("확저된 예약만 체크인 가능합니다.");
+            throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
         }
 
         reservation.setReservationStatus(ReservationStatus.CHECKED_IN);
