@@ -34,7 +34,7 @@ public class ReservationController {
     @Operation(summary = "예약 조회", description = "예약 ID로 예약 정보를 조회합니다")
     public ResponseEntity<ReservationResponseDto> getReservation(
             @PathVariable Long reservationId) {
-                ReservationResponseDto response = reservationService.getRservation(reservationId);
+                ReservationResponseDto response = reservationService.getReservation(reservationId);
                 return ResponseEntity.ok(response);
     }
 
@@ -53,7 +53,7 @@ public class ReservationController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{reservationId}}/check-in")
+    @PatchMapping("/{reservationId}/check-in")
     @Operation(summary = "체크인", description = "예약에 대한 체크인을 처리합니다")
     public ResponseEntity<ReservationResponseDto> checkIn(
             @PathVariable Long reservationId) {
@@ -68,5 +68,4 @@ public class ReservationController {
         ReservationResponseDto response = reservationService.checkOut(reservationId);
         return ResponseEntity.ok(response);
     }
-    )
 }

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class ReservationCancelDto {
 
     @NotNull(message = "예약 ID는 필수입니다")
-    private Long reservationId;
+    private Long sid;
 
     @NotBlank(message = "취소 사유는 필수입니다")
     @Size(max = 255, message = "취소 사유는 255자 이내여야 합니다")

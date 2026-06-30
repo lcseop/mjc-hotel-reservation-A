@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class EmailLogRequestDto {
-    private Long reservationSid;
+    private Long sid;
     private String recipientEmail;
 }
