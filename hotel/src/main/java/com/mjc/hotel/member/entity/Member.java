@@ -53,8 +53,4 @@ public class Member extends BaseEntity {
 
     @Column(name = "phone_verified")
     private Boolean phoneVerified;
-
-    @Column(name = "member_point")
-    private Integer point;
-
 }
