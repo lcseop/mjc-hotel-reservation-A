@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class HotelPhotoDto {
-    private Long id;
+    private Long sid;
     private String imagePath;
 }

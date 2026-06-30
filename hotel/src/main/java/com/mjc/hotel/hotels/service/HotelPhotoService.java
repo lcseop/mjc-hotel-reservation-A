@@ -1,6 +1,9 @@
 package com.mjc.hotel.hotels.service;
 
+import com.mjc.hotel.hotels.dto.HotelPhotoDto;
+import com.mjc.hotel.hotels.dto.HotelTypeDto;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
+import com.mjc.hotel.hotels.entity.HotelType;
 import com.mjc.hotel.hotels.repository.HotelPhotoRepository;
 import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
@@ -17,32 +20,54 @@ public class HotelPhotoService {
     @Autowired
     private HotelPhotoRepository hotelPhotoRepository;
 
-    public HotelPhoto insert(HotelPhoto photo) {
+    public HotelPhotoDto insert(HotelPhotoDto photo) {
         if (photo.getImagePath() == null) return null;
         HotelPhoto clone = HotelPhoto
                 .builder()
                 .imagePath(photo.getImagePath())
                 .build();
-        return hotelPhotoRepository.save(clone);
+
+        return toDto(hotelPhotoRepository.save(clone), false);
     }
 
-    public HotelPhoto update(HotelPhoto photo) {
+    public HotelPhotoDto update(HotelPhotoDto photo) {
         if (photo.getSid() == null || photo.getImagePath() == null) return null;
-        if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return hotelPhotoRepository.save(photo);
+        HotelPhoto origin =  hotelPhotoRepository.findById(photo.getSid()).orElseThrow();
+        if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        HotelPhoto clone = HotelPhoto
+                .builder()
+                .sid(photo.getSid())
+                .imagePath(photo.getImagePath())
+                .build();
+        return toDto(hotelPhotoRepository.save(clone), true);
     }
 
-    public HotelPhoto delete(Long id) {
+    public HotelPhotoDto delete(Long id) {
         HotelPhoto photo = hotelPhotoRepository.findById(id).orElseThrow();
         if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         photo.setDeleted(true);
         photo.setDeletedAt(LocalDateTime.now());
-        return hotelPhotoRepository.save(photo);
+        return toDto(hotelPhotoRepository.save(photo), true);
     }
 
-    public HotelPhoto findById(Long id) {
+    public HotelPhotoDto findById(Long id) {
         HotelPhoto photo = hotelPhotoRepository.findById(id).orElseThrow();
         if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return photo;
+        return toDto(photo, true);
+    }
+
+    private HotelPhotoDto toDto(HotelPhoto photo, boolean sid) {
+        if (sid) {
+            return HotelPhotoDto
+                    .builder()
+                    .sid(photo.getSid())
+                    .imagePath(photo.getImagePath())
+                    .build();
+        } else {
+            return HotelPhotoDto
+                    .builder()
+                    .imagePath(photo.getImagePath())
+                    .build();
+        }
     }
 }

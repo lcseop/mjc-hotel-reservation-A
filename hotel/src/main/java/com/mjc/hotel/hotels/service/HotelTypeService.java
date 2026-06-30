@@ -29,24 +29,30 @@ public class HotelTypeService {
         return toDto(hotelTypeRepository.save(clone), false);
     }
 
-    public HotelType update(HotelType type) {
+    public HotelTypeDto update(HotelTypeDto type) {
         if (type.getTitle() == null || type.getSid() == null) return null;
-        if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return hotelTypeRepository.save(type);
+        HotelType origin = hotelTypeRepository.findById(type.getSid()).orElseThrow();
+        if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        HotelType clone = HotelType
+                .builder()
+                .sid(type.getSid())
+                .title(type.getTitle())
+                .build();
+        return toDto(hotelTypeRepository.save(clone), true);
     }
 
-    public HotelType delete(Long id) {
+    public HotelTypeDto delete(Long id) {
         HotelType type = hotelTypeRepository.findById(id).orElseThrow();
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         type.setDeleted(true);
         type.setDeletedAt(LocalDateTime.now());
-        return hotelTypeRepository.save(type);
+        return toDto(hotelTypeRepository.save(type), true);
     }
 
-    public HotelType findById(Long id) {
+    public HotelTypeDto findById(Long id) {
         HotelType type = hotelTypeRepository.findById(id).orElseThrow();
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return type;
+        return toDto(type, true);
     }
 
     private HotelTypeDto toDto(HotelType type, boolean sid) {
