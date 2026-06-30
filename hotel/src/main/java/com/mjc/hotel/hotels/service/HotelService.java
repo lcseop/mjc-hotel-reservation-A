@@ -15,6 +15,8 @@ import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,7 +117,7 @@ public class HotelService {
         return dto;
     }
 
-    public List<Hotel> search(HotelSearchRequestDto dto) {
-        return hotelRepository.search(dto);
+    public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {
+        return hotelRepository.search(dto, pageable);
     }
 }
