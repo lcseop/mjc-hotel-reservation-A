@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface ReviewTagRepository extends JpaRepository<ReviewTag, ReviewTagId> {
-    public void deleteByReviewReviewId(Long reviewReviewId);
-    List<ReviewTag> findByReviewReviewId(Long reviewReviewId);
+    public void deleteByReviewSid(Long reviewReviewId);
+    List<ReviewTag> findByReviewSid(Long reviewReviewId);
 }

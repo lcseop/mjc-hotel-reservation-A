@@ -122,7 +122,7 @@ public class ReviewReactionService {
     }
 
     public int findByReviewReviewIdAndReactionType(Review review, ReactionType reactionType) {
-        List<ReviewReaction> reviewReactions = reviewReactionRepository.findByReviewReviewIdAndReactionType(review.getSid(),reactionType);
+        List<ReviewReaction> reviewReactions = reviewReactionRepository.findByReviewSidAndReactionType(review.getSid(),reactionType);
         return reviewReactions.size();
     }
 }

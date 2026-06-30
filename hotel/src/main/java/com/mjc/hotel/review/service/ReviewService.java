@@ -7,7 +7,6 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.*;
-import com.mjc.hotel.review.entity.composite_key.ReviewTagId;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.ReviewCategoryRequest;
 import com.mjc.hotel.review.request.ReviewCreateRequest;
@@ -92,9 +91,9 @@ public class ReviewService {
 
         //기존 리뷰에 있던 항목별 평점(청결도, 서비스 등등)을 리뷰ID로 삭제
         //ex) 사용자가 청결도 리뷰를 삭제하고 위치 리뷰를 추가하는 식으로 리뷰를 수정할 수 있음 그러면 기존 리뷰에 딸린 항목별 리뷰를 삭제하고 새로 넣는게 좋다고 봄.
-        reviewCategoryRepository.deleteByReviewReviewId(reviewUpdateRequest.getSid());
+        reviewCategoryRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
         //마찬가지로 기존 리뷰에 딸린 장단점 항목을 삭제하고 새로 넣음
-        reviewTagRepository.deleteByReviewReviewId(reviewUpdateRequest.getSid());
+        reviewTagRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
 
         List<ReviewCategory> categories = this.insertReviewCategories(reviewUpdateRequest.getCategories(), updateAfter);
         List<ReviewTag> tags = this.insertReviewTags(reviewUpdateRequest.getTags(), updateAfter);
@@ -109,8 +108,8 @@ public class ReviewService {
 
         if(Boolean.TRUE.equals(review.getDeleted())) return null;
 
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
         ReviewResponse result = toReviewResponse(review,categories,tags);
 
@@ -125,8 +124,8 @@ public class ReviewService {
 
         Review save = reviewRepository.save(find);
 
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
         ReviewResponse result = toReviewResponse(save,categories,tags);
 
