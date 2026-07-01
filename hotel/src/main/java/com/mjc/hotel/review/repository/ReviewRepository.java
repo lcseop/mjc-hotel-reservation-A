@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findBySidAndDeletedFalse(Long sid, Pageable pageable);
     Review findBySidAndDeletedFalse(Long sid);
+    Page<Review> findByHotelSid(Long reviewId, Pageable pageable);
 }
