@@ -39,6 +39,9 @@ public class HotelPhotoService {
                 .sid(photo.getSid())
                 .imagePath(photo.getImagePath())
                 .build();
+        clone.setCreatedAt(origin.getCreatedAt());
+        clone.setDeleted(origin.getDeleted());
+        clone.setDeletedAt(origin.getDeletedAt());
         return toDto(hotelPhotoRepository.save(clone), true);
     }
 

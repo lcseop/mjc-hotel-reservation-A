@@ -31,8 +31,19 @@ public class HotelAmenitiesService {
 
     public HotelAmenitiesDto update(HotelAmenitiesDto amenities) {
         if (amenities.getTitle() == null || amenities.getSid() == null) return null;
-        if (amenities.getDeleted() != null && amenities.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return hotelAmenitiesRepository.save(amenities);
+        HotelAmenities origin = hotelAmenitiesRepository.findById(amenities.getSid()).orElseThrow();
+        if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        HotelAmenities clone =  HotelAmenities
+                .builder()
+                .sid(amenities.getSid())
+                .title(amenities.getTitle())
+                .description((amenities.getDescription() == null) ? origin.getDescription() : amenities.getDescription())
+                .build();
+
+        clone.setCreatedAt(origin.getCreatedAt());
+        clone.setDeleted(origin.getDeleted());
+        clone.setDeletedAt(origin.getDeletedAt());
+        return toDto(hotelAmenitiesRepository.save(clone), true);
     }
 
     public HotelAmenitiesDto delete(Long id) {
@@ -40,13 +51,13 @@ public class HotelAmenitiesService {
         if (amenities.getDeleted() != null && amenities.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         amenities.setDeleted(true);
         amenities.setDeletedAt(LocalDateTime.now());
-        return hotelAmenitiesRepository.save(amenities);
+        return toDto(hotelAmenitiesRepository.save(amenities), true);
     }
 
     public HotelAmenitiesDto findById(Long id) {
         HotelAmenities amenities = hotelAmenitiesRepository.findById(id).orElseThrow();
         if (amenities.getDeleted() != null && amenities.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return amenities;
+        return toDto(amenities, true);
     }
 
     private HotelAmenitiesDto toDto(HotelAmenities ame, boolean sid) {

@@ -50,6 +50,9 @@ public class HotelInAmenitiesService {
                 .hotel(hotel)
                 .amenities(hotelAmenities)
                 .build();
+        clone.setCreatedAt(origin.getCreatedAt());
+        clone.setDeleted(origin.getDeleted());
+        clone.setDeletedAt(origin.getDeletedAt());
         return toDto(hotelInAmenitiesRepository.save(clone), true);
     }
 

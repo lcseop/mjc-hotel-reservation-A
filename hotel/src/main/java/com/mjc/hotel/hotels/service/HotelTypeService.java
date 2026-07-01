@@ -38,6 +38,9 @@ public class HotelTypeService {
                 .sid(type.getSid())
                 .title(type.getTitle())
                 .build();
+        clone.setCreatedAt(origin.getCreatedAt());
+        clone.setDeleted(origin.getDeleted());
+        clone.setDeletedAt(origin.getDeletedAt());
         return toDto(hotelTypeRepository.save(clone), true);
     }
 
