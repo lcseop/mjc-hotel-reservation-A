@@ -67,7 +67,7 @@ public class ReviewService {
         List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest.getCategories(), reviewResult);
         List<ReviewTag> tags = this.insertReviewTags(reviewRequest.getTags(), reviewResult);
 
-        ReviewResponse result = toReviewResponse(reviewResult,categories, tags);
+        ReviewResponse result = this.toReviewResponse(reviewResult,categories, tags);
 
         return result;
     }
@@ -101,7 +101,7 @@ public class ReviewService {
         List<ReviewCategory> categories = this.insertReviewCategories(reviewUpdateRequest.getCategories(), updateAfter);
         List<ReviewTag> tags = this.insertReviewTags(reviewUpdateRequest.getTags(), updateAfter);
 
-        ReviewResponse result = toReviewResponse(updateAfter,categories, tags);
+        ReviewResponse result = this.toReviewResponse(updateAfter,categories, tags);
 
         return result;
     }
@@ -114,7 +114,7 @@ public class ReviewService {
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
-        ReviewResponse result = toReviewResponse(review,categories,tags);
+        ReviewResponse result = this.toReviewResponse(review,categories,tags);
 
         return result;
     }
