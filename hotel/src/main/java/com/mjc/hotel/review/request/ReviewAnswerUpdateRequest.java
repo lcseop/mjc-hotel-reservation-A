@@ -10,7 +10,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class ReviewAnswerUpdateRequest {
-    private Long reviewAnswerId;
+    private Long sid;
     private Long reviewId;
     private String reviewAnswer;
 }

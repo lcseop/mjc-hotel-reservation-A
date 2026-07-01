@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ReviewCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewCategoryId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")
@@ -25,5 +25,5 @@ public class ReviewCategory {
     private ReviewCategoryMaster reviewCategoryMaster;
 
     @Column(name = "rating", nullable = false)
-    private int rating;
+    private Integer rating;
 }

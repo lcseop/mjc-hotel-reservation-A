@@ -7,8 +7,10 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
+public class ReviewPhotoResponse {
+    private Long sid;
 
-public class ReviewTagResponse {
-    private Long reviewId;
-    private Long reviewTagId;
+    private String originalFileName;
+
+    private String imagePath;
 }

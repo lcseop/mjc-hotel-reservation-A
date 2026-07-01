@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class Review extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id")
@@ -36,7 +36,7 @@ public class Review extends BaseEntity {
     private Reservation reservation;
 
     @Column(name = "rating", nullable = false)
-    private int rating;
+    private Integer rating;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "travel_type", nullable = true)
@@ -46,10 +46,10 @@ public class Review extends BaseEntity {
     private String content;
 
     @Column(name = "like_count", nullable = false)
-    private int likeCount; //null 못들어가게 기본형
+    private Integer likeCount; //null 못들어가게 기본형
 
     @Column(name = "dislike_count", nullable = false)
-    private int dislikeCount;
+    private Integer dislikeCount;
 
     public void increaseLike() {
         this.likeCount++;

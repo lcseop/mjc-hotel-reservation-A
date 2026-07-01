@@ -9,7 +9,7 @@ import com.mjc.hotel.review.entity.enums.ReactionType;
 import com.mjc.hotel.review.repository.ReviewReactionRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewReactionRequest;
-import com.mjc.hotel.review.response.ReviewReactionResponse;
+import com.mjc.hotel.review.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,13 +44,7 @@ public class ReviewReactionService {
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
-        ReviewReactionResponse result = ReviewReactionResponse.builder()
-                .reviewId(save.getReview().getReviewId())
-                .memberId(save.getMember().getMemberId())
-                .reactionType(save.getReactionType())
-                .createdAt(save.getCreatedAt())
-                .updatedAt(save.getUpdatedAt())
-                .build();
+        ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
 
@@ -59,7 +53,7 @@ public class ReviewReactionService {
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
-        Review review = reviewRepository.findById(find.getReview().getReviewId()).orElseThrow();
+        Review review = reviewRepository.findById(find.getReview().getSid()).orElseThrow();
         //좋아요에서 취소상태 (삭제)
         if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
             review.decreaseLike();
@@ -96,13 +90,7 @@ public class ReviewReactionService {
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
-        ReviewReactionResponse result = ReviewReactionResponse.builder()
-                .reviewId(save.getReview().getReviewId())
-                .memberId(save.getMember().getMemberId())
-                .reactionType(save.getReactionType())
-                .createdAt(save.getCreatedAt())
-                .updatedAt(save.getUpdatedAt())
-                .build();
+        ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
 
@@ -111,9 +99,14 @@ public class ReviewReactionService {
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
+        ReviewReactionResponse result = this.toReviewReactionResponse(find);
+        return result;
+    }
+
+    private ReviewReactionResponse toReviewReactionResponse(ReviewReaction find) {
         ReviewReactionResponse result = ReviewReactionResponse.builder()
-                .reviewId(find.getReview().getReviewId())
-                .memberId(find.getMember().getMemberId())
+                .reviewId(find.getReview().getSid())
+                .memberId(find.getMember().getSid())
                 .reactionType(find.getReactionType())
                 .createdAt(find.getCreatedAt())
                 .updatedAt(find.getUpdatedAt())
@@ -121,8 +114,9 @@ public class ReviewReactionService {
         return result;
     }
 
-    public int findByReviewReviewIdAndReactionType(Review review, ReactionType reactionType) {
-        List<ReviewReaction> reviewReactions = reviewReactionRepository.findByReviewReviewIdAndReactionType(review.getReviewId(),reactionType);
-        return reviewReactions.size();
+    public Long findAllByReviewIdAndReactionType(Long reviewId, String reactionTypeName) {
+        ReactionType reactionType = reactionTypeName.equals("GOOD") ? ReactionType.GOOD : reactionTypeName.equals("BAD") ? ReactionType.BAD : ReactionType.NONE;
+        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionType(reviewId,reactionType);
+        return Long.valueOf(reviewReactions.size());
     }
 }
