@@ -1,9 +1,6 @@
 package com.mjc.hotel.member_auth;
 
-import com.mjc.hotel.member.entity.Member;
-import com.mjc.hotel.member.entity.MemberAuthAccount;
-import com.mjc.hotel.member.entity.MemberRole;
-import com.mjc.hotel.member.entity.MemberStatus;
+import com.mjc.hotel.member.entity.*;
 import com.mjc.hotel.member.repository.MemberAuthAccountRepository;
 import com.mjc.hotel.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +30,7 @@ public class MemberAuthAccountServiceTest {
         MemberAuthAccount authAccount = MemberAuthAccount
                 .builder()
                 .member(member)
-                .provider("LOCAL")
+                .provider(MemberAuthProvider.KAKAO)
                 .providerUserId("auth-account-test@mjc.com")
                 .passwordHash("test-password-hash")
                 .lastLoginAt(LocalDateTime.now())
