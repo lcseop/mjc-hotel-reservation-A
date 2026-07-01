@@ -32,7 +32,7 @@ public class ReviewPhotoService {
     private String uploadDir;
 
     @Transactional
-    public List<ReviewPhotoResponse> insertReviewPhotos(ReviewPhotoCreateRequest request) throws IOException {
+    public List<ReviewPhotoResponse> insertReviewPhotos(ReviewPhotoCreateRequest request) {
         Review review = reviewRepository.findById(request.getReviewId())
                 .orElseThrow();
 
