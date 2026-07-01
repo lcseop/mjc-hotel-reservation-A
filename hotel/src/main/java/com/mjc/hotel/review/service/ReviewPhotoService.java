@@ -4,7 +4,8 @@ import com.mjc.hotel.review.entity.Review;
 import com.mjc.hotel.review.entity.ReviewPhoto;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
-import com.mjc.hotel.review.request.ReviewPhotoRequest;
+import com.mjc.hotel.review.request.ReviewPhotoCreateRequest;
+import com.mjc.hotel.review.request.ReviewPhotoUpdateRequest;
 import com.mjc.hotel.review.response.ReviewPhotoResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class ReviewPhotoService {
     private String uploadDir;
 
     @Transactional
-    public List<ReviewPhotoResponse> insertReviewImages(ReviewPhotoRequest request) throws IOException {
+    public List<ReviewPhotoResponse> insertReviewPhotos(ReviewPhotoCreateRequest request) throws IOException {
         Review review = reviewRepository.findById(request.getReviewId())
                 .orElseThrow();
 
@@ -44,8 +45,8 @@ public class ReviewPhotoService {
                 continue;
             }
 
-            ReviewPhoto reviewImage = this.saveImageFile(review, photo);
-            ReviewPhoto save = reviewPhotoRepository.save(reviewImage);
+            ReviewPhoto reviewPhoto = this.saveImageFile(review, photo);
+            ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
 
             ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
 
@@ -54,7 +55,45 @@ public class ReviewPhotoService {
         return result;
     }
 
+    public ReviewPhotoResponse updateReviewPhoto(ReviewPhotoUpdateRequest request){
+        Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
+        ReviewPhoto oldPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(request.getSid());
 
+        MultipartFile photo = request.getPhoto();
+
+        if(photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
+            return null;
+        }
+        oldPhoto.markDeleted();
+        reviewPhotoRepository.save(oldPhoto);
+
+        ReviewPhoto newPhoto = this.saveImageFile(review, photo);
+        ReviewPhoto save = reviewPhotoRepository.save(newPhoto);
+
+        ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
+        return response;
+    }
+
+    public List<ReviewPhotoResponse> findAllByReviewId(Long reviewId){
+        List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId);
+
+        List<ReviewPhotoResponse> result = photos.stream()
+                .map(this::toReviewPhotoResponse)
+                .toList();
+
+        return result;
+    }
+
+    public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
+        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
+
+        reviewPhoto.markDeleted();
+        ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
+
+        ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
+
+        return response;
+    }
 
     private ReviewPhoto saveImageFile(Review review, MultipartFile photo) {
         try {
@@ -108,18 +147,6 @@ public class ReviewPhotoService {
             return true;
         }
         return false;
-    }
-
-    @Transactional
-    public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
-        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
-
-        reviewPhoto.markDeleted();
-        ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
-
-        ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
-
-        return response;
     }
 
     private ReviewPhotoResponse toReviewPhotoResponse(ReviewPhoto reviewPhoto) {
