@@ -6,12 +6,12 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ReviewPhotoRequest {
+public class ReviewPhotoUpdateRequest {
+    Long sid;
     Long reviewId;
-    List<MultipartFile> reviewPhotos;
+    MultipartFile photo;
 }
