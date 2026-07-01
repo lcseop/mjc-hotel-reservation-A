@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/hotel/ame")
@@ -36,10 +33,10 @@ public class HotelAmenitiesRestController {
             summary = "호텔 편의시설 수정",
             description = "호텔의 편의시설 데이터를 수정합니다.\n편의시설의 title에는 제목이, description에는 간단한 설명이 제공됩니다."
     )
-    @PostMapping
+    @PatchMapping
     public ResponseEntity<ApiResponse<HotelAmenitiesDto>> update(@RequestBody HotelAmenitiesDto dto) {
         HotelAmenitiesDto update = hotelAmenitiesService.update(dto);
-        return ResponseEntity.status(201).body(
+        return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
         );
     }
