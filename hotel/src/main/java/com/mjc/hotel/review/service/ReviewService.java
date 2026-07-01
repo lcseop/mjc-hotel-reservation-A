@@ -16,6 +16,9 @@ import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +117,21 @@ public class ReviewService {
         ReviewResponse result = toReviewResponse(review,categories,tags);
 
         return result;
+    }
+
+    public Page<ReviewResponse> search(Long reviewId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.search(reviewId,pageable);
+
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
+
+        List<ReviewResponse> list = reviews.stream()
+                .map(review ->
+                        toReviewResponse(review,categories,tags)
+                )
+                .toList();
+        Page<ReviewResponse> responses = new PageImpl<>(list, pageable, reviews.getTotalElements());
+        return responses;
     }
 
     public ReviewResponse deleteReviewId(Long reviewId) {
