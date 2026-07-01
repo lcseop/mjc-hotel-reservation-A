@@ -1,5 +1,6 @@
 package com.mjc.hotel.util;
 
+import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> dataNotFoundHandler(DataNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 new ApiResponse<>(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ApiResponse<String>> authenticationFailedHandler(AuthenticationFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                new ApiResponse<>(ResponseCode.AUTHENTICATION_ERROR, "authentication failed", ex.getMessage())
         );
     }
 }

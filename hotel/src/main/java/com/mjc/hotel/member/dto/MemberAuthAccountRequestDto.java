@@ -20,6 +20,7 @@ public class MemberAuthAccountRequestDto {
     private Long memberSid;
     private MemberAuthProvider provider;
     private String providerUserId;
+    private String password;
     private String passwordHash;
     private LocalDateTime lastLoginAt;
 }
