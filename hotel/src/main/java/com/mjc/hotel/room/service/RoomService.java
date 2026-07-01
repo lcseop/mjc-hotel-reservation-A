@@ -3,6 +3,7 @@ package com.mjc.hotel.room.service;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.room.dto.RoomPhotoDto;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.entity.Room;
@@ -107,6 +108,12 @@ public class RoomService {
         return rooms.stream()
                 .map(RoomMapper::response)
                 .toList();
+    }
+
+    public RoomResponseDto findById(Long id) {
+        Room room = roomRepository.findById(id).orElseThrow();
+        if (room.getDeleted() != null && room.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        return response(room);
     }
 
     private RoomResponseDto response(Room saved) {

@@ -20,17 +20,17 @@ public class HotelTypeService {
     private HotelTypeRepository hotelTypeRepository;
 
     public HotelTypeDto insert(HotelTypeDto type) {
-        if (type.getTitle() == null) return null;
+        if (type.getTitle() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelType clone = HotelType
                 .builder()
                 .title(type.getTitle())
                 .build();
 
-        return toDto(hotelTypeRepository.save(clone), false);
+        return toDto(hotelTypeRepository.save(clone), true);
     }
 
     public HotelTypeDto update(HotelTypeDto type) {
-        if (type.getTitle() == null || type.getSid() == null) return null;
+        if (type.getTitle() == null || type.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelType origin = hotelTypeRepository.findById(type.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         HotelType clone = HotelType

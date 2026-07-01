@@ -70,11 +70,23 @@ public class RoomController {
     }
 
     @Operation(
+            summary = "객실 데이터 조회",
+            description = "객실 데이터를 가져옵니다."
+    )
+    @GetMapping("/in/{id}")
+    public ResponseEntity<ApiResponse<RoomResponseDto>> findById(@PathVariable(name = "id") Long hotelId) {
+        RoomResponseDto search = roomService.findById(hotelId);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in room search success", search)
+        );
+    }
+
+    @Operation(
             summary = "호텔의 모든 객실 조회",
             description = "호텔 ID를 받아 모든 객실을 가져옵니다."
     )
     @GetMapping("/in/{id}")
-    public ResponseEntity<ApiResponse<List<RoomResponseDto>>> search(@PathVariable(name = "id") Long hotelId) {
+    public ResponseEntity<ApiResponse<List<RoomResponseDto>>> findByInHotels(@PathVariable(name = "id") Long hotelId) {
         List<RoomResponseDto> search = roomService.findByHotelId(hotelId);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel in room search success", search)

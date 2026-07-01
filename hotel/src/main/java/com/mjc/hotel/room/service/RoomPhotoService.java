@@ -18,16 +18,16 @@ public class RoomPhotoService {
     private RoomPhotoRepository roomPhotoRepository;
 
     public RoomPhotoDto insert(RoomPhotoDto roomPhotoDto) {
-        if (roomPhotoDto.getImagePath() == null) return null;
+        if (roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         RoomPhoto clone = RoomPhoto
                 .builder()
                 .imagePath(roomPhotoDto.getImagePath())
                 .build();
-        return toDto(roomPhotoRepository.save(clone), false);
+        return toDto(roomPhotoRepository.save(clone), true);
     }
 
     public RoomPhotoDto update(RoomPhotoDto roomPhotoDto) {
-        if (roomPhotoDto.getSid() == null || roomPhotoDto.getImagePath() == null) return null;
+        if (roomPhotoDto.getSid() == null || roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         RoomPhoto origin = roomPhotoRepository.findById(roomPhotoDto.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         RoomPhoto clone = RoomPhoto

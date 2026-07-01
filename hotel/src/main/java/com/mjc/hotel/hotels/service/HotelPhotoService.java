@@ -21,17 +21,17 @@ public class HotelPhotoService {
     private HotelPhotoRepository hotelPhotoRepository;
 
     public HotelPhotoDto insert(HotelPhotoDto photo) {
-        if (photo.getImagePath() == null) return null;
+        if (photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelPhoto clone = HotelPhoto
                 .builder()
                 .imagePath(photo.getImagePath())
                 .build();
 
-        return toDto(hotelPhotoRepository.save(clone), false);
+        return toDto(hotelPhotoRepository.save(clone), true);
     }
 
     public HotelPhotoDto update(HotelPhotoDto photo) {
-        if (photo.getSid() == null || photo.getImagePath() == null) return null;
+        if (photo.getSid() == null || photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelPhoto origin =  hotelPhotoRepository.findById(photo.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         HotelPhoto clone = HotelPhoto

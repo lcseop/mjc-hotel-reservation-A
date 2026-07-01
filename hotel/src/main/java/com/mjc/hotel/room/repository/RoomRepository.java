@@ -15,4 +15,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     AND (r.deleted IS NULL OR r.deleted = false)
 """)
     List<Room> findActiveRooms(@Param("hotel") Hotel hotel);
+
+    List<Room> findByHotelIdSid(Long hotelId);
 }

@@ -20,17 +20,17 @@ public class HotelAmenitiesService {
     private HotelAmenitiesRepository hotelAmenitiesRepository;
 
     public HotelAmenitiesDto insert(HotelAmenitiesDto amenities) {
-        if (amenities.getTitle() == null) return null;
+        if (amenities.getTitle() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelAmenities clone = HotelAmenities
                 .builder()
                 .title(amenities.getTitle())
                 .description(amenities.getDescription())
                 .build();
-        return toDto(hotelAmenitiesRepository.save(clone), false);
+        return toDto(hotelAmenitiesRepository.save(clone), true);
     }
 
     public HotelAmenitiesDto update(HotelAmenitiesDto amenities) {
-        if (amenities.getTitle() == null || amenities.getSid() == null) return null;
+        if (amenities.getTitle() == null || amenities.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelAmenities origin = hotelAmenitiesRepository.findById(amenities.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         HotelAmenities clone =  HotelAmenities

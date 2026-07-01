@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/hotel/ame")
+@RequestMapping("/api/hotelame")
 @RequiredArgsConstructor
 public class HotelAmenitiesRestController {
     @Autowired
@@ -25,7 +25,7 @@ public class HotelAmenitiesRestController {
     public ResponseEntity<ApiResponse<HotelAmenitiesDto>> insert(@RequestBody HotelAmenitiesDto dto) {
         HotelAmenitiesDto insert = hotelAmenitiesService.insert(dto);
         return ResponseEntity.status(201).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "hotel insert success", insert)
+                new ApiResponse<>(ResponseCode.SUCCESS, "amenities insert success", insert)
         );
     }
 
@@ -37,7 +37,31 @@ public class HotelAmenitiesRestController {
     public ResponseEntity<ApiResponse<HotelAmenitiesDto>> update(@RequestBody HotelAmenitiesDto dto) {
         HotelAmenitiesDto update = hotelAmenitiesService.update(dto);
         return ResponseEntity.status(200).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "hotel update success", update)
+                new ApiResponse<>(ResponseCode.SUCCESS, "amenities update success", update)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 편의시설 삭제",
+            description = "호텔의 편의시설 데이터를 삭제합니다."
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelAmenitiesDto>> delete(@PathVariable Long id) {
+        HotelAmenitiesDto delete = hotelAmenitiesService.delete(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "amenities delete success", delete)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 편의시설 가져오기",
+            description = "알맞은 id의 호텔의 편의시설 데이터를 가져옵니다.\n편의시설의 title에는 제목이, description에는 간단한 설명이 제공됩니다."
+    )
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelAmenitiesDto>> findById(@PathVariable Long id) {
+        HotelAmenitiesDto dto = hotelAmenitiesService.findById(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "amenities get success", dto)
         );
     }
 }

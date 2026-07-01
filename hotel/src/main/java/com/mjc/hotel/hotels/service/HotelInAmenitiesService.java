@@ -28,18 +28,18 @@ public class HotelInAmenitiesService {
     private HotelAmenitiesRepository hotelAmenitiesRepository;
 
     public HotelInAmenitiesDto insert(HotelInAmenities ame) {
-        if (ame.getHotel() == null || ame.getAmenities() == null) return null;
+        if (ame.getHotel() == null || ame.getAmenities() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelInAmenities insert = HotelInAmenities
                 .builder()
                 .hotel(ame.getHotel())
                 .amenities(ame.getAmenities())
                 .build();
-        return toDto(hotelInAmenitiesRepository.save(insert), false);
+        return toDto(hotelInAmenitiesRepository.save(insert), true);
     }
 
     public HotelInAmenitiesDto update(HotelInAmenitiesDto ame) {
         if (ame.getHotelId() == null || ame.getAmenitiesId() == null
-        || ame.getSid() == null) return null;
+        || ame.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelInAmenities origin = hotelInAmenitiesRepository.findById(ame.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         Hotel hotel = hotelRepository.findById(ame.getHotelId()).orElseThrow();
