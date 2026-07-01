@@ -114,8 +114,9 @@ public class ReviewReactionService {
         return result;
     }
 
-    public Integer findByReviewReviewIdAndReactionType(Review review, ReactionType reactionType) {
-        List<ReviewReaction> reviewReactions = reviewReactionRepository.findByReviewSidAndReactionType(review.getSid(),reactionType);
-        return reviewReactions.size();
+    public Long findAllByReviewIdAndReactionType(Long reviewId, String reactionTypeName) {
+        ReactionType reactionType = reactionTypeName.equals("GOOD") ? ReactionType.GOOD : reactionTypeName.equals("BAD") ? ReactionType.BAD : ReactionType.NONE;
+        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionType(reviewId,reactionType);
+        return Long.valueOf(reviewReactions.size());
     }
 }
