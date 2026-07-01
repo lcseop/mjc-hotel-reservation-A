@@ -1,9 +1,6 @@
 package com.mjc.hotel.hotels.service;
 
-import com.mjc.hotel.hotels.dto.HotelAmenitiesDto;
-import com.mjc.hotel.hotels.dto.HotelRequestDto;
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
-import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
+import com.mjc.hotel.hotels.dto.*;
 import com.mjc.hotel.hotels.entity.*;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.*;
@@ -57,25 +54,11 @@ public class HotelService {
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
-        HotelPhoto photo = hotelPhotoRepository.findById(hotel.getPhotoId()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(hotel.getTypeId()).orElseThrow();
-
-        Hotel insert = HotelMapper.clone(null, hotel, false, type, photo);
-
+        Hotel insert = HotelMapper.clone(null, hotel, false, type);
         Hotel saved = hotelRepository.save(insert);
 
-        HotelResponseDto dto = HotelResponseDto
-                .builder()
-                .sid(saved.getSid())
-                .typeTitle(type.getTitle())
-                .photoPath(photo.getImagePath())
-                .hotelName(saved.getHotelName())
-                .hotelPrice(saved.getHotelPrice())
-                .location(saved.getLocation())
-                .starRating(saved.getStarRating())
-                .description(saved.getDescription())
-                .build();
-        return dto;
+        return HotelMapper.response(saved, type, null);
     }
 
     @Transactional
@@ -86,26 +69,22 @@ public class HotelService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         }
 
-        HotelPhoto photo = hotelPhotoRepository.findById(hotel.getPhotoId()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(hotel.getTypeId()).orElseThrow();
-
-        Hotel update = HotelMapper.clone(origin, hotel, true, type, photo);
-
+        Hotel update = HotelMapper.clone(origin, hotel, true, type);
         Hotel saved = hotelRepository.save(update);
 
-        HotelResponseDto dto = HotelResponseDto
-                .builder()
-                .sid(saved.getSid())
-                .typeTitle(type.getTitle())
-                .photoPath(photo.getImagePath())
-                .hotelName(saved.getHotelName())
-                .hotelPrice(saved.getHotelPrice())
-                .location(saved.getLocation())
-                .starRating(saved.getStarRating())
-                .description(saved.getDescription())
-                .build();
+        List<HotelPhotoDto> photos = hotelPhotoRepository.findByHotelSid(hotel.getSid())
+                .stream()
+                .map(h -> HotelPhotoDto
+                        .builder()
+                        .sid(h.getSid())
+                        .hotelId(h.getHotel().getSid())
+                        .imagePath(h.getImagePath())
+                        .build()
+                )
+                .toList();
 
-        return dto;
+        return HotelMapper.response(saved, type, photos);
     }
 
     @Transactional
@@ -117,7 +96,6 @@ public class HotelService {
         }
 
         hotelInAmenitiesRepository.deleteByHotelSid(id);
-        HotelPhoto photo = hotelPhotoRepository.findById(target.getPhoto().getSid()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(target.getType().getSid()).orElseThrow();
 
         target.setDeleted(true);
@@ -125,19 +103,18 @@ public class HotelService {
 
         Hotel saved = hotelRepository.save(target);
 
-        HotelResponseDto dto = HotelResponseDto
-                .builder()
-                .sid(saved.getSid())
-                .typeTitle(type.getTitle())
-                .photoPath(photo.getImagePath())
-                .hotelName(saved.getHotelName())
-                .hotelPrice(saved.getHotelPrice())
-                .location(saved.getLocation())
-                .starRating(saved.getStarRating())
-                .description(saved.getDescription())
-                .build();
+        List<HotelPhotoDto> photos = hotelPhotoRepository.findByHotelSid(target.getSid())
+                .stream()
+                .map(h -> HotelPhotoDto
+                        .builder()
+                        .sid(h.getSid())
+                        .hotelId(h.getHotel().getSid())
+                        .imagePath(h.getImagePath())
+                        .build()
+                )
+                .toList();
 
-        return dto;
+        return HotelMapper.response(saved, type, photos);
     }
 
     public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {

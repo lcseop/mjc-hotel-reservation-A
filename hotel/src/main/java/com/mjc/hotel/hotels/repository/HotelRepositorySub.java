@@ -9,5 +9,5 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface HotelRepositorySub {
-    Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable);
+    Page<Hotel> search(HotelSearchRequestDto dto, Pageable pageable);
 }

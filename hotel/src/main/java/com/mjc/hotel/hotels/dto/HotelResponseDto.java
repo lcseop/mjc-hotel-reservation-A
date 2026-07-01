@@ -2,6 +2,8 @@ package com.mjc.hotel.hotels.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -11,7 +13,7 @@ import lombok.*;
 public class HotelResponseDto {
     private Long sid;
     private String typeTitle;
-    private String photoPath;
+    private List<HotelPhotoDto> photos;
     private String hotelName;
     private Integer hotelPrice;
     private String location;

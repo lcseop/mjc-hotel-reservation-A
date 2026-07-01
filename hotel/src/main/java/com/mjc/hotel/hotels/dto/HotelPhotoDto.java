@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class HotelPhotoDto {
     private Long sid;
+    private Long hotelId;
     private String imagePath;
 }
