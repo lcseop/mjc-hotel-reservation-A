@@ -70,7 +70,7 @@ public class ReviewController {
             summary = "리뷰, 항목별 리뷰, 리뷰 태그 검색",
             description = "리뷰, 항목별 리뷰, 리뷰 태그를 검색합니다."
     )
-    @GetMapping
+    @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<ReviewResponse>>> search(@RequestParam Long sid,
                                                                     @PageableDefault(size = 5) Pageable pageable){
         Page<ReviewResponse> responses = reviewService.search(sid, pageable);
@@ -82,8 +82,8 @@ public class ReviewController {
             summary = "리뷰, 항목별 리뷰, 리뷰 태그 삭제",
             description = "리뷰, 항목별 리뷰, 리뷰 태그를 삭제합니다."
     )
-    @DeleteMapping("{sid}")
-    public ResponseEntity<ApiResponse<ReviewResponse>> delete(@RequestParam Long sid){
+    @DeleteMapping("/{sid}")
+    public ResponseEntity<ApiResponse<ReviewResponse>> delete(@PathVariable Long sid){
         ReviewResponse response = reviewService.deleteReviewId(sid);
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review delete ok",response)
