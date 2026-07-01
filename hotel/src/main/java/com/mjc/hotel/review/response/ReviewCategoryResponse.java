@@ -14,5 +14,5 @@ public class ReviewCategoryResponse {
 
     private Long reviewCategoryId;
 
-    private int rating;
+    private Integer rating;
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public class ReviewUpdateRequest {
     private Long sid;
 
-    private int rating;
+    private Integer rating;
 
     private TravelType travelType;
 

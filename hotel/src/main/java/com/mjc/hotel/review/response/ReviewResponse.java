@@ -21,15 +21,15 @@ public class ReviewResponse {
 
     private Long reservationId;
 
-    private int rating;
+    private Integer rating;
 
     private TravelType travelType;
 
     private String content;
 
-    private int likeCount;
+    private Integer likeCount;
 
-    private int dislikeCount;
+    private Integer dislikeCount;
 
     private List<ReviewCategoryResponse> categories;
 

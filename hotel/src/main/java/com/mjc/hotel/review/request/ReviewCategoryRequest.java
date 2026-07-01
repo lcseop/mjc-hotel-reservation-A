@@ -11,5 +11,5 @@ import lombok.ToString;
 @ToString
 public class ReviewCategoryRequest {
     private Long categoryId;
-    private int rating;
+    private Integer rating;
 }

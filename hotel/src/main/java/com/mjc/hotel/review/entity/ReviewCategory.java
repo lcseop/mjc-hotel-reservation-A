@@ -25,5 +25,5 @@ public class ReviewCategory {
     private ReviewCategoryMaster reviewCategoryMaster;
 
     @Column(name = "rating", nullable = false)
-    private int rating;
+    private Integer rating;
 }

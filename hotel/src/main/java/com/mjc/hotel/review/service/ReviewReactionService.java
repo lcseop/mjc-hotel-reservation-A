@@ -114,7 +114,7 @@ public class ReviewReactionService {
         return result;
     }
 
-    public int findByReviewReviewIdAndReactionType(Review review, ReactionType reactionType) {
+    public Integer findByReviewReviewIdAndReactionType(Review review, ReactionType reactionType) {
         List<ReviewReaction> reviewReactions = reviewReactionRepository.findByReviewSidAndReactionType(review.getSid(),reactionType);
         return reviewReactions.size();
     }
