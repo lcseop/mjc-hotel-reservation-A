@@ -40,30 +40,26 @@ public class ReviewPhotoService {
         }
         List<ReviewPhotoResponse> result = new ArrayList<>();
         for (MultipartFile photo : request.getReviewPhotos()) {
-            if (photo.isEmpty()) {
+            if (photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
                 continue;
             }
-
-            this.validatePhotoFile(photo);
 
             ReviewPhoto reviewImage = this.saveImageFile(review, photo);
             ReviewPhoto save = reviewPhotoRepository.save(reviewImage);
 
-            ReviewPhotoResponse response = ReviewPhotoResponse.builder()
-                    .sid(save.getSid())
-                    .originalFileName(save.getOriginalFileName())
-                    .imagePath(save.getImagePath())
-                    .build();
+            ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
 
             result.add(response);
         }
         return result;
     }
 
+
+
     private ReviewPhoto saveImageFile(Review review, MultipartFile photo) {
         try {
             String originalFileName = photo.getOriginalFilename();
-            String extension = getExtension(originalFileName);
+            String extension = this.getExtension(originalFileName);
             String storedFileName = UUID.randomUUID() + extension;
 
             Path uploadPath = Paths.get(uploadDir);
@@ -76,13 +72,17 @@ public class ReviewPhotoService {
 
             photo.transferTo(filePath.toFile());
 
-            return ReviewPhoto.builder()
+            ReviewPhoto result = ReviewPhoto.builder()
                     .review(review)
                     .originalFileName(originalFileName)
                     .storedFileName(storedFileName)
                     .filePath(filePath.toString())
                     .imagePath("/images/reviews/" + storedFileName)
                     .build();
+
+            result.prePersist();
+
+            return result;
 
         } catch (IOException e) {
             throw new RuntimeException("이미지 저장 중 오류가 발생했습니다.", e);
@@ -97,31 +97,41 @@ public class ReviewPhotoService {
         return fileName.substring(fileName.lastIndexOf("."));
     }
 
-    private void validatePhotoFile(MultipartFile file) {
+    private Boolean falseValidatePhotoFile(MultipartFile file) {
         String contentType = file.getContentType();
 
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
+            return true;
         }
 
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new IllegalArgumentException("파일 크기는 5MB를 초과할 수 없습니다.");
+            return true;
         }
+        return false;
     }
 
     @Transactional
-    public void deleteReviewImage(Long reviewId, Long reviewImageId) {
-        ReviewPhoto reviewImage = reviewPhotoRepository
-                .findBySidAndReviewSid(reviewImageId, reviewId)
-                .orElseThrow();
+    public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
+        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
 
-        try {
-            Path path = Paths.get(reviewImage.getFilePath());
-            Files.deleteIfExists(path);
-        } catch (IOException e) {
-            throw new RuntimeException("이미지 파일 삭제 중 오류가 발생했습니다.", e);
-        }
+        reviewPhoto.markDeleted();
+        ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
 
-        reviewPhotoRepository.delete(reviewImage);
+        ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
+
+        return response;
+    }
+
+    private ReviewPhotoResponse toReviewPhotoResponse(ReviewPhoto reviewPhoto) {
+        ReviewPhotoResponse response = ReviewPhotoResponse.builder()
+                .sid(reviewPhoto.getSid())
+                .originalFileName(reviewPhoto.getOriginalFileName())
+                .imagePath(reviewPhoto.getImagePath())
+                .createdAt(reviewPhoto.getCreatedAt())
+                .updatedAt(reviewPhoto.getUpdatedAt())
+                .deletedAt(reviewPhoto.getDeletedAt())
+                .deleted(reviewPhoto.getDeleted())
+                .build();
+        return response;
     }
 }

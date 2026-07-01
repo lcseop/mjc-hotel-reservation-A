@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("api/review")
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewCategoryRepository reviewCategoryRepository;
@@ -81,7 +82,7 @@ public class ReviewController {
             summary = "리뷰, 항목별 리뷰, 리뷰 태그 삭제",
             description = "리뷰, 항목별 리뷰, 리뷰 태그를 삭제합니다."
     )
-    @DeleteMapping
+    @DeleteMapping("{sid}")
     public ResponseEntity<ApiResponse<ReviewResponse>> delete(@RequestParam Long sid){
         ReviewResponse response = reviewService.deleteReviewId(sid);
         return ResponseEntity.status(HttpStatus.OK).body(
