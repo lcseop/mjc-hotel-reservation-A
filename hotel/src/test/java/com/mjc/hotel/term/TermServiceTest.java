@@ -1,5 +1,6 @@
-package com.mjc.hotel.term.entity;
+package com.mjc.hotel.term;
 
+import com.mjc.hotel.term.entity.Term;
 import com.mjc.hotel.term.repository.TermRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,7 @@ import org.springframework.test.annotation.Commit;
 import java.time.LocalDateTime;
 
 @SpringBootTest
-public class TermMappingTests {
+public class TermServiceTest {
 
     @Autowired
     private TermRepository termRepository;

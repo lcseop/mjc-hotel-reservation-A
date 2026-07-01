@@ -5,6 +5,8 @@ import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,8 +34,7 @@ public class Refunds extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "refund_id")
-    private Long refundId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
@@ -55,8 +56,9 @@ public class Refunds extends BaseEntity {
     @Column(name = "reason", length = 500)
     private String reason;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private String status;
+    private RefundStatus status;
 
     @Column(name = "requested_at")
     private LocalDateTime requestedAt;

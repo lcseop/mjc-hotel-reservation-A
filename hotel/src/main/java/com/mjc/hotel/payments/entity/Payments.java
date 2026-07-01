@@ -2,6 +2,7 @@ package com.mjc.hotel.payments.entity;
 
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.reservations.entity.Reservation;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,12 +28,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class Payments {
+public class Payments extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
-    private Long paymentId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)

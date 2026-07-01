@@ -28,8 +28,7 @@ public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_id")
-    private Long memberId;
+    private Long sid;
 
     @Column(name = "name", length = 50)
     private String name;
@@ -53,5 +52,8 @@ public class Member extends BaseEntity {
 
     @Column(name = "phone_verified")
     private Boolean phoneVerified;
+
+    @Column(name = "member_point")
+    private Integer point;
 
 }

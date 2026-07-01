@@ -13,7 +13,7 @@ import java.util.List;
 @ToString
 @Builder
 public class ReviewResponse {
-    private Long reviewId;
+    private Long sid;
 
     private Long hotelId;
 

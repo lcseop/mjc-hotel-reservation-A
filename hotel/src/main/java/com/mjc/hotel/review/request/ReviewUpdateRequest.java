@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class ReviewUpdateRequest {
-    private Long reviewId;
+    private Long sid;
 
     private int rating;
 

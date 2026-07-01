@@ -7,7 +7,6 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.*;
-import com.mjc.hotel.review.entity.composite_key.ReviewTagId;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.ReviewCategoryRequest;
 import com.mjc.hotel.review.request.ReviewCreateRequest;
@@ -72,12 +71,12 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
-        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getReviewId()).orElseThrow();
+        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getSid()).orElseThrow();
 
         if(Boolean.TRUE.equals(updateBefore.getDeleted())) return null;
 
         Review review = Review.builder()
-                .reviewId(updateBefore.getReviewId())
+                .sid(updateBefore.getSid())
                 .hotel(updateBefore.getHotel())
                 .member(updateBefore.getMember())
                 .reservation(updateBefore.getReservation())
@@ -92,9 +91,9 @@ public class ReviewService {
 
         //기존 리뷰에 있던 항목별 평점(청결도, 서비스 등등)을 리뷰ID로 삭제
         //ex) 사용자가 청결도 리뷰를 삭제하고 위치 리뷰를 추가하는 식으로 리뷰를 수정할 수 있음 그러면 기존 리뷰에 딸린 항목별 리뷰를 삭제하고 새로 넣는게 좋다고 봄.
-        reviewCategoryRepository.deleteByReviewReviewId(reviewUpdateRequest.getReviewId());
+        reviewCategoryRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
         //마찬가지로 기존 리뷰에 딸린 장단점 항목을 삭제하고 새로 넣음
-        reviewTagRepository.deleteByReviewReviewId(reviewUpdateRequest.getReviewId());
+        reviewTagRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
 
         List<ReviewCategory> categories = this.insertReviewCategories(reviewUpdateRequest.getCategories(), updateAfter);
         List<ReviewTag> tags = this.insertReviewTags(reviewUpdateRequest.getTags(), updateAfter);
@@ -109,8 +108,8 @@ public class ReviewService {
 
         if(Boolean.TRUE.equals(review.getDeleted())) return null;
 
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
         ReviewResponse result = toReviewResponse(review,categories,tags);
 
@@ -125,8 +124,8 @@ public class ReviewService {
 
         Review save = reviewRepository.save(find);
 
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewReviewId(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewReviewId(reviewId);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
         ReviewResponse result = toReviewResponse(save,categories,tags);
 
@@ -135,9 +134,9 @@ public class ReviewService {
 
     private ReviewResponse toReviewResponse(Review reviewResult, List<ReviewCategory> categories, List<ReviewTag> tags) {
         return  ReviewResponse.builder()
-                .reviewId(reviewResult.getReviewId())
+                .sid(reviewResult.getSid())
                 .hotelId(reviewResult.getHotel().getSid())
-                .memberId(reviewResult.getMember().getMemberId())
+                .memberId(reviewResult.getMember().getSid())
                 .reservationId(reviewResult.getReservation().getSid())
                 .rating(reviewResult.getRating())
                 .travelType(reviewResult.getTravelType())
@@ -147,9 +146,9 @@ public class ReviewService {
                 .categories(
                         categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()
-                                        .reviewCategoryId(reviewCategory.getReviewCategoryId())
-                                        .reviewCategoryMasterId(reviewCategory.getReviewCategoryMaster().getReviewCategoryMasterId())
-                                        .reviewId(reviewCategory.getReview().getReviewId())
+                                        .reviewCategoryId(reviewCategory.getSid())
+                                        .reviewCategoryId(reviewCategory.getReviewCategoryMaster().getSid())
+                                        .reviewId(reviewCategory.getReview().getSid())
                                         .rating(reviewCategory.getRating())
                                         .build())
                                 .toList()
@@ -157,8 +156,8 @@ public class ReviewService {
                 .tags(
                         tags.stream()
                                 .map(reviewTag -> ReviewTagResponse.builder()
-                                        .reviewId(reviewTag.getReview().getReviewId())
-                                        .reviewTageMapId(reviewTag.getReviewTagMaster().getReviewTagMasterId())
+                                        .reviewId(reviewTag.getReview().getSid())
+                                        .reviewTagId(reviewTag.getReviewTagMaster().getSid())
                                         .build()
                                 )
                                 .toList()

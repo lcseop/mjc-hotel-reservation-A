@@ -8,11 +8,11 @@ import lombok.*;
 @ToString
 @Builder
 public class ReviewCategoryResponse {
-    private Long reviewCategoryId;
+    private Long sid;
 
     private Long reviewId;
 
-    private Long reviewCategoryMasterId;
+    private Long reviewCategoryId;
 
     private int rating;
 }
