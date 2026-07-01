@@ -83,10 +83,6 @@ public class RoomService {
         if (target.getDeleted() != null && target.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, target.getRoomName() + " is not found");
         }
-        Hotel hotel = hotelRepository.findById(target.getHotelId().getSid()).orElseThrow();
-        RoomTag tag = roomTagRepository.findById(target.getRoomTagId().getSid()).orElseThrow();
-        RoomPhoto photo = roomPhotoRepository.findById(target.getRoomPhotoId().getSid()).orElseThrow();
-        RoomType type = roomTypeRepository.findById(target.getRoomTypeId().getSid()).orElseThrow();
 
         target.setDeleted(true);
         target.setDeletedAt(LocalDateTime.now());
@@ -96,18 +92,6 @@ public class RoomService {
         RoomResponseDto dto = response(saved);
 
         return dto;
-    }
-
-    public List<RoomResponseDto> findByHotelId(Long id) {
-        Hotel hotel = hotelRepository.findById(id).orElseThrow();
-        if (hotel.getDeleted() != null && hotel.getDeleted()) {
-            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, hotel.getHotelName() + " is not found");
-        }
-        List<Room> rooms = roomRepository.findActiveRooms(hotel);
-
-        return rooms.stream()
-                .map(RoomMapper::response)
-                .toList();
     }
 
     public RoomResponseDto findById(Long id) {

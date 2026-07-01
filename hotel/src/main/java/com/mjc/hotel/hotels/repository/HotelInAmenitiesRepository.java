@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface HotelInAmenitiesRepository extends JpaRepository<HotelInAmenities, Long> {
     List<HotelInAmenities> findByHotelSid(Long hotelId);
+    void deleteByHotelSid(Long hotelId);
+    void deleteByAmenitiesSid(Long amenitiesId);
 }

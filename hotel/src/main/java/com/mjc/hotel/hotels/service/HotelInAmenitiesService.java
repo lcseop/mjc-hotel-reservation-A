@@ -1,6 +1,7 @@
 package com.mjc.hotel.hotels.service;
 
 import com.mjc.hotel.hotels.dto.HotelInAmenitiesDto;
+import com.mjc.hotel.hotels.dto.HotelInAmenitiesRequestDto;
 import com.mjc.hotel.hotels.dto.HotelTypeDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
@@ -27,17 +28,21 @@ public class HotelInAmenitiesService {
     @Autowired
     private HotelAmenitiesRepository hotelAmenitiesRepository;
 
-    public HotelInAmenitiesDto insert(HotelInAmenities ame) {
-        if (ame.getHotel() == null || ame.getAmenities() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
+    @Transactional
+    public HotelInAmenitiesDto insert(HotelInAmenitiesRequestDto ame) {
+        if (ame.getHotelId() == null || ame.getAmenitiesId() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
+        Hotel hotel = hotelRepository.findById(ame.getHotelId()).orElseThrow();
+        HotelAmenities hotelAmenities = hotelAmenitiesRepository.findById(ame.getAmenitiesId()).orElseThrow();
         HotelInAmenities insert = HotelInAmenities
                 .builder()
-                .hotel(ame.getHotel())
-                .amenities(ame.getAmenities())
+                .hotel(hotel)
+                .amenities(hotelAmenities)
                 .build();
         return toDto(hotelInAmenitiesRepository.save(insert), true);
     }
 
-    public HotelInAmenitiesDto update(HotelInAmenitiesDto ame) {
+    @Transactional
+    public HotelInAmenitiesDto update(HotelInAmenitiesRequestDto ame) {
         if (ame.getHotelId() == null || ame.getAmenitiesId() == null
         || ame.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelInAmenities origin = hotelInAmenitiesRepository.findById(ame.getSid()).orElseThrow();
@@ -53,15 +58,15 @@ public class HotelInAmenitiesService {
         clone.setCreatedAt(origin.getCreatedAt());
         clone.setDeleted(origin.getDeleted());
         clone.setDeletedAt(origin.getDeletedAt());
-        return toDto(hotelInAmenitiesRepository.save(clone), true);
+        hotelInAmenitiesRepository.save(clone);
+        return toDto(clone, true);
     }
 
+    @Transactional
     public HotelInAmenitiesDto delete(Long id) {
         HotelInAmenities ame = hotelInAmenitiesRepository.findById(id).orElseThrow();
-        if (ame.getDeleted() != null && ame.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        ame.setDeleted(true);
-        ame.setDeletedAt(LocalDateTime.now());
-        return toDto(hotelInAmenitiesRepository.save(ame), true);
+        hotelInAmenitiesRepository.delete(ame);
+        return toDto(ame, true);
     }
 
     public HotelInAmenitiesDto findById(Long id) {

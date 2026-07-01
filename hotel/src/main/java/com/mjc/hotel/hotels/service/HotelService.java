@@ -116,6 +116,7 @@ public class HotelService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, target.getHotelName() + " is not found");
         }
 
+        hotelInAmenitiesRepository.deleteByHotelSid(id);
         HotelPhoto photo = hotelPhotoRepository.findById(target.getPhoto().getSid()).orElseThrow();
         HotelType type = hotelTypeRepository.findById(target.getType().getSid()).orElseThrow();
 

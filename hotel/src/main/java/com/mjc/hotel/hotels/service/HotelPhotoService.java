@@ -5,6 +5,7 @@ import com.mjc.hotel.hotels.dto.HotelTypeDto;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import com.mjc.hotel.hotels.entity.HotelType;
 import com.mjc.hotel.hotels.repository.HotelPhotoRepository;
+import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
@@ -19,7 +20,10 @@ import java.time.LocalDateTime;
 public class HotelPhotoService {
     @Autowired
     private HotelPhotoRepository hotelPhotoRepository;
+    @Autowired
+    private HotelRepository hotelRepository;
 
+    @Transactional
     public HotelPhotoDto insert(HotelPhotoDto photo) {
         if (photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelPhoto clone = HotelPhoto
@@ -30,6 +34,7 @@ public class HotelPhotoService {
         return toDto(hotelPhotoRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelPhotoDto update(HotelPhotoDto photo) {
         if (photo.getSid() == null || photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelPhoto origin =  hotelPhotoRepository.findById(photo.getSid()).orElseThrow();
@@ -45,12 +50,14 @@ public class HotelPhotoService {
         return toDto(hotelPhotoRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelPhotoDto delete(Long id) {
+        if (hotelRepository.existsByPhotoSid(id)) {
+            throw new IllegalStateException("이 사진을 사용 중인 호텔이 있습니다.");
+        }
         HotelPhoto photo = hotelPhotoRepository.findById(id).orElseThrow();
-        if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        photo.setDeleted(true);
-        photo.setDeletedAt(LocalDateTime.now());
-        return toDto(hotelPhotoRepository.save(photo), true);
+        hotelPhotoRepository.delete(photo);
+        return toDto(photo, true);
     }
 
     public HotelPhotoDto findById(Long id) {

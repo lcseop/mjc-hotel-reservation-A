@@ -43,7 +43,7 @@ public class HotelAmenitiesRestController {
 
     @Operation(
             summary = "호텔 편의시설 삭제",
-            description = "호텔의 편의시설 데이터를 삭제합니다."
+            description = "호텔의 편의시설 데이터를 완전히 삭제하고, HotelInAmenities의 매핑 정보도 같이 삭제합니다."
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<HotelAmenitiesDto>> delete(@PathVariable Long id) {

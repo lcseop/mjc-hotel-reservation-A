@@ -4,6 +4,7 @@ package com.mjc.hotel.hotels.service;
 import com.mjc.hotel.hotels.dto.HotelTypeDto;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import com.mjc.hotel.hotels.entity.HotelType;
+import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
@@ -18,7 +19,10 @@ import java.time.LocalDateTime;
 public class HotelTypeService {
     @Autowired
     private HotelTypeRepository hotelTypeRepository;
+    @Autowired
+    private HotelRepository hotelRepository;
 
+    @Transactional
     public HotelTypeDto insert(HotelTypeDto type) {
         if (type.getTitle() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelType clone = HotelType
@@ -29,6 +33,7 @@ public class HotelTypeService {
         return toDto(hotelTypeRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelTypeDto update(HotelTypeDto type) {
         if (type.getTitle() == null || type.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelType origin = hotelTypeRepository.findById(type.getSid()).orElseThrow();
@@ -44,12 +49,14 @@ public class HotelTypeService {
         return toDto(hotelTypeRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelTypeDto delete(Long id) {
+        if (hotelRepository.existsByTypeSid(id)) {
+            throw new IllegalStateException("이 타입을 사용 중인 호텔이 있습니다.");
+        }
         HotelType type = hotelTypeRepository.findById(id).orElseThrow();
-        if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        type.setDeleted(true);
-        type.setDeletedAt(LocalDateTime.now());
-        return toDto(hotelTypeRepository.save(type), true);
+        hotelTypeRepository.delete(type);
+        return toDto(type, true);
     }
 
     public HotelTypeDto findById(Long id) {

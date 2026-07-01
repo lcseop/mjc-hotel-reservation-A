@@ -5,6 +5,7 @@ import com.mjc.hotel.hotels.dto.HotelInAmenitiesDto;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
 import com.mjc.hotel.hotels.entity.HotelInAmenities;
 import com.mjc.hotel.hotels.repository.HotelAmenitiesRepository;
+import com.mjc.hotel.hotels.repository.HotelInAmenitiesRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,10 @@ import java.time.LocalDateTime;
 public class HotelAmenitiesService {
     @Autowired
     private HotelAmenitiesRepository hotelAmenitiesRepository;
+    @Autowired
+    private HotelInAmenitiesRepository hotelInAmenitiesRepository;
 
+    @Transactional
     public HotelAmenitiesDto insert(HotelAmenitiesDto amenities) {
         if (amenities.getTitle() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelAmenities clone = HotelAmenities
@@ -29,6 +33,7 @@ public class HotelAmenitiesService {
         return toDto(hotelAmenitiesRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelAmenitiesDto update(HotelAmenitiesDto amenities) {
         if (amenities.getTitle() == null || amenities.getSid() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelAmenities origin = hotelAmenitiesRepository.findById(amenities.getSid()).orElseThrow();
@@ -46,12 +51,12 @@ public class HotelAmenitiesService {
         return toDto(hotelAmenitiesRepository.save(clone), true);
     }
 
+    @Transactional
     public HotelAmenitiesDto delete(Long id) {
+        hotelInAmenitiesRepository.deleteByAmenitiesSid(id);
         HotelAmenities amenities = hotelAmenitiesRepository.findById(id).orElseThrow();
-        if (amenities.getDeleted() != null && amenities.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        amenities.setDeleted(true);
-        amenities.setDeletedAt(LocalDateTime.now());
-        return toDto(hotelAmenitiesRepository.save(amenities), true);
+        hotelAmenitiesRepository.delete(amenities);
+        return toDto(amenities, true);
     }
 
     public HotelAmenitiesDto findById(Long id) {
