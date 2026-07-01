@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class HotelAmenitiesDto {
-    private Long id;
+    private Long sid;
     private String title;
     private String description;
 }
