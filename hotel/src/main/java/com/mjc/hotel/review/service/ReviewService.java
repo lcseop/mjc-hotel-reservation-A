@@ -146,10 +146,11 @@ public class ReviewService {
         ReviewResponse result = toReviewResponse(save,categories,tags);
 
         List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId);
-
-        for(ReviewPhoto photo : photos) {
-            photo.prePersist();
-            reviewPhotoRepository.save(photo);
+        if(photos != null && !photos.isEmpty()){
+            for(ReviewPhoto photo : photos) {
+                photo.prePersist();
+                reviewPhotoRepository.save(photo);
+            }
         }
 
         return result;
