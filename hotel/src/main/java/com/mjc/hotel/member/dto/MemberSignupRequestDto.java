@@ -1,5 +1,6 @@
 package com.mjc.hotel.member.dto;
 
+import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.member.entity.MemberRole;
 import com.mjc.hotel.member.entity.MemberStatus;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,7 @@ public class MemberSignupRequestDto {
     @Getter
     @Setter
     public static class AuthAccountRequest {
-        private String provider;
+        private MemberAuthProvider provider;
         private String providerUserId;
         private String passwordHash;
     }
