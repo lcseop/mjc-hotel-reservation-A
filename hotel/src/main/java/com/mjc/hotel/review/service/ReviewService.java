@@ -39,6 +39,8 @@ public class ReviewService {
 
     private final ReviewTagRepository reviewTagRepository;
 
+    private final ReviewPhotoRepository reviewPhotoRepository;
+
     private final HotelRepository hotelRepository;
 
     private final MemberRepository memberRepository;
@@ -62,6 +64,8 @@ public class ReviewService {
                 .dislikeCount(0)
                 .build();
 
+        review.prePersist();
+
         Review reviewResult = reviewRepository.save(review);
 
         List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest.getCategories(), reviewResult);
@@ -74,9 +78,7 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
-        Review updateBefore = reviewRepository.findById(reviewUpdateRequest.getSid()).orElseThrow();
-
-        if(Boolean.TRUE.equals(updateBefore.getDeleted())) return null;
+        Review updateBefore = reviewRepository.findBySidAndDeletedFalse(reviewUpdateRequest.getSid());
 
         Review review = Review.builder()
                 .sid(updateBefore.getSid())
@@ -107,9 +109,7 @@ public class ReviewService {
     }
 
     public ReviewResponse findByReviewId(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId).orElseThrow();
-
-        if(Boolean.TRUE.equals(review.getDeleted())) return null;
+        Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
 
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
@@ -120,7 +120,7 @@ public class ReviewService {
     }
 
     public Page<ReviewResponse> search(Long reviewId, Pageable pageable) {
-        Page<Review> reviews = reviewRepository.search(reviewId,pageable);
+        Page<Review> reviews = reviewRepository.findBySidAndDeletedFalse(reviewId,pageable);
 
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
@@ -135,17 +135,22 @@ public class ReviewService {
     }
 
     public ReviewResponse deleteReviewId(Long reviewId) {
-        Review find = reviewRepository.findById(reviewId).orElseThrow();
-
-        find.setDeletedAt(LocalDateTime.now());
-        find.setDeleted(true);
-
-        Review save = reviewRepository.save(find);
-
+        Review find = reviewRepository.findBySidAndDeletedFalse(reviewId);
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
+        find.markDeleted();
+
+        Review save = reviewRepository.save(find);
+
         ReviewResponse result = toReviewResponse(save,categories,tags);
+
+        List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId);
+
+        for(ReviewPhoto photo : photos) {
+            photo.prePersist();
+            reviewPhotoRepository.save(photo);
+        }
 
         return result;
     }

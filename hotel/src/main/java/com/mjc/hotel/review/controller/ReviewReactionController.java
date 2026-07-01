@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/review-reaction")
 @RequiredArgsConstructor
 public class ReviewReactionController {
     private final ReviewReactionService reviewReactionService;

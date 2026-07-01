@@ -2,6 +2,8 @@ package com.mjc.hotel.review.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,4 +15,12 @@ public class ReviewPhotoResponse {
     private String originalFileName;
 
     private String imagePath;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    private LocalDateTime deletedAt;
+
+    private Boolean deleted;
 }

@@ -26,6 +26,8 @@ public class ReviewAnswerService {
                 .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
                 .build();
 
+        reviewAnswer.prePersist();
+
         ReviewAnswer save = reviewAnswerRepository.save(reviewAnswer);
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(save);
@@ -33,9 +35,7 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest reviewAnswerRequest) {
-        ReviewAnswer find = reviewAnswerRepository.findById(reviewAnswerRequest.getSid()).orElseThrow();
-
-        if(Boolean.TRUE.equals(find.getDeleted())) return null;
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(reviewAnswerRequest.getSid());
 
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
                 .sid(find.getSid())
@@ -50,9 +50,7 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse findReviewAnswer(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findById(id).orElseThrow();
-
-        if(Boolean.TRUE.equals(find.getDeleted())) return null;
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
 
@@ -60,10 +58,9 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse deleteReviewAnswerId(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findById(id).orElseThrow();
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
 
-        find.setDeletedAt(LocalDateTime.now());
-        find.setDeleted(true);
+        find.markDeleted();
 
         ReviewAnswer save = reviewAnswerRepository.save(find);
 
