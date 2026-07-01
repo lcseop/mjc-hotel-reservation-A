@@ -1,10 +1,7 @@
 package com.mjc.hotel.room;
 
 import com.mjc.hotel.hotels.entity.Hotel;
-import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.entity.RoomPhoto;
-import com.mjc.hotel.room.entity.RoomTag;
-import com.mjc.hotel.room.entity.RoomType;
+import com.mjc.hotel.room.entity.*;
 import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
@@ -69,6 +66,12 @@ public class RoomServiceTest {
                 .floor(3)
                 .area(30)
                 .maximumPeople(3)
+                .checkInTime(15)
+                .checkOutTime(11)
+                .parking("발렛파킹 주차")
+                .pet(RoomPetAndSmokeEnum.BAN)
+                .smoke(RoomPetAndSmokeEnum.BAN)
+                .idCard(RoomIdCardEnum.OPTIONAL)
                 .build();
 
         roomRepository.save(room);

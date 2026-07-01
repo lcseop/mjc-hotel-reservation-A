@@ -3,6 +3,7 @@ package com.mjc.hotel.room.service;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.room.dto.RoomPhotoDto;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.entity.Room;
@@ -82,10 +83,6 @@ public class RoomService {
         if (target.getDeleted() != null && target.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, target.getRoomName() + " is not found");
         }
-        Hotel hotel = hotelRepository.findById(target.getHotelId().getSid()).orElseThrow();
-        RoomTag tag = roomTagRepository.findById(target.getRoomTagId().getSid()).orElseThrow();
-        RoomPhoto photo = roomPhotoRepository.findById(target.getRoomPhotoId().getSid()).orElseThrow();
-        RoomType type = roomTypeRepository.findById(target.getRoomTypeId().getSid()).orElseThrow();
 
         target.setDeleted(true);
         target.setDeletedAt(LocalDateTime.now());
@@ -97,13 +94,10 @@ public class RoomService {
         return dto;
     }
 
-    public List<RoomResponseDto> findByHotelId(Long id) {
-        Hotel hotel = hotelRepository.findById(id).orElseThrow();
-        List<Room> rooms = roomRepository.findByHotelId(hotel);
-
-        return rooms.stream()
-                .map(RoomMapper::response)
-                .toList();
+    public RoomResponseDto findById(Long id) {
+        Room room = roomRepository.findById(id).orElseThrow();
+        if (room.getDeleted() != null && room.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        return response(room);
     }
 
     private RoomResponseDto response(Room saved) {
