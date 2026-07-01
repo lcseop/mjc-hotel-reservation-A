@@ -1,5 +1,6 @@
 package com.mjc.hotel.member.dto;
 
+import com.mjc.hotel.member.entity.MemberAuthProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 public class MemberAuthAccountResponseDto {
     private Long sid;
     private Long memberSid;
-    private String provider;
+    private MemberAuthProvider provider;
     private String providerUserId;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
