@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString
-public class ReviewCategoryRequest {
-    private Long categoryId;
-    private Integer rating;
+public class ReviewPhotoRequest {
+    Long reviewId;
+    List<MultipartFile> reviewPhotos;
 }
