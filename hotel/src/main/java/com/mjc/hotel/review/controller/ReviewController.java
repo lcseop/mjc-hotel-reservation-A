@@ -61,6 +61,11 @@ public class ReviewController {
     @PatchMapping
     public ResponseEntity<ApiResponse<ReviewResponse>> update(@RequestBody ReviewUpdateRequest request){
         ReviewResponse response = reviewService.updateReview(request);
+        if(response == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ApiResponse<>(ResponseCode.UPDATE_ERROR,"review is deleted so don't update", null)
+            );
+        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review update ok",response)
         );
@@ -71,11 +76,15 @@ public class ReviewController {
             description = "리뷰, 항목별 리뷰, 리뷰 태그를 검색합니다."
     )
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> search(@RequestParam Long sid,
-                                                                    @PageableDefault(size = 5) Pageable pageable){
-        Page<ReviewResponse> responses = reviewService.search(sid, pageable);
+    public ResponseEntity<ApiResponse<ReviewResponse>> search(@RequestParam Long sid){
+        ReviewResponse response = reviewService.findByReviewId(sid);
+        if(response == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ApiResponse<>(ResponseCode.SELECT_ERROR,"review not found", null)
+            );
+        }
         return ResponseEntity.status(HttpStatus.OK).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review search ok", responses)
+                new ApiResponse<>(ResponseCode.SUCCESS, "review search ok", response)
         );
     }
     @Operation(
@@ -85,6 +94,11 @@ public class ReviewController {
     @DeleteMapping("/{sid}")
     public ResponseEntity<ApiResponse<ReviewResponse>> delete(@PathVariable Long sid){
         ReviewResponse response = reviewService.deleteReviewId(sid);
+        if(response == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ApiResponse<>(ResponseCode.DELETE_ERROR,"review is deleted so don't delete", null)
+            );
+        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review delete ok",response)
         );

@@ -67,7 +67,6 @@ public class ReviewService {
         review.prePersist();
 
         Review reviewResult = reviewRepository.save(review);
-
         List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest.getCategories(), reviewResult);
         List<ReviewTag> tags = this.insertReviewTags(reviewRequest.getTags(), reviewResult);
 
@@ -79,7 +78,9 @@ public class ReviewService {
     @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
         Review updateBefore = reviewRepository.findBySidAndDeletedFalse(reviewUpdateRequest.getSid());
-
+        if(updateBefore == null){
+            return null;
+        }
         Review review = Review.builder()
                 .sid(updateBefore.getSid())
                 .hotel(updateBefore.getHotel())
@@ -113,7 +114,9 @@ public class ReviewService {
 
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
-
+        if(review == null){
+            return null;
+        }
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
@@ -121,9 +124,12 @@ public class ReviewService {
 
         return result;
     }
-
+    //
     public Page<ReviewResponse> search(Long reviewId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findBySidAndDeletedFalse(reviewId,pageable);
+        if(reviews.isEmpty()){
+            return null;
+        }
 
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
@@ -139,6 +145,9 @@ public class ReviewService {
 
     public ReviewResponse deleteReviewId(Long reviewId) {
         Review find = reviewRepository.findBySidAndDeletedFalse(reviewId);
+        if(find == null){
+            return null;
+        }
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
