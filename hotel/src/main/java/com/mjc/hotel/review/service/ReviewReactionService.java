@@ -88,6 +88,9 @@ public class ReviewReactionService {
                 .reactionType(reviewReactionRequest.getReactionType())
                 .build();
 
+        //생성일 그대로 넘겨주기
+        reviewReaction.setCreatedAt(find.getCreatedAt());
+
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
         ReviewReactionResponse result = this.toReviewReactionResponse(save);
