@@ -1,5 +1,6 @@
 package com.mjc.hotel.hotels.mapper;
 
+import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
 import com.mjc.hotel.hotels.dto.HotelPhotoDto;
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
@@ -50,12 +51,27 @@ public class HotelMapper {
         return clone;
     }
 
-    public static HotelResponseDto response(Hotel hotel, HotelType type, List<HotelPhotoDto> photos) {
+    public static HotelResponseDto response(Hotel hotel, List<HotelPhotoDto> photos) {
         return HotelResponseDto
                 .builder()
                 .sid(hotel.getSid())
                 .typeTitle(hotel.getType().getTitle())
                 .photos(photos)
+                .hotelName(hotel.getHotelName())
+                .hotelPrice(hotel.getHotelPrice())
+                .location(hotel.getLocation())
+                .starRating(hotel.getStarRating())
+                .description(hotel.getDescription())
+                .latitude(hotel.getLatitude())
+                .longitude(hotel.getLongitude())
+                .build();
+    }
+
+    public static HotelInPhotoResponseDto photoResponse(Hotel hotel) {
+        return HotelInPhotoResponseDto
+                .builder()
+                .sid(hotel.getSid())
+                .typeTitle(hotel.getType().getTitle())
                 .hotelName(hotel.getHotelName())
                 .hotelPrice(hotel.getHotelPrice())
                 .location(hotel.getLocation())

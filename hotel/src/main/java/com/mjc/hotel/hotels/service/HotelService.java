@@ -20,6 +20,8 @@ import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -51,6 +55,8 @@ public class HotelService {
     private ReviewCategoryRepository reviewCategoryRepository;
     @Autowired
     private ReviewTagRepository reviewTagRepository;
+    @Autowired
+    private JPAQueryFactory queryFactory;
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
@@ -58,7 +64,7 @@ public class HotelService {
         Hotel insert = HotelMapper.clone(null, hotel, false, type);
         Hotel saved = hotelRepository.save(insert);
 
-        return HotelMapper.response(saved, type, null);
+        return HotelMapper.response(saved, null);
     }
 
     @Transactional
@@ -84,7 +90,7 @@ public class HotelService {
                 )
                 .toList();
 
-        return HotelMapper.response(saved, type, photos);
+        return HotelMapper.response(saved, photos);
     }
 
     @Transactional
@@ -114,12 +120,60 @@ public class HotelService {
                 )
                 .toList();
 
-        return HotelMapper.response(saved, type, photos);
+        return HotelMapper.response(saved, photos);
     }
 
     public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {
-        return hotelRepository.search(dto, pageable);
+
+        Page<HotelResponseDto> result = hotelRepository.search(dto, pageable);
+
+        List<HotelResponseDto> content = result.getContent();
+
+        // 1. hotelId 추출
+        List<Long> hotelIds = content.stream()
+                .map(HotelResponseDto::getSid)
+                .toList();
+
+        if (hotelIds.isEmpty()) return result;
+
+        // 2. 사진 조회
+        QHotelPhoto hp = QHotelPhoto.hotelPhoto;
+
+        List<Tuple> photoTuples = queryFactory
+                .select(hp.hotel.sid, hp.imagePath)
+                .select(hp.sid, hp.hotel.sid, hp.imagePath)
+                .from(hp)
+                .where(hp.hotel.sid.in(hotelIds))
+                .fetch();
+
+        // 3. 그룹핑
+        Map<Long, List<HotelPhotoDto>> photoMap = photoTuples.stream()
+                .filter(t -> t.get(hp.hotel.sid) != null)
+                .collect(Collectors.groupingBy(
+                        t -> t.get(hp.hotel.sid),
+                        Collectors.mapping(
+                                t -> HotelPhotoDto.builder()
+                                        .sid(t.get(hp.sid))
+                                        .hotelId(t.get(hp.hotel.sid))
+                                        .imagePath(t.get(hp.imagePath))
+                                        .build(),
+                                Collectors.toList()
+                        )
+                ));
+
+
+
+
+        // 4. DTO에 세팅
+        content.forEach(hotel -> {
+            hotel.setPhotos(
+                    photoMap.getOrDefault(hotel.getSid(), List.of())
+            );
+        });
+
+        return result;
     }
+
 
     public List<HotelAmenitiesDto> findHotelInAmenities(Long hotelId) {
         List<HotelInAmenities> inAmenities = hotelInAmenitiesRepository.findByHotelSid(hotelId);
@@ -139,8 +193,6 @@ public class HotelService {
                 .map(r -> RoomResponseNoHotelDto
                             .builder()
                             .sid(r.getSid())
-                            .roomTagTitle(r.getRoomTagId().getTitle())
-                            .roomPhotoPath(r.getRoomPhotoId().getImagePath())
                             .roomTypeTitle(r.getRoomTypeId().getTitle())
                             .roomName(r.getRoomName())
                             .roomPrice(r.getRoomPrice())

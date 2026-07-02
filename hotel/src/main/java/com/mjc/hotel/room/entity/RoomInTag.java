@@ -1,6 +1,5 @@
 package com.mjc.hotel.room.entity;
 
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,12 +7,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "room_photo")
+@Entity(name = "room_in_tag")
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Data
-public class RoomPhoto extends BaseEntity {
+@Builder
+public class RoomInTag extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +22,7 @@ public class RoomPhoto extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Room room;
 
-    @Column(name = "image_path", length = 255, nullable = false)
-    private String imagePath;
+    @JoinColumn(name = "tag_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private RoomTag tag;
 }

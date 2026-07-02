@@ -15,9 +15,8 @@ import com.mjc.hotel.room.entity.RoomType;
 import java.util.List;
 
 public class RoomMapper {
-    public static Room clone(Room origin, RoomRequestDto room, boolean sid, Hotel hotel, RoomTag tag, RoomType type, RoomPhoto photo) {
-        if (room == null || photo == null
-                || tag == null || type == null
+    public static Room clone(Room origin, RoomRequestDto room, boolean sid, Hotel hotel, RoomType type) {
+        if (room == null || type == null
                 || hotel == null || room.getRoomName() == null
                 || room.getRoomPrice() == null || room.getRoomNumber() == null
                 || room.getFloor() == null || room.getArea() == null
@@ -30,9 +29,7 @@ public class RoomMapper {
         Room clone = Room
                 .builder()
                 .hotelId(hotel)
-                .roomTagId(tag)
                 .roomTypeId(type)
-                .roomPhotoId(photo)
                 .roomName(room.getRoomName())
                 .roomPrice(room.getRoomPrice())
                 .roomNumber(room.getRoomNumber())
@@ -62,10 +59,8 @@ public class RoomMapper {
         return RoomResponseDto
                 .builder()
                 .sid(room.getSid())
-                .hotel(HotelMapper.response(room.getHotelId()))
-                .roomTagTitle(room.getRoomTagId().getTitle())
+                .hotel(HotelMapper.photoResponse(room.getHotelId()))
                 .roomTypeTitle(room.getRoomTypeId().getTitle())
-                .roomPhotoPath(room.getRoomPhotoId().getImagePath())
                 .roomName(room.getRoomName())
                 .roomPrice(room.getRoomPrice())
                 .roomNumber(room.getRoomNumber())

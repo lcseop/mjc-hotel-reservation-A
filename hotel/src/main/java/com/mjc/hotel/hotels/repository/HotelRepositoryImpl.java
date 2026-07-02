@@ -2,7 +2,6 @@ package com.mjc.hotel.hotels.repository;
 
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.QHotel;
 import com.mjc.hotel.reservations.entity.QReservation;
 import com.mjc.hotel.reservations.entity.QReservationCancel;
@@ -86,9 +85,11 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .from(r)
                 .where(
                         r.hotelId.eq(h),
+
                         capacityCond(r, req.getPeople()),
                         priceCond(r, req.getMinPrice(), req.getMaxPrice()),
                         roomTypeCond(r, req.getRoomTypeIds()),
+
                         noReservationConflict(r, res, rc,
                                 req.getCheckIn(), req.getCheckOut())
                 )
@@ -121,11 +122,14 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .from(res)
                 .where(
                         res.room.eq(r),
+
                         res.sid.notIn(
                                 JPAExpressions
                                         .select(rc.reservation.sid)
                                         .from(rc)
                         ),
+
+                        // 날짜 겹침 조건
                         res.checkInDate.lt(checkOut),
                         res.checkOutDate.gt(checkIn)
                 )
