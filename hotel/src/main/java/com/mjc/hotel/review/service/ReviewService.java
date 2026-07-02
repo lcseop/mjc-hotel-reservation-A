@@ -15,6 +15,8 @@ import com.mjc.hotel.review.request.ReviewUpdateRequest;
 import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
+import com.mjc.hotel.util.ResponseCode;
+import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,34 +33,31 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     private final ReviewCategoryMasterRepository reviewCategoryMasterRepository;
-
     private final ReviewCategoryRepository reviewCategoryRepository;
 
     private final ReviewTagMasterRepository reviewTagMasterRepository;
-
     private final ReviewTagRepository reviewTagRepository;
 
     private final ReviewPhotoRepository reviewPhotoRepository;
+    private final ReviewAnswerRepository reviewAnswerRepository;
 
     private final HotelRepository hotelRepository;
-
     private final MemberRepository memberRepository;
-
     private final ReservationRepository reservationRepository;
 
-    public ReviewResponse insertReview(ReviewCreateRequest reviewRequest) {
-        Hotel hotel = hotelRepository.findById(reviewRequest.getHotelId()).orElseThrow();
-        Member member = memberRepository.findById(reviewRequest.getMemberId()).orElseThrow();
-        Reservation reservation = reservationRepository.findById(reviewRequest.getReservationId()).orElseThrow();
+    public ReviewResponse insertReview(ReviewCreateRequest request) {
+        Hotel hotel = hotelRepository.findById(request.getHotelId()).orElseThrow();
+        Member member = memberRepository.findById(request.getMemberId()).orElseThrow();
+        Reservation reservation = reservationRepository.findById(request.getReservationId()).orElseThrow();
 
         //request로 빌더 패턴 사용
         Review review = Review.builder()
                 .hotel(hotel)
                 .member(member)
                 .reservation(reservation)
-                .rating(reviewRequest.getRating())
-                .travelType(reviewRequest.getTravelType())
-                .content(reviewRequest.getContent())
+                .rating(request.getRating())
+                .travelType(request.getTravelType())
+                .content(request.getContent())
                 .likeCount(0)
                 .dislikeCount(0)
                 .build();
@@ -66,8 +65,8 @@ public class ReviewService {
         review.prePersist();
 
         Review reviewResult = reviewRepository.save(review);
-        List<ReviewCategory> categories = this.insertReviewCategories(reviewRequest.getCategories(), reviewResult);
-        List<ReviewTag> tags = this.insertReviewTags(reviewRequest.getTags(), reviewResult);
+        List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), reviewResult);
+        List<ReviewTag> tags = this.insertReviewTags(request.getTags(), reviewResult);
 
         ReviewResponse result = this.toReviewResponse(reviewResult,categories, tags);
 
@@ -75,36 +74,36 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewResponse updateReview(ReviewUpdateRequest reviewUpdateRequest) {
-        Review updateBefore = reviewRepository.findBySidAndDeletedFalse(reviewUpdateRequest.getSid());
-        if(updateBefore == null){
-            return null;
+    public ReviewResponse updateReview(ReviewUpdateRequest request) {
+        Review find = reviewRepository.findBySidAndDeletedFalse(request.getSid());
+        if(find == null){
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
         Review review = Review.builder()
-                .sid(updateBefore.getSid())
-                .hotel(updateBefore.getHotel())
-                .member(updateBefore.getMember())
-                .reservation(updateBefore.getReservation())
-                .rating(reviewUpdateRequest.getRating())
-                .travelType(reviewUpdateRequest.getTravelType())
-                .content(reviewUpdateRequest.getContent())
-                .likeCount(updateBefore.getLikeCount())
-                .dislikeCount(updateBefore.getDislikeCount())
+                .sid(find.getSid())
+                .hotel(find.getHotel())
+                .member(find.getMember())
+                .reservation(find.getReservation())
+                .rating(request.getRating())
+                .travelType(request.getTravelType())
+                .content(request.getContent())
+                .likeCount(find.getLikeCount())
+                .dislikeCount(find.getDislikeCount())
                 .build();
         //생성시간 그대로 넘겨주기
-        review.setCreatedAt(updateBefore.getCreatedAt());
+        review.setCreatedAt(find.getCreatedAt());
         review.prePersist();
 
         Review updateAfter = reviewRepository.save(review);
 
         //기존 리뷰에 있던 항목별 평점(청결도, 서비스 등등)을 리뷰ID로 삭제
         //ex) 사용자가 청결도 리뷰를 삭제하고 위치 리뷰를 추가하는 식으로 리뷰를 수정할 수 있음 그러면 기존 리뷰에 딸린 항목별 리뷰를 삭제하고 새로 넣는게 좋다고 봄.
-        reviewCategoryRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
+        reviewCategoryRepository.deleteByReviewSid(updateAfter.getSid());
         //마찬가지로 기존 리뷰에 딸린 장단점 항목을 삭제하고 새로 넣음
-        reviewTagRepository.deleteByReviewSid(reviewUpdateRequest.getSid());
+        reviewTagRepository.deleteByReviewSid(updateAfter.getSid());
 
-        List<ReviewCategory> categories = this.insertReviewCategories(reviewUpdateRequest.getCategories(), updateAfter);
-        List<ReviewTag> tags = this.insertReviewTags(reviewUpdateRequest.getTags(), updateAfter);
+        List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), updateAfter);
+        List<ReviewTag> tags = this.insertReviewTags(request.getTags(), updateAfter);
 
         ReviewResponse result = this.toReviewResponse(updateAfter,categories, tags);
 
@@ -114,56 +113,42 @@ public class ReviewService {
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(review == null){
-            return null;
+            throw new  DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(review.getSid());
 
         ReviewResponse result = this.toReviewResponse(review,categories,tags);
 
         return result;
     }
-    //
-    public Page<ReviewResponse> search(Long reviewId, Pageable pageable) {
-        Page<Review> reviews = reviewRepository.findBySidAndDeletedFalse(reviewId,pageable);
-        if(reviews.isEmpty()){
-            return null;
-        }
 
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
-
-        List<ReviewResponse> list = reviews.stream()
-                .map(review ->
-                        this.toReviewResponse(review,categories,tags)
-                )
-                .toList();
-        Page<ReviewResponse> responses = new PageImpl<>(list, pageable, reviews.getTotalElements());
-        return responses;
-    }
-
-    public ReviewResponse deleteReviewId(Long reviewId) {
-        Review find = reviewRepository.findBySidAndDeletedFalse(reviewId);
+    public ReviewResponse deleteReviewId(Long sid) {
+        Review find = reviewRepository.findBySidAndDeletedFalse(sid);
         if(find == null){
-            return null;
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
-        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(reviewId);
-        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(reviewId);
 
         find.markDeleted();
-
         Review save = reviewRepository.save(find);
 
-        ReviewResponse result = toReviewResponse(save,categories,tags);
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(find.getSid());
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(find.getSid());
 
-        List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId);
+        List<ReviewPhoto> photos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(find.getSid());
         if(photos != null && !photos.isEmpty()){
             for(ReviewPhoto photo : photos) {
-                photo.prePersist();
+                photo.markDeleted();
                 reviewPhotoRepository.save(photo);
             }
         }
+        ReviewAnswer answer = reviewAnswerRepository.findByReviewSidAndDeletedFalse(find.getSid());
+        if(answer != null){
+            answer.markDeleted();
+            reviewAnswerRepository.save(answer);
+        }
 
+        ReviewResponse result = toReviewResponse(save,categories,tags);
         return result;
     }
 

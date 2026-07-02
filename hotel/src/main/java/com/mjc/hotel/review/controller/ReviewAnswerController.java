@@ -25,11 +25,6 @@ public class ReviewAnswerController {
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewAnswerResponse>> insert(@RequestBody ReviewAnswerCreateRequest request){
         ReviewAnswerResponse response = reviewAnswerService.insertReviewAnswer(request);
-        if(response==null){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                    new ApiResponse<>(ResponseCode.INSERT_ERROR,"review_answer is exist", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer insert ok",response)
         );
@@ -42,11 +37,6 @@ public class ReviewAnswerController {
     @PatchMapping
     public ResponseEntity<ApiResponse<ReviewAnswerResponse>> update(@RequestBody ReviewAnswerUpdateRequest request){
         ReviewAnswerResponse response = reviewAnswerService.updateReviewAnswer(request);
-        if(response == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ResponseCode.UPDATE_ERROR,"review_answer is deleted so don't update", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer update ok",response)
         );
@@ -59,11 +49,6 @@ public class ReviewAnswerController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<ReviewAnswerResponse>> search(@RequestParam Long sid){
         ReviewAnswerResponse response = reviewAnswerService.findBySidReviewAnswer(sid);
-        if(response == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ResponseCode.SELECT_ERROR,"review_answer not found", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer search ok",response)
         );
@@ -76,11 +61,6 @@ public class ReviewAnswerController {
     @DeleteMapping("/{sid}")
     public ResponseEntity<ApiResponse<ReviewAnswerResponse>> delete(@PathVariable Long sid){
         ReviewAnswerResponse response = reviewAnswerService.deleteReviewAnswer(sid);
-        if(response == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ResponseCode.DELETE_ERROR,"review_answer is deleted so don't delete", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer delete ok",response)
         );

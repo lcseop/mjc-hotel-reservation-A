@@ -31,7 +31,6 @@ public class ReviewPhotoController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<List<ReviewPhotoResponse>>> insert(@ModelAttribute ReviewPhotoCreateRequest request) {
         List<ReviewPhotoResponse> responses = reviewPhotoService.insertReviewPhotos(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review photos insert ok", responses)
         );
@@ -43,11 +42,6 @@ public class ReviewPhotoController {
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ReviewPhotoResponse>> update(@ModelAttribute ReviewPhotoUpdateRequest request) {
         ReviewPhotoResponse response = reviewPhotoService.updateReviewPhoto(request);
-        if(response == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ResponseCode.UPDATE_ERROR,"review photo is deleted so don't update", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review photo update ok", response)
         );
@@ -71,11 +65,6 @@ public class ReviewPhotoController {
     @DeleteMapping("{sid}")
     public ResponseEntity<ApiResponse<ReviewPhotoResponse>> delete(@PathVariable Long sid) {
         ReviewPhotoResponse response = reviewPhotoService.deleteReviewImage(sid);
-        if(response == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ResponseCode.DELETE_ERROR,"review photo is deleted so don't delete", null)
-            );
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review photo delete ok", response)
         );

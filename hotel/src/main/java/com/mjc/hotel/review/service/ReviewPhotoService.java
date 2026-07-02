@@ -7,6 +7,8 @@ import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewPhotoCreateRequest;
 import com.mjc.hotel.review.request.ReviewPhotoUpdateRequest;
 import com.mjc.hotel.review.response.ReviewPhotoResponse;
+import com.mjc.hotel.util.ResponseCode;
+import com.mjc.hotel.util.excep.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,11 +38,13 @@ public class ReviewPhotoService {
 
     @Transactional
     public List<ReviewPhotoResponse> insertReviewPhotos(ReviewPhotoCreateRequest request) {
-        Review review = reviewRepository.findById(request.getReviewId())
-                .orElseThrow();
+        Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
+        if(review == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
 
         if (request.getPhotos() == null || request.getPhotos().isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("Files Cannot Be Empty");
         }
         List<ReviewPhotoResponse> result = new ArrayList<>();
         for (MultipartFile photo : request.getPhotos()) {
@@ -60,14 +64,16 @@ public class ReviewPhotoService {
 
     public ReviewPhotoResponse updateReviewPhoto(ReviewPhotoUpdateRequest request){
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
+        if(review == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
         ReviewPhoto oldPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(request.getSid());
         if(oldPhoto == null){
-            return null;
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }
         MultipartFile photo = request.getPhoto();
-
         if(photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
-            return null;
+            throw new IllegalArgumentException("Files Cannot Be Empty");
         }
         oldPhoto.markDeleted();
         reviewPhotoRepository.save(oldPhoto);
@@ -80,8 +86,10 @@ public class ReviewPhotoService {
     }
 
     public List<ReviewPhotoResponse> findAllByReviewId(Long reviewId){
-        List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId);
-
+        List<ReviewPhoto> photos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId);
+        if(photos.isEmpty()){
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photos Not Found");
+        }
         List<ReviewPhotoResponse> result = photos.stream()
                 .map(this::toReviewPhotoResponse)
                 .toList();
@@ -89,9 +97,9 @@ public class ReviewPhotoService {
         return result;
     }
     public Page<ReviewPhotoResponse> search(Long reviewId, Pageable pageable) {
-        Page<ReviewPhoto> reviewPhotos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId,pageable);
+        Page<ReviewPhoto> reviewPhotos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId,pageable);
         if(reviewPhotos.isEmpty()){
-            return null;
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photos Not Found");
         }
         List<ReviewPhotoResponse> list = reviewPhotos.stream()
                 .map(this::toReviewPhotoResponse)
@@ -104,7 +112,7 @@ public class ReviewPhotoService {
     public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
         ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
         if(reviewPhoto == null){
-            return null;
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }
         reviewPhoto.markDeleted();
         ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
