@@ -39,11 +39,11 @@ public class ReviewPhotoService {
         Review review = reviewRepository.findById(request.getReviewId())
                 .orElseThrow();
 
-        if (request.getReviewPhotos() == null || request.getReviewPhotos().isEmpty()) {
+        if (request.getPhotos() == null || request.getPhotos().isEmpty()) {
             return null;
         }
         List<ReviewPhotoResponse> result = new ArrayList<>();
-        for (MultipartFile photo : request.getReviewPhotos()) {
+        for (MultipartFile photo : request.getPhotos()) {
             if (photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
                 continue;
             }

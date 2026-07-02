@@ -11,5 +11,5 @@ import java.util.List;
 @ToString
 public class ReviewPhotoCreateRequest {
     Long reviewId;
-    List<MultipartFile> reviewPhotos;
+    List<MultipartFile> photos;
 }
