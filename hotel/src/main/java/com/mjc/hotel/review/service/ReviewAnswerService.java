@@ -16,12 +16,15 @@ public class ReviewAnswerService {
     private final ReviewAnswerRepository reviewAnswerRepository;
     private final ReviewRepository reviewRepository;
 
-    public ReviewAnswerResponse insertReviewAnswer(ReviewAnswerCreateRequest reviewAnswerRequest) {
-        Review review = reviewRepository.findById(reviewAnswerRequest.getReviewId()).orElseThrow();
+    public ReviewAnswerResponse insertReviewAnswer(ReviewAnswerCreateRequest request) {
+        Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
 
+        if(reviewAnswerRepository.existsByReviewSidAndDeletedFalse(review.getSid())) {
+            return null;
+        }
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
                 .review(review)
-                .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
+                .reviewAnswer(request.getReviewAnswer())
                 .build();
 
         reviewAnswer.prePersist();

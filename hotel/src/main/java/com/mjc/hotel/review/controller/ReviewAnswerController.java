@@ -25,6 +25,11 @@ public class ReviewAnswerController {
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewAnswerResponse>> insert(@RequestBody ReviewAnswerCreateRequest request){
         ReviewAnswerResponse response = reviewAnswerService.insertReviewAnswer(request);
+        if(response==null){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    new ApiResponse<>(ResponseCode.INSERT_ERROR,"review_answer is exist", null)
+            );
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer insert ok",response)
         );
