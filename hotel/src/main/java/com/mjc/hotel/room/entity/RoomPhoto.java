@@ -1,5 +1,6 @@
 package com.mjc.hotel.room.entity;
 
+import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,10 @@ public class RoomPhoto extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
+
+    @JoinColumn(name = "room_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Room room;
 
     @Column(name = "image_path", length = 255, nullable = false)
     private String imagePath;

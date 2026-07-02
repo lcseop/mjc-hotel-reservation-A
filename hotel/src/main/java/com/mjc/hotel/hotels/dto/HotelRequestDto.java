@@ -11,7 +11,6 @@ import lombok.*;
 public class HotelRequestDto {
     private Long sid;
     private Long typeId;
-    private Long photoId;
     private String hotelName;
     private Integer hotelPrice;
     private String location;

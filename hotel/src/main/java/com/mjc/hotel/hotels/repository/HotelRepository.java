@@ -10,6 +10,5 @@ import java.util.List;
 
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, Long>, HotelRepositorySub {
-    boolean existsByPhotoSid(Long sid);
     boolean existsByTypeSid(Long sid);
 }

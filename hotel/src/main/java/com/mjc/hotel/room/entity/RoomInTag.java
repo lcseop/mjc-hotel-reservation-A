@@ -1,4 +1,4 @@
-package com.mjc.hotel.hotels.entity;
+package com.mjc.hotel.room.entity;
 
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
@@ -7,21 +7,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "hotel_photo")
+@Entity(name = "room_in_tag")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class HotelPhoto extends BaseEntity {
+public class RoomInTag extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
-    @JoinColumn(name = "hotel_id", nullable = false)
+    @JoinColumn(name = "room_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Hotel hotel;
+    private Room room;
 
-    @Column(name = "image_path", length = 255, nullable = false)
-    private String imagePath;
+    @JoinColumn(name = "tag_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private RoomTag tag;
 }

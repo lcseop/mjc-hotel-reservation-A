@@ -110,7 +110,7 @@ public class PromotionService {
         List<Condition> conditions = conditionRepository.findByConditiontype(type);
 
         return conditions.stream()
-                .map(c -> PromotionMapper.toDto(c.getPromotion(), c)) // 람다 변수명을 c로 간단히 수정
+                .map(c -> PromotionMapper.toDto(c.getPromotion(), c))
                 .collect(Collectors.toList());
     }
 }

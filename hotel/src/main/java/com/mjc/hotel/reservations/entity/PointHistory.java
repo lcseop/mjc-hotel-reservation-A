@@ -1,6 +1,7 @@
 package com.mjc.hotel.reservations.entity;
 
 import com.mjc.hotel.member.entity.Member;
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 
-public class PointHistory {
+public class PointHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

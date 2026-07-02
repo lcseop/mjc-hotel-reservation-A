@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class RoomPhotoDto {
+public class RoomInTagDto {
     private Long sid;
     private Long roomId;
-    private String imagePath;
+    private Long roomTagId;
 }

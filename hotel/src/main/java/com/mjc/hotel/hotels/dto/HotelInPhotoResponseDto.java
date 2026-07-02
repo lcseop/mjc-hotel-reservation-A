@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
-public class HotelResponseDto {
+public class HotelInPhotoResponseDto {
     private Long sid;
     private String typeTitle;
     private String hotelName;
