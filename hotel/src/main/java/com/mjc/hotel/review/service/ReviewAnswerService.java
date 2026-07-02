@@ -43,6 +43,10 @@ public class ReviewAnswerService {
                 .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
                 .build();
 
+        //생성시간 그대로 넘겨주기
+        reviewAnswer.setCreatedAt(find.getCreatedAt());
+        reviewAnswer.prePersist();
+
         ReviewAnswer save = reviewAnswerRepository.save(reviewAnswer);
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(save);

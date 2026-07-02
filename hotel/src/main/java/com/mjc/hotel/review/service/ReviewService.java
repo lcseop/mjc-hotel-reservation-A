@@ -91,6 +91,9 @@ public class ReviewService {
                 .likeCount(updateBefore.getLikeCount())
                 .dislikeCount(updateBefore.getDislikeCount())
                 .build();
+        //생성시간 그대로 넘겨주기
+        review.setCreatedAt(updateBefore.getCreatedAt());
+        review.prePersist();
 
         Review updateAfter = reviewRepository.save(review);
 
