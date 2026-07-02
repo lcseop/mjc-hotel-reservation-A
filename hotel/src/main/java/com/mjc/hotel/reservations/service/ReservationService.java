@@ -93,12 +93,12 @@ public class ReservationService {
 
 
     public ReservationResponseDto getReservation(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+        Reservation reservation = reservationRepository.findByIdWithDetails(reservationId).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
         return convertToResponseDto(reservation);
     }
 
     public List<ReservationResponseDto> getAllReservations() {
-        return reservationRepository.findAll().stream().map(this::convertToResponseDto).collect(Collectors.toList());
+        return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
     }
 
     @Transactional
