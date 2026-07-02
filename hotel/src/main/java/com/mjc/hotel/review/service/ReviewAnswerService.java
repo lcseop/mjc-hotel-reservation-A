@@ -6,7 +6,7 @@ import com.mjc.hotel.review.repository.ReviewAnswerRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewAnswerCreateRequest;
 import com.mjc.hotel.review.request.ReviewAnswerUpdateRequest;
-import com.mjc.hotel.review.response.ReviewAnswerResponse;
+import com.mjc.hotel.review.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +26,8 @@ public class ReviewAnswerService {
                 .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
                 .build();
 
+        reviewAnswer.prePersist();
+
         ReviewAnswer save = reviewAnswerRepository.save(reviewAnswer);
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(save);
@@ -33,12 +35,10 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest reviewAnswerRequest) {
-        ReviewAnswer find = reviewAnswerRepository.findById(reviewAnswerRequest.getReviewAnswerId()).orElseThrow();
-
-        if(Boolean.TRUE.equals(find.getDeleted())) return null;
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(reviewAnswerRequest.getSid());
 
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
-                .reviewAnswerId(find.getReviewAnswerId())
+                .sid(find.getSid())
                 .review(find.getReview())
                 .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
                 .build();
@@ -50,9 +50,7 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse findReviewAnswer(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findById(id).orElseThrow();
-
-        if(Boolean.TRUE.equals(find.getDeleted())) return null;
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
 
@@ -60,10 +58,9 @@ public class ReviewAnswerService {
     }
 
     public ReviewAnswerResponse deleteReviewAnswerId(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findById(id).orElseThrow();
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
 
-        find.setDeletedAt(LocalDateTime.now());
-        find.setDeleted(true);
+        find.markDeleted();
 
         ReviewAnswer save = reviewAnswerRepository.save(find);
 
@@ -74,8 +71,8 @@ public class ReviewAnswerService {
 
     private ReviewAnswerResponse toReviewAnswerResponse(ReviewAnswer reviewAnswer) {
         return ReviewAnswerResponse.builder()
-                .reviewAnswerId(reviewAnswer.getReviewAnswerId())
-                .reviewId(reviewAnswer.getReview().getReviewId())
+                .sid(reviewAnswer.getSid())
+                .reviewId(reviewAnswer.getReview().getSid())
                 .reviewAnswer(reviewAnswer.getReviewAnswer())
                 .createdAt(reviewAnswer.getCreatedAt())
                 .updatedAt(reviewAnswer.getUpdatedAt())

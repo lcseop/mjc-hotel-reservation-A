@@ -1,11 +1,13 @@
 package com.mjc.hotel.hotels.controller;
 
+import com.mjc.hotel.hotels.dto.HotelAmenitiesDto;
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
-import com.mjc.hotel.hotels.entity.Hotel;
-import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.service.HotelService;
+import com.mjc.hotel.review.response.ReviewResponse;
+import com.mjc.hotel.room.dto.RoomResponseDto;
+import com.mjc.hotel.room.dto.RoomResponseNoHotelDto;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,7 +55,7 @@ public class HotelRestController {
 
     @Operation(
             summary = "호텔 데이터 삭제",
-            description = "호텔 데이터를 삭제합니다."
+            description = "호텔 데이터를 삭제하고, HotelInAmenities의 매핑 정보도 같이 삭제합니다."
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<HotelResponseDto>> delete(@PathVariable Long id) {
@@ -67,12 +69,49 @@ public class HotelRestController {
             summary = "호텔 데이터 검색",
             description = "호텔 데이터를 필터에 맞추어 검색합니다."
     )
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
                                                            @PageableDefault(size = 5) Pageable pageable) {
         Page<HotelResponseDto> search = hotelService.search(dto, pageable);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "호텔의 편의 시설들 검색",
+            description = "호텔 내에 있는 편의 시설들을 가져옵니다."
+    )
+    @GetMapping("/iname/{id}")
+    public ResponseEntity<ApiResponse<List<HotelAmenitiesDto>>> findHotelInAmenities(@PathVariable Long id) {
+        List<HotelAmenitiesDto> search = hotelService.findHotelInAmenities(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in amenities search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "호텔의 객실들 검색",
+            description = "호텔 내에 있는 객실들을 가져옵니다."
+    )
+    @GetMapping("/inroom/{id}")
+    public ResponseEntity<ApiResponse<List<RoomResponseNoHotelDto>>> findHotelInRooms(@PathVariable Long id) {
+        List<RoomResponseNoHotelDto> search = hotelService.findHotelInRooms(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in rooms search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 리뷰들 검색",
+            description = "호텔에 대한 리뷰들을 가져옵니다."
+    )
+    @GetMapping("/inreview/{id}")
+    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> findHotelInReviews(@PathVariable Long id,
+                                                                                @PageableDefault(size = 5) Pageable pageable) {
+        Page<ReviewResponse> search = hotelService.findHotelInReviews(id, pageable);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in reviews search success", search)
         );
     }
 }

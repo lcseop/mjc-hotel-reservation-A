@@ -22,10 +22,10 @@ public class RoomMapper {
                 || room.getRoomPrice() == null || room.getRoomNumber() == null
                 || room.getFloor() == null || room.getArea() == null
                 || room.getMaximumPeople() == null) {
-            return null;
+            throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         }
         if (sid && room.getSid() == null) {
-            return null;
+            throw new IllegalArgumentException("sid가 입력되지 않았습니다.");
         }
         Room clone = Room
                 .builder()

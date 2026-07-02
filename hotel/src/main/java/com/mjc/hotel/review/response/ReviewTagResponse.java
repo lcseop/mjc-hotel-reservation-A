@@ -10,5 +10,5 @@ import lombok.*;
 
 public class ReviewTagResponse {
     private Long reviewId;
-    private Long reviewTageMapId;
+    private Long reviewTagId;
 }

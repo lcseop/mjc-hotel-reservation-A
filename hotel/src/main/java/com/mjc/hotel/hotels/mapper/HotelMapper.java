@@ -21,10 +21,10 @@ public class HotelMapper {
         if (hotel == null || photo == null
                 || type == null || hotel.getHotelName() == null
                 || hotel.getHotelPrice() == null || hotel.getLocation() == null) {
-            return null;
+            throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         }
         if (sid && hotel.getSid() == null) {
-            return null;
+            throw new IllegalArgumentException("sid가 입력되지 않았습니다.");
         }
         Hotel clone = Hotel
                 .builder()

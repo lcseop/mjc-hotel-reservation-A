@@ -19,7 +19,7 @@ public class ReviewCreateRequest {
 
     private Long reservationId;
 
-    private int rating;
+    private Integer rating;
 
     private TravelType travelType;
 
