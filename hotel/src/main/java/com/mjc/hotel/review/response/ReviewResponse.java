@@ -30,6 +30,10 @@ public class ReviewResponse {
 
     private Integer dislikeCount;
 
+    private String roomName;
+
+    private Integer totalNights;
+
     private List<ReviewCategoryResponse> categories;
 
     private List<ReviewTagResponse> tags;
