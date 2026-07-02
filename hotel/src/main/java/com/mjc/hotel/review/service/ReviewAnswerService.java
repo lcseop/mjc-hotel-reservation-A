@@ -10,8 +10,6 @@ import com.mjc.hotel.review.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class ReviewAnswerService {
@@ -36,6 +34,9 @@ public class ReviewAnswerService {
 
     public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest reviewAnswerRequest) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(reviewAnswerRequest.getSid());
+        if(find == null) {
+            return null;
+        }
 
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
                 .sid(find.getSid())
@@ -55,15 +56,20 @@ public class ReviewAnswerService {
 
     public ReviewAnswerResponse findReviewAnswer(Long id) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
+        if(find == null) {
+            return null;
+        }
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
 
         return result;
     }
 
-    public ReviewAnswerResponse deleteReviewAnswerId(Long id) {
+    public ReviewAnswerResponse deleteReviewAnswer(Long id) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
-
+        if(find == null) {
+            return null;
+        }
         find.markDeleted();
 
         ReviewAnswer save = reviewAnswerRepository.save(find);
