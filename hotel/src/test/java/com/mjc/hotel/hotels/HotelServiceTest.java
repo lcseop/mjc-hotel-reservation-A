@@ -125,15 +125,8 @@ public class HotelServiceTest {
     @Test
     @Commit
     public void hotelInAmenitiesAdd() {
-        Hotel hotel = Hotel
-                .builder()
-                .sid(1L)
-                .build();
-
-        HotelAmenities hotelAmenities = HotelAmenities
-                .builder()
-                .sid(1L)
-                .build();
+        Hotel hotel = hotelRepository.findById(1L).orElseThrow();
+        HotelAmenities hotelAmenities = hotelAmenitiesRepository.findById(1L).orElseThrow();
 
         HotelInAmenities hotelInAmenities = HotelInAmenities
                 .builder()
