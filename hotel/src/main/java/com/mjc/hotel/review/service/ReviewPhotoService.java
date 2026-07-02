@@ -1,5 +1,11 @@
 package com.mjc.hotel.review.service;
 
+import com.mjc.hotel.member.entity.Member;
+import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.reservations.entity.PointHistory;
+import com.mjc.hotel.reservations.entity.PointStatus;
+import com.mjc.hotel.reservations.repository.PointHistoryRepository;
+import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.Review;
 import com.mjc.hotel.review.entity.ReviewPhoto;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
@@ -22,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +40,9 @@ public class ReviewPhotoService {
     private final ReviewRepository reviewRepository;
     private final ReviewPhotoRepository reviewPhotoRepository;
 
+    private final MemberRepository memberRepository;
+
+    private final PointHistoryRepository pointHistoryRepository;
     @Value("${review.images}")
     private String uploadDir;
 
@@ -42,7 +52,8 @@ public class ReviewPhotoService {
         if(review == null) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
-
+        //사진 첫 등록 여부 판단
+        Boolean duplicate = reviewPhotoRepository.existsByReviewSid(review.getSid());
         if (request.getPhotos() == null || request.getPhotos().isEmpty()) {
             throw new IllegalArgumentException("Files Cannot Be Empty");
         }
@@ -58,6 +69,21 @@ public class ReviewPhotoService {
             ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
 
             result.add(response);
+        }
+        //사진 첫 등록일 때
+        if(!duplicate) {
+            Member member = memberRepository.findById(review.getMember().getSid()).orElseThrow();
+            member.setPoint(member.getPoint() + 500);
+            Member updatedMember = memberRepository.save(member);
+
+            PointHistory pointHistory = PointHistory.builder()
+                    .reservation(review.getReservation())
+                    .member(updatedMember)
+                    .amount(500)
+                    .pointStatus(PointStatus.ACCUMULATION)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            pointHistoryRepository.save(pointHistory);
         }
         return result;
     }

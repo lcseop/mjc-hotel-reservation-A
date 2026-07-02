@@ -13,4 +13,5 @@ public interface ReviewPhotoRepository extends JpaRepository<ReviewPhoto, Long> 
     ReviewPhoto findBySidAndDeletedFalse(Long sid);
     List<ReviewPhoto> findAllByReviewSidAndDeletedFalse(Long reviewId);
     Page<ReviewPhoto> findAllByReviewSidAndDeletedFalse(Long reviewId, Pageable pageable);
+    Boolean existsByReviewSid(Long sid);
 }

@@ -4,7 +4,10 @@ import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.reservations.entity.PointHistory;
+import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
+import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.*;
 import com.mjc.hotel.review.repository.*;
@@ -18,12 +21,10 @@ import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,12 +45,15 @@ public class ReviewService {
     private final HotelRepository hotelRepository;
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     public ReviewResponse insertReview(ReviewCreateRequest request) {
         Hotel hotel = hotelRepository.findById(request.getHotelId()).orElseThrow();
         Member member = memberRepository.findById(request.getMemberId()).orElseThrow();
         Reservation reservation = reservationRepository.findById(request.getReservationId()).orElseThrow();
 
+        //첫 리뷰 등록 여부 판단용
+        Boolean duplicate = reviewRepository.existsByReservationSid(reservation.getSid());
         //request로 빌더 패턴 사용
         Review review = Review.builder()
                 .hotel(hotel)
@@ -64,11 +68,27 @@ public class ReviewService {
 
         review.prePersist();
 
-        Review reviewResult = reviewRepository.save(review);
-        List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), reviewResult);
-        List<ReviewTag> tags = this.insertReviewTags(request.getTags(), reviewResult);
+        Review save = reviewRepository.save(review);
+        List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), save);
+        List<ReviewTag> tags = this.insertReviewTags(request.getTags(), save);
 
-        ReviewResponse result = this.toReviewResponse(reviewResult,categories, tags);
+        //첫 리뷰 등록일 때
+        if(!duplicate) {
+            int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
+            member.setPoint(member.getPoint() + accumulationPoint);
+            Member updatedMember = memberRepository.save(member);
+
+            PointHistory pointHistory = PointHistory.builder()
+                    .reservation(reservation)
+                    .member(updatedMember)
+                    .amount(accumulationPoint)
+                    .pointStatus(PointStatus.ACCUMULATION)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            pointHistoryRepository.save(pointHistory);
+        }
+
+        ReviewResponse result = this.toReviewResponse(save,categories, tags);
 
         return result;
     }
@@ -152,17 +172,19 @@ public class ReviewService {
         return result;
     }
 
-    private ReviewResponse toReviewResponse(Review reviewResult, List<ReviewCategory> categories, List<ReviewTag> tags) {
+    private ReviewResponse toReviewResponse(Review review, List<ReviewCategory> categories, List<ReviewTag> tags) {
         return  ReviewResponse.builder()
-                .sid(reviewResult.getSid())
-                .hotelId(reviewResult.getHotel().getSid())
-                .memberId(reviewResult.getMember().getSid())
-                .reservationId(reviewResult.getReservation().getSid())
-                .rating(reviewResult.getRating())
-                .travelType(reviewResult.getTravelType())
-                .content(reviewResult.getContent())
-                .likeCount(reviewResult.getLikeCount())
-                .dislikeCount(reviewResult.getDislikeCount())
+                .sid(review.getSid())
+                .hotelId(review.getHotel().getSid())
+                .memberId(review.getMember().getSid())
+                .reservationId(review.getReservation().getSid())
+                .rating(review.getRating())
+                .travelType(review.getTravelType())
+                .content(review.getContent())
+                .likeCount(review.getLikeCount())
+                .dislikeCount(review.getDislikeCount())
+                .roomName(review.getReservation().getRoom().getRoomName())
+                .totalNights(review.getReservation().getTotalNights())
                 .categories(
                         categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()
@@ -182,10 +204,10 @@ public class ReviewService {
                                 )
                                 .toList()
                 )
-                .createdAt(reviewResult.getCreatedAt())
-                .updatedAt(reviewResult.getUpdatedAt())
-                .deletedAt(reviewResult.getDeletedAt())
-                .deleted(reviewResult.getDeleted())
+                .createdAt(review.getCreatedAt())
+                .updatedAt(review.getUpdatedAt())
+                .deletedAt(review.getDeletedAt())
+                .deleted(review.getDeleted())
                 .build();
     }
 
