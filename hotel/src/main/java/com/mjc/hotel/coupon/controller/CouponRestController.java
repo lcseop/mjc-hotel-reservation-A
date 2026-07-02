@@ -7,10 +7,7 @@ import com.mjc.hotel.util.ResponseCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/cou")
@@ -25,6 +22,14 @@ public class CouponRestController {
         CouponDto insert = couponService.insert(dto);
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "coupon insert success", insert)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<CouponDto>> delete(@PathVariable Long id) {
+        couponService.delete(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "coupon delete success", null)
         );
     }
 }
