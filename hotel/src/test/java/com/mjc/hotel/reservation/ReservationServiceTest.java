@@ -1,6 +1,8 @@
 package com.mjc.hotel.reservation;
 
 import com.mjc.hotel.coupon.entity.CouponIssue;
+import com.mjc.hotel.coupon.repository.CouponIssueRepository;
+import com.mjc.hotel.coupon.repository.CouponRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.*;
@@ -8,6 +10,7 @@ import com.mjc.hotel.reservations.repository.EmailLogRepository;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationCancelRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
+import com.mjc.hotel.reservations.service.ReservationService;
 import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.repository.RoomRepository;
 import jakarta.transaction.Transactional;
@@ -25,13 +28,29 @@ import java.time.LocalDateTime;
 public class ReservationServiceTest {
 
     @Autowired
+    private ReservationService reservationService;
+
+    @Autowired
     private ReservationRepository reservationRepository;
+
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private CouponRepository couponRepository;
+
+    @Autowired
+    CouponIssueRepository couponIssueRepository;
 
     @Autowired
     private ReservationCancelRepository reservationCancelRepository;
 
     @Autowired
     private EmailLogRepository emailLogRepository;
+
     @Autowired
     private PointHistoryRepository pointHistoryRepository;
 
