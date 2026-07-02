@@ -1,15 +1,21 @@
 package com.mjc.hotel.review.service;
 
 import com.mjc.hotel.review.entity.Review;
+import com.mjc.hotel.review.entity.ReviewCategory;
 import com.mjc.hotel.review.entity.ReviewPhoto;
+import com.mjc.hotel.review.entity.ReviewTag;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewPhotoCreateRequest;
 import com.mjc.hotel.review.request.ReviewPhotoUpdateRequest;
 import com.mjc.hotel.review.response.ReviewPhotoResponse;
+import com.mjc.hotel.review.response.ReviewResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -82,6 +88,18 @@ public class ReviewPhotoService {
                 .toList();
 
         return result;
+    }
+    public Page<ReviewPhotoResponse> search(Long reviewId, Pageable pageable) {
+        Page<ReviewPhoto> reviewPhotos = reviewPhotoRepository.findByReviewSidAndDeletedFalse(reviewId,pageable);
+        if(reviewPhotos.isEmpty()){
+            return null;
+        }
+        List<ReviewPhotoResponse> list = reviewPhotos.stream()
+                .map(this::toReviewPhotoResponse)
+                .toList();
+
+        Page<ReviewPhotoResponse> responses = new PageImpl<>(list, pageable, reviewPhotos.getTotalElements());
+        return responses;
     }
 
     public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
