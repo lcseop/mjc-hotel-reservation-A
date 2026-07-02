@@ -130,7 +130,7 @@ public class ReviewService {
 
         List<ReviewResponse> list = reviews.stream()
                 .map(review ->
-                        toReviewResponse(review,categories,tags)
+                        this.toReviewResponse(review,categories,tags)
                 )
                 .toList();
         Page<ReviewResponse> responses = new PageImpl<>(list, pageable, reviews.getTotalElements());
@@ -173,7 +173,7 @@ public class ReviewService {
                 .categories(
                         categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()
-                                        .reviewCategoryId(reviewCategory.getSid())
+                                        .sid(reviewCategory.getSid())
                                         .reviewCategoryId(reviewCategory.getReviewCategoryMaster().getSid())
                                         .reviewId(reviewCategory.getReview().getSid())
                                         .rating(reviewCategory.getRating())
