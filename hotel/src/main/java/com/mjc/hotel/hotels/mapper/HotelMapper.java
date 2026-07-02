@@ -56,7 +56,6 @@ public class HotelMapper {
                 .builder()
                 .sid(hotel.getSid())
                 .typeTitle(hotel.getType().getTitle())
-                .photos(photos)
                 .hotelName(hotel.getHotelName())
                 .hotelPrice(hotel.getHotelPrice())
                 .location(hotel.getLocation())

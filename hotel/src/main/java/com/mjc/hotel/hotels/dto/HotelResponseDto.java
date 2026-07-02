@@ -13,7 +13,6 @@ import java.util.List;
 public class HotelResponseDto {
     private Long sid;
     private String typeTitle;
-    private List<HotelPhotoDto> photos;
     private String hotelName;
     private Integer hotelPrice;
     private String location;

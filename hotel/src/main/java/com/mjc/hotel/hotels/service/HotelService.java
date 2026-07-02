@@ -124,54 +124,7 @@ public class HotelService {
     }
 
     public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {
-
-        Page<HotelResponseDto> result = hotelRepository.search(dto, pageable);
-
-        List<HotelResponseDto> content = result.getContent();
-
-        // 1. hotelId 추출
-        List<Long> hotelIds = content.stream()
-                .map(HotelResponseDto::getSid)
-                .toList();
-
-        if (hotelIds.isEmpty()) return result;
-
-        // 2. 사진 조회
-        QHotelPhoto hp = QHotelPhoto.hotelPhoto;
-
-        List<Tuple> photoTuples = queryFactory
-                .select(hp.hotel.sid, hp.imagePath)
-                .select(hp.sid, hp.hotel.sid, hp.imagePath)
-                .from(hp)
-                .where(hp.hotel.sid.in(hotelIds))
-                .fetch();
-
-        // 3. 그룹핑
-        Map<Long, List<HotelPhotoDto>> photoMap = photoTuples.stream()
-                .filter(t -> t.get(hp.hotel.sid) != null)
-                .collect(Collectors.groupingBy(
-                        t -> t.get(hp.hotel.sid),
-                        Collectors.mapping(
-                                t -> HotelPhotoDto.builder()
-                                        .sid(t.get(hp.sid))
-                                        .hotelId(t.get(hp.hotel.sid))
-                                        .imagePath(t.get(hp.imagePath))
-                                        .build(),
-                                Collectors.toList()
-                        )
-                ));
-
-
-
-
-        // 4. DTO에 세팅
-        content.forEach(hotel -> {
-            hotel.setPhotos(
-                    photoMap.getOrDefault(hotel.getSid(), List.of())
-            );
-        });
-
-        return result;
+        return hotelRepository.search(dto, pageable);
     }
 
 
