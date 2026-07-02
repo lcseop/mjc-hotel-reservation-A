@@ -1,8 +1,10 @@
 package com.mjc.hotel.room.service;
 
 import com.mjc.hotel.room.dto.RoomPhotoDto;
+import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.entity.RoomPhoto;
 import com.mjc.hotel.room.repository.RoomPhotoRepository;
+import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +18,15 @@ import java.time.LocalDateTime;
 public class RoomPhotoService {
     @Autowired
     private RoomPhotoRepository roomPhotoRepository;
+    @Autowired
+    private RoomRepository roomRepository;
 
     public RoomPhotoDto insert(RoomPhotoDto roomPhotoDto) {
         if (roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
+        Room room = roomRepository.findById(roomPhotoDto.getRoomId()).orElseThrow();
         RoomPhoto clone = RoomPhoto
                 .builder()
+                .room(room)
                 .imagePath(roomPhotoDto.getImagePath())
                 .build();
         return toDto(roomPhotoRepository.save(clone), true);
@@ -30,9 +36,11 @@ public class RoomPhotoService {
         if (roomPhotoDto.getSid() == null || roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         RoomPhoto origin = roomPhotoRepository.findById(roomPhotoDto.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        Room room = roomRepository.findById(roomPhotoDto.getRoomId()).orElseThrow();
         RoomPhoto clone = RoomPhoto
                 .builder()
                 .sid(roomPhotoDto.getSid())
+                .room(room)
                 .imagePath(roomPhotoDto.getImagePath())
                 .build();
 
@@ -61,11 +69,13 @@ public class RoomPhotoService {
             return RoomPhotoDto
                     .builder()
                     .sid(photo.getSid())
+                    .roomId(photo.getRoom().getSid())
                     .imagePath(photo.getImagePath())
                     .build();
         } else {
             return RoomPhotoDto
                     .builder()
+                    .roomId(photo.getRoom().getSid())
                     .imagePath(photo.getImagePath())
                     .build();
         }

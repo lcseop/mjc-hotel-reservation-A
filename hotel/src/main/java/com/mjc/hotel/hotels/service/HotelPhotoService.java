@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.service;
 
 import com.mjc.hotel.hotels.dto.HotelPhotoDto;
 import com.mjc.hotel.hotels.dto.HotelTypeDto;
+import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import com.mjc.hotel.hotels.entity.HotelType;
 import com.mjc.hotel.hotels.repository.HotelPhotoRepository;
@@ -26,8 +27,10 @@ public class HotelPhotoService {
     @Transactional
     public HotelPhotoDto insert(HotelPhotoDto photo) {
         if (photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
+        Hotel hotel = hotelRepository.findById(photo.getHotelId()).orElseThrow();
         HotelPhoto clone = HotelPhoto
                 .builder()
+                .hotel(hotel)
                 .imagePath(photo.getImagePath())
                 .build();
 
@@ -39,9 +42,11 @@ public class HotelPhotoService {
         if (photo.getSid() == null || photo.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         HotelPhoto origin =  hotelPhotoRepository.findById(photo.getSid()).orElseThrow();
         if (origin.getDeleted() != null && origin.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        Hotel hotel = hotelRepository.findById(photo.getHotelId()).orElseThrow();
         HotelPhoto clone = HotelPhoto
                 .builder()
                 .sid(photo.getSid())
+                .hotel(hotel)
                 .imagePath(photo.getImagePath())
                 .build();
         clone.setCreatedAt(origin.getCreatedAt());
@@ -52,9 +57,6 @@ public class HotelPhotoService {
 
     @Transactional
     public HotelPhotoDto delete(Long id) {
-        if (hotelRepository.existsByPhotoSid(id)) {
-            throw new IllegalStateException("이 사진을 사용 중인 호텔이 있습니다.");
-        }
         HotelPhoto photo = hotelPhotoRepository.findById(id).orElseThrow();
         hotelPhotoRepository.delete(photo);
         return toDto(photo, true);
@@ -71,11 +73,13 @@ public class HotelPhotoService {
             return HotelPhotoDto
                     .builder()
                     .sid(photo.getSid())
+                    .hotelId(photo.getHotel().getSid())
                     .imagePath(photo.getImagePath())
                     .build();
         } else {
             return HotelPhotoDto
                     .builder()
+                    .hotelId(photo.getHotel().getSid())
                     .imagePath(photo.getImagePath())
                     .build();
         }
