@@ -64,7 +64,9 @@ public class ReviewPhotoService {
     public ReviewPhotoResponse updateReviewPhoto(ReviewPhotoUpdateRequest request){
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
         ReviewPhoto oldPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(request.getSid());
-
+        if(oldPhoto == null){
+            return null;
+        }
         MultipartFile photo = request.getPhoto();
 
         if(photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
@@ -104,7 +106,9 @@ public class ReviewPhotoService {
 
     public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
         ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
-
+        if(reviewPhoto == null){
+            return null;
+        }
         reviewPhoto.markDeleted();
         ReviewPhoto save = reviewPhotoRepository.save(reviewPhoto);
 
