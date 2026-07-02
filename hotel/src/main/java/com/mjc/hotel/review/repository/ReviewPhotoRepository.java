@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface ReviewPhotoRepository extends JpaRepository<ReviewPhoto, Long> {
     ReviewPhoto findBySidAndDeletedFalse(Long sid);
-    List<ReviewPhoto> findByReviewSidAndDeletedFalse(Long reviewId);
-    Page<ReviewPhoto> findByReviewSidAndDeletedFalse(Long reviewId, Pageable pageable);
+    List<ReviewPhoto> findAllByReviewSidAndDeletedFalse(Long reviewId);
+    Page<ReviewPhoto> findAllByReviewSidAndDeletedFalse(Long reviewId, Pageable pageable);
 }
