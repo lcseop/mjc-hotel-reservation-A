@@ -54,8 +54,8 @@ public class ReviewAnswerService {
         return result;
     }
 
-    public ReviewAnswerResponse findReviewAnswer(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
+    public ReviewAnswerResponse findBySidReviewAnswer(Long sid) {
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(sid);
         if(find == null) {
             return null;
         }

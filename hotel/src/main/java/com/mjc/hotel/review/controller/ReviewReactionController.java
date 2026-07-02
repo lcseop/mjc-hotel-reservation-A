@@ -1,6 +1,5 @@
 package com.mjc.hotel.review.controller;
 
-import com.mjc.hotel.review.entity.enums.ReactionType;
 import com.mjc.hotel.review.request.ReviewReactionRequest;
 import com.mjc.hotel.review.response.ReviewReactionResponse;
 import com.mjc.hotel.review.service.ReviewReactionService;

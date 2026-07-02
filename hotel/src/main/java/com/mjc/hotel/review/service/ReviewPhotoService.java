@@ -1,15 +1,12 @@
 package com.mjc.hotel.review.service;
 
 import com.mjc.hotel.review.entity.Review;
-import com.mjc.hotel.review.entity.ReviewCategory;
 import com.mjc.hotel.review.entity.ReviewPhoto;
-import com.mjc.hotel.review.entity.ReviewTag;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewPhotoCreateRequest;
 import com.mjc.hotel.review.request.ReviewPhotoUpdateRequest;
 import com.mjc.hotel.review.response.ReviewPhotoResponse;
-import com.mjc.hotel.review.response.ReviewResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

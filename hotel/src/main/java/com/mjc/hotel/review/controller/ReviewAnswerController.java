@@ -52,8 +52,8 @@ public class ReviewAnswerController {
             description = "리뷰 답변을 검색합니다."
     )
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<ReviewAnswerResponse>> search(@RequestParam Long id){
-        ReviewAnswerResponse response = reviewAnswerService.findReviewAnswer(id);
+    public ResponseEntity<ApiResponse<ReviewAnswerResponse>> search(@RequestParam Long sid){
+        ReviewAnswerResponse response = reviewAnswerService.findBySidReviewAnswer(sid);
         if(response == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ApiResponse<>(ResponseCode.SELECT_ERROR,"review_answer not found", null)
