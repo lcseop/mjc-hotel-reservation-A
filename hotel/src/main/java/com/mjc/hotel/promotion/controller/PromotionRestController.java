@@ -8,6 +8,7 @@ import com.mjc.hotel.promotion.service.PromotionService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 @RestController
 @RequestMapping("/api/prom")
 @RequiredArgsConstructor
+@Tag(name = "프로모션 관리", description = "특가 및 할인 프로모션 관리")
 public class PromotionRestController {
 
     @Autowired
