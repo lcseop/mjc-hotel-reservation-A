@@ -46,10 +46,28 @@ public class CouponService {
 
     @Transactional
     public void delete(Long id) {
+        couponIssueRepository.deleteByCouponId(id);
+
         Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
         couponRepository.delete(coupon);
 
+    }
+
+    @Transactional
+    public void update(Long id, CouponDto couponDto) {
+        Coupon coupon = couponRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다." + id));
+
+        coupon.update(
+                couponDto.getCouponName(),
+                couponDto.getDiscountType(),
+                couponDto.getDiscountValue(),
+                couponDto.getMinOrderAmount(),
+                couponDto.getStartDate(),
+                couponDto.getEndDate(),
+                couponDto.getTotalQuantity()
+        );
     }
 }
