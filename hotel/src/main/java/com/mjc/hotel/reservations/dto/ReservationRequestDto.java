@@ -22,7 +22,7 @@ public class ReservationRequestDto {
     private Long memberId;
 
     @NotNull(message = "객실 ID는 필수입니다")
-    private Long roomTagId;
+    private Long roomId;
 
     @NotNull(message = "쿠폰 ID는 양수여야 합니다")
     private Long couponIssueId;
