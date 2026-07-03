@@ -1,9 +1,6 @@
 package com.mjc.hotel.hotels.controller;
 
-import com.mjc.hotel.hotels.dto.HotelAmenitiesDto;
-import com.mjc.hotel.hotels.dto.HotelRequestDto;
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
-import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
+import com.mjc.hotel.hotels.dto.*;
 import com.mjc.hotel.hotels.service.HotelService;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.room.dto.RoomResponseDto;
@@ -11,6 +8,7 @@ import com.mjc.hotel.room.dto.RoomResponseNoHotelDto;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/hotel")
 @RequiredArgsConstructor
+@Tag(name = "Hotel", description = "호텔 API")
 public class HotelRestController {
 
     @Autowired
@@ -112,6 +111,18 @@ public class HotelRestController {
         Page<ReviewResponse> search = hotelService.findHotelInReviews(id, pageable);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel in reviews search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 사진 검색",
+            description = "호텔에 대한 사진 주소들을 가져옵니다."
+    )
+    @GetMapping("/inimage/{id}")
+    public ResponseEntity<ApiResponse<List<HotelPhotoDto>>> findHotelInReviews(@PathVariable Long id) {
+        List<HotelPhotoDto> search = hotelService.findHotelInPhotos(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel photos search success", search)
         );
     }
 }

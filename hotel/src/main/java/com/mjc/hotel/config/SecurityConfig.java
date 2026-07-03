@@ -31,18 +31,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)s
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // 테스트시에만 permitAll
+//                 테스트시에만 permitAll
 //                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-//                .authorizeHttpRequests(
-//                        auth -> auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
-//                            .permitAll().anyRequest().authenticated()
-//                );
-        .authorizeHttpRequests(
-                auth -> auth
-                        .anyRequest().permitAll()
-        );
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers(
+                                        "/api/auth/login",
+                                        "/swagger-ui/**",
+                                        "/api/member/signup",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**")
+                            .permitAll().anyRequest().authenticated()
+                );
+//        .authorizeHttpRequests(
+//                auth -> auth
+//                        .anyRequest().permitAll()
+//        );
 
         return http.build();
     }

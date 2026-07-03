@@ -13,6 +13,7 @@ import com.mjc.hotel.member.repository.MemberTermAgreementRepository;
 import com.mjc.hotel.term.entity.Term;
 import com.mjc.hotel.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class MemberService {
     private final MemberTermAgreementRepository memberTermAgreementRepository;
     private final TermRepository termRepository;
     private final MemberDtoMapper memberDtoMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public List<Member> getMembers() {
         return memberRepository.findAll();
@@ -113,17 +115,23 @@ public class MemberService {
                     .toList();
         }
 
-        return createMember(
-                memberDtoMapper.toEntity(request),
-                memberDtoMapper.toAuthAccount(request.getAuthAccount()),
-                termAgreements
-        );
+        MemberAuthAccount authAccount = memberDtoMapper.toAuthAccount(request.getAuthAccount());
+        if (authAccount != null) {
+            authAccount.setPasswordHash(resolvePasswordHash(
+                    request.getAuthAccount().getPassword(),
+                    request.getAuthAccount().getPasswordHash()
+            ));
+        }
+
+        return createMember(memberDtoMapper.toEntity(request), authAccount, termAgreements);
     }
 
     @Transactional
     public MemberAuthAccount createAuthAccount(MemberAuthAccountRequestDto request) {
         Member member = getMember(request.getMemberSid());
-        return memberAuthAccountRepository.save(memberDtoMapper.toAuthAccount(request, member));
+        MemberAuthAccount authAccount = memberDtoMapper.toAuthAccount(request, member);
+        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword(), request.getPasswordHash()));
+        return memberAuthAccountRepository.save(authAccount);
     }
 
     @Transactional
@@ -132,7 +140,7 @@ public class MemberService {
         authAccount.setMember(getMember(request.getMemberSid()));
         authAccount.setProvider(request.getProvider());
         authAccount.setProviderUserId(request.getProviderUserId());
-        authAccount.setPasswordHash(request.getPasswordHash());
+        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword(), request.getPasswordHash()));
         authAccount.setLastLoginAt(request.getLastLoginAt());
 
         return authAccount;
@@ -188,5 +196,12 @@ public class MemberService {
     private Term findTerm(Long sid) {
         return termRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + sid));
+    }
+
+    private String resolvePasswordHash(String password, String passwordHash) {
+        if (password != null && !password.isBlank()) {
+            return passwordEncoder.encode(password);
+        }
+        return passwordHash;
     }
 }

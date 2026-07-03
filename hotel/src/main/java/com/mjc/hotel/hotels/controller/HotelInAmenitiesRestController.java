@@ -6,6 +6,7 @@ import com.mjc.hotel.hotels.service.HotelInAmenitiesService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/hoteliname")
 @RequiredArgsConstructor
+@Tag(name = "HotelInAmenities", description = "호텔과 편의 시설 매핑 API")
 public class HotelInAmenitiesRestController {
     @Autowired
     private HotelInAmenitiesService hotelInAmenitiesService;
