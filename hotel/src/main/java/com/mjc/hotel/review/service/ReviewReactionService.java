@@ -30,7 +30,8 @@ public class ReviewReactionService {
         if(review == null){
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
-        Member member = memberRepository.findById(request.getMemberId()).orElseThrow();
+        Member member = memberRepository.findById(request.getMemberId())
+                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Member Not Found"));
 
         if(request.getReactionType() == ReactionType.GOOD){
             review.increaseLike();
@@ -56,7 +57,8 @@ public class ReviewReactionService {
     public ReviewReactionResponse updateReviewReaction(ReviewReactionRequest request) {
         ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
 
-        ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
+        ReviewReaction find = reviewReactionRepository.findById(reviewReactionId)
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"ReviewReaction Not Found"));
 
         Review review = reviewRepository.findBySidAndDeletedFalse(find.getReview().getSid());
         if(review == null) {
@@ -108,7 +110,8 @@ public class ReviewReactionService {
     public ReviewReactionResponse findReviewReaction(ReviewReactionRequest request) {
         ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
 
-        ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
+        ReviewReaction find = reviewReactionRepository.findById(reviewReactionId)
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"ReviewReaction Not Found"));
 
         ReviewReactionResponse result = this.toReviewReactionResponse(find);
         return result;

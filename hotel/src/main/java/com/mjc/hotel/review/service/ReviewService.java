@@ -52,9 +52,12 @@ public class ReviewService {
     private final PointHistoryRepository pointHistoryRepository;
 
     public ReviewResponse insertReview(ReviewCreateRequest request) {
-        Hotel hotel = hotelRepository.findById(request.getHotelId()).orElseThrow();
-        Member member = memberRepository.findById(request.getMemberId()).orElseThrow();
-        Reservation reservation = reservationRepository.findById(request.getReservationId()).orElseThrow();
+        Hotel hotel = hotelRepository.findById(request.getHotelId())
+                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
+        Member member = memberRepository.findById(request.getMemberId())
+                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Member Not Found"));
+        Reservation reservation = reservationRepository.findById(request.getReservationId())
+                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Reservation Not Found"));
 
         //첫 리뷰 등록 여부 판단용
         Boolean duplicate = reviewRepository.existsByReservationSid(reservation.getSid());
@@ -219,20 +222,19 @@ public class ReviewService {
         List<ReviewCategory> results = new ArrayList<>();
         if(categories != null && !categories.isEmpty()){
 
-            for(ReviewCategoryRequest reviewCategoryRequest : categories){
-                ReviewCategoryMaster reviewCategoryMaster = reviewCategoryMasterRepository
-                        .findById(reviewCategoryRequest.getCategoryId())
-                        .orElseThrow();
+            for(ReviewCategoryRequest category : categories){
+                ReviewCategoryMaster reviewCategoryMaster = reviewCategoryMasterRepository.findById(category.getCategoryId())
+                        .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Category Not Exist"));
 
                 ReviewCategory reviewCategory = ReviewCategory.builder()
                         .review(review)
                         .reviewCategoryMaster(reviewCategoryMaster)
-                        .rating(reviewCategoryRequest.getRating())
+                        .rating(category.getRating())
                         .build();
 
-                ReviewCategory categoryResult = reviewCategoryRepository.save(reviewCategory);
+                ReviewCategory result = reviewCategoryRepository.save(reviewCategory);
 
-                results.add(categoryResult);
+                results.add(result);
             }
         }
 
@@ -242,17 +244,18 @@ public class ReviewService {
     private List<ReviewTag> insertReviewTags(List<ReviewTagRequest> tags , Review review) {
         List<ReviewTag> results = new ArrayList<>();
         if(tags != null && !tags.isEmpty()) {
-            for(ReviewTagRequest reviewTagRequest : tags) {
-                ReviewTagMaster reviewTagMaster = reviewTagMasterRepository.findById(reviewTagRequest.getTagId()).orElseThrow();
+            for(ReviewTagRequest tag : tags) {
+                ReviewTagMaster reviewTagMaster = reviewTagMasterRepository.findById(tag.getTagId())
+                        .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Tag Not Exist"));
 
                 ReviewTag reviewTag = ReviewTag.builder()
                         .review(review)
                         .reviewTagMaster(reviewTagMaster)
                         .build();
 
-                ReviewTag tagResult = reviewTagRepository.save(reviewTag);
+                ReviewTag result = reviewTagRepository.save(reviewTag);
 
-                results.add(tagResult);
+                results.add(result);
             }
         }
         return results;
