@@ -265,7 +265,7 @@ public class ReviewService {
      @param pageable 페이징 조건
      *
      **/
-    private Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
+    public Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
         return responses;
@@ -277,7 +277,7 @@ public class ReviewService {
      @param pageable 페이징 조건
      *
      **/
-    private Page<ReviewResponse> sortingReviewsInHotel(Long hotelId, SortType sortType, Pageable pageable) {
+    public Page<ReviewResponse> sortingReviewsInHotel(Long hotelId, SortType sortType, Pageable pageable) {
         Sort sort = switch (sortType) {
             case LATEST -> Sort.by(Sort.Direction.DESC, "createdAt");
             case RATING_HIGH -> Sort.by(Sort.Direction.DESC, "rating");
@@ -294,7 +294,7 @@ public class ReviewService {
      @param pageable 페이징 조건
     *
      **/
-    private Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
+    public Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndRatingGreaterThanEqualAndDeletedFalse(hotelId, 4, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
         return responses;
@@ -305,7 +305,7 @@ public class ReviewService {
      @param pageable 페이징 조건
      *
      **/
-    private Page<ReviewResponse> sortingReviewsInHotel(Long hotelId, Pageable pageable) {
+    public Page<ReviewResponse> existsPhotoReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndExistsPhotoAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
         return responses;
