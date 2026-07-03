@@ -7,6 +7,7 @@ import com.mjc.hotel.review.request.ReviewCreateRequest;
 import com.mjc.hotel.review.request.ReviewUpdateRequest;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.service.ReviewService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
@@ -24,26 +25,14 @@ import java.util.List;
 @RestController
 @RequestMapping("api/review")
 @RequiredArgsConstructor
+@Tag(name = "리뷰", description = "리뷰를 저장, 수정, 검색, 삭제, 정렬(조회, 긍정 조회, 사진 포함 조회)하는 API")
 public class ReviewController {
-    private final ReviewRepository reviewRepository;
-
-    private final ReviewMapper reviewMapper;
 
     private final ReviewService reviewService;
 
-    @GetMapping("/mapperGetReviews")
-    public List<Review> getReviews() {
-        return reviewMapper.getReviews();
-    }
-
-    @GetMapping("/repositoryGetReviews")
-    public List<Review> getReviewsR() {
-        return reviewRepository.findAll();
-    }
-
     @Operation(
-            summary = "리뷰, 항목별 리뷰, 리뷰 태그 생성",
-            description = "리뷰, 항목별 리뷰, 리뷰 태그를 만듭니다."
+            summary = "리뷰 생성",
+            description = "리뷰를 만듭니다."
     )
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewResponse>> insert(@RequestBody ReviewCreateRequest request){
@@ -55,7 +44,7 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 수정",
-            description = "리뷰 수정합니다."
+            description = "리뷰를 수정합니다."
     )
     @PatchMapping
     public ResponseEntity<ApiResponse<ReviewResponse>> update(@RequestBody ReviewUpdateRequest request){

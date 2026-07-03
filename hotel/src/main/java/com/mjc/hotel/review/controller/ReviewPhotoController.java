@@ -7,6 +7,7 @@ import com.mjc.hotel.review.service.ReviewPhotoService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/review-photo")
 @RequiredArgsConstructor
+@Tag(name = "리뷰 사진", description = "리뷰에 사진을 저장, 수정, 조회, 삭제하는 API")
 public class ReviewPhotoController {
 
     private final ReviewPhotoService reviewPhotoService;
@@ -60,7 +62,7 @@ public class ReviewPhotoController {
     }
     @Operation(
             summary = "리뷰 사진 삭제",
-            description = "리뷰 사진 삭제시 사진을 논리 삭제합니다."
+            description = "리뷰 사진 삭제시 사진을 삭제합니다."
     )
     @DeleteMapping("{sid}")
     public ResponseEntity<ApiResponse<ReviewPhotoResponse>> delete(@PathVariable Long sid) {
