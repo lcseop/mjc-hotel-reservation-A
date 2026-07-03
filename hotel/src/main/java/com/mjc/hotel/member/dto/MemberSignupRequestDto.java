@@ -38,6 +38,7 @@ public class MemberSignupRequestDto {
     public static class AuthAccountRequest {
         private MemberAuthProvider provider;
         private String providerUserId;
+        private String password;
         private String passwordHash;
     }
 

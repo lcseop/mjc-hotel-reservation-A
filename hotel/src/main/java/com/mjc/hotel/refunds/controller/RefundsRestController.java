@@ -48,13 +48,12 @@ public class RefundsRestController {
         );
     }
 
-    @PutMapping("/{sid}")
+    @PatchMapping
     public ResponseEntity<ApiResponse<RefundsResponseDto>> update(
-            @PathVariable Long sid,
             @RequestBody RefundsRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "refunds update success", refundsDtoMapper.toResponseDto(refundsService.updateRefund(sid, dto)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "refunds update success", refundsDtoMapper.toResponseDto(refundsService.updateRefund(dto.getSid(), dto)))
         );
     }
 

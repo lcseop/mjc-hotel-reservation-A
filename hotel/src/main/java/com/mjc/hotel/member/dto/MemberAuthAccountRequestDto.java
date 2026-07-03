@@ -17,9 +17,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class MemberAuthAccountRequestDto {
+    private Long sid;
     private Long memberSid;
     private MemberAuthProvider provider;
     private String providerUserId;
+    private String password;
     private String passwordHash;
     private LocalDateTime lastLoginAt;
 }

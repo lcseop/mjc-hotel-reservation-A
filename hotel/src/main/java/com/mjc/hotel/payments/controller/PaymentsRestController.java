@@ -48,13 +48,12 @@ public class PaymentsRestController {
         );
     }
 
-    @PutMapping("/{sid}")
+    @PatchMapping
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> update(
-            @PathVariable Long sid,
             @RequestBody PaymentsRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(sid, dto)))
+                new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(dto.getSid(), dto)))
         );
     }
 

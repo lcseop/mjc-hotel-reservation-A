@@ -11,6 +11,7 @@ import lombok.*;
 @Getter
 @Setter
 public class MemberRequestDto {
+    private Long sid;
     private String name;
     private String phone;
     private String email;
