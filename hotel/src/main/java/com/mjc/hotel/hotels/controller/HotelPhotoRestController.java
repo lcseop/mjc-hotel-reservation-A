@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/hotelphoto")
 @RequiredArgsConstructor
-@Tag(name = "HotelPhoto", description = "호텔 이미지 API")
+@Tag(name = "호텔 이미지", description = "호텔의 이미지 데이터를 관리합니다.")
 public class HotelPhotoRestController {
     @Autowired
     private HotelPhotoService hotelPhotoService;

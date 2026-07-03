@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/roomtype")
 @RequiredArgsConstructor
-@Tag(name = "RoomType", description = "객실 타입 API")
+@Tag(name = "객실 타입", description = "객실 타입 데이터를 관리합니다.")
 public class RoomTypeRestController {
 
     @Autowired
