@@ -6,8 +6,10 @@ import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.room.dto.RoomPhotoDto;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
+import com.mjc.hotel.room.dto.RoomTagDto;
 import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.mapper.RoomMapper;
 import com.mjc.hotel.room.repository.RoomRepository;
@@ -73,11 +75,47 @@ public class RoomController {
             summary = "객실 데이터 조회",
             description = "객실 데이터를 가져옵니다."
     )
-    @GetMapping("/in/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RoomResponseDto>> findById(@PathVariable(name = "id") Long hotelId) {
         RoomResponseDto search = roomService.findById(hotelId);
         return ResponseEntity.status(200).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in room search success", search)
+                new ApiResponse<>(ResponseCode.SUCCESS, "room search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "객실 타입별 조회",
+            description = "객실 데이터를 타입 ID를 통해 가져옵니다."
+    )
+    @GetMapping("/type/{id}")
+    public ResponseEntity<ApiResponse<List<RoomResponseDto>>> findByRoomType(@PathVariable(name = "id") Long typeId) {
+        List<RoomResponseDto> search = roomService.findByRoomType(typeId);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "room search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "객실의 태그들 조회",
+            description = "객실의 태그들을 가져옵니다."
+    )
+    @GetMapping("/intag/{id}")
+    public ResponseEntity<ApiResponse<List<RoomTagDto>>> findRoomInTags(@PathVariable(name = "id") Long hotelId) {
+        List<RoomTagDto> search = roomService.findRoomInTags(hotelId);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in tags search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "객실의 사진들 조회",
+            description = "객실의 사진 경로들을 가져옵니다."
+    )
+    @GetMapping("/inimage/{id}")
+    public ResponseEntity<ApiResponse<List<RoomPhotoDto>>> findRoomInImages(@PathVariable(name = "id") Long hotelId) {
+        List<RoomPhotoDto> search = roomService.findRoomInImages(hotelId);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in images search success", search)
         );
     }
 }

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface RoomInTagRepository extends JpaRepository<RoomInTag, Long> {
     List<RoomInTag> findByRoomSid(Long sid);
+    void deleteByRoomSid(Long sid);
+    void deleteByTagSid(Long sid);
 }

@@ -1,9 +1,6 @@
 package com.mjc.hotel.hotels.controller;
 
-import com.mjc.hotel.hotels.dto.HotelAmenitiesDto;
-import com.mjc.hotel.hotels.dto.HotelRequestDto;
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
-import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
+import com.mjc.hotel.hotels.dto.*;
 import com.mjc.hotel.hotels.service.HotelService;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.room.dto.RoomResponseDto;
@@ -112,6 +109,18 @@ public class HotelRestController {
         Page<ReviewResponse> search = hotelService.findHotelInReviews(id, pageable);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel in reviews search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 사진 검색",
+            description = "호텔에 대한 사진 주소들을 가져옵니다."
+    )
+    @GetMapping("/inimage/{id}")
+    public ResponseEntity<ApiResponse<List<HotelPhotoDto>>> findHotelInReviews(@PathVariable Long id) {
+        List<HotelPhotoDto> search = hotelService.findHotelInPhotos(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel photos search success", search)
         );
     }
 }
