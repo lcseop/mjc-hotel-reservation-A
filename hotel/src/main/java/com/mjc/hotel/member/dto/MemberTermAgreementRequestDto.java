@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class MemberTermAgreementRequestDto {
+    private Long sid;
     private Long memberSid;
     private Long termSid;
     private Boolean isAgreed;
