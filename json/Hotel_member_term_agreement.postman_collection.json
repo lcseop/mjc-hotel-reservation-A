@@ -1,0 +1,139 @@
+{
+  "info": {
+    "_postman_id": "44a8f95b-029d-4607-90d9-d0cd94aad016",
+    "name": "Hotel_member_term_agreement",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53671660",
+    "_collection_link": "https://go.postman.co/collection/53671660-44a8f95b-029d-4607-90d9-d0cd94aad016?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Member Term Agreement Copy",
+      "item": [
+        {
+          "name": "회원_약관_동의_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": true,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_단건_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원별_약관_동의_목록_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member/1/term-agreements",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "1",
+                "term-agreements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_수정",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": false,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": \"2026-06-30T15:10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_약관_동의_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member-term-agreements/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member-term-agreements",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
