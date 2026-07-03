@@ -57,8 +57,7 @@ public class RoomTagService {
         RoomTag tag = roomTagRepository.findById(id).orElseThrow();
         roomInTagRepository.deleteByTagSid(id);
         if (tag.getDeleted() != null && tag.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        tag.setDeleted(true);
-        tag.setDeletedAt(LocalDateTime.now());
+        roomTagRepository.delete(tag);
         return toDto(roomTagRepository.save(tag), true);
     }
 

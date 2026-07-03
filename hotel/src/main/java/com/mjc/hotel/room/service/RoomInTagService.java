@@ -77,12 +77,14 @@ public class RoomInTagService {
             return RoomInTagDto
                     .builder()
                     .sid(tag.getSid())
-                    .title(tag.getTitle())
+                    .roomId(tag.getRoom().getSid())
+                    .roomTagId(tag.getTag().getSid())
                     .build();
         } else {
             return RoomInTagDto
                     .builder()
-                    .title(tag.getTitle())
+                    .roomId(tag.getRoom().getSid())
+                    .roomTagId(tag.getTag().getSid())
                     .build();
         }
     }
