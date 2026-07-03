@@ -21,7 +21,7 @@ public class RoomPhotoRestController {
     private final RoomPhotoService roomPhotoService;
 
     @Operation(
-            summary = "객실 이미지 삭제",
+            summary = "객실 이미지 생성",
             description = "객실 이미지를 만듭니다.\nroomId에 객실 아이디를, imagePath에 이미지 경로 주소를 기입하세요."
     )
     @PostMapping
