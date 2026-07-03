@@ -65,4 +65,16 @@ public class ReviewAnswerController {
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer delete ok",response)
         );
     }
+    @Operation(
+            summary = "리뷰 리뷰 답변 검색",
+            description = "리뷰에 달린 리뷰 답변을 검색합니다."
+    )
+    @GetMapping("/review-search")
+    public ResponseEntity<ApiResponse<ReviewAnswerResponse>> reviewSearch(@RequestParam Long reviewId){
+        ReviewAnswerResponse response = reviewAnswerService.findByReviewSid(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ApiResponse<>(ResponseCode.SUCCESS,"review_answer review_search ok",response)
+        );
+
+    }
 }
