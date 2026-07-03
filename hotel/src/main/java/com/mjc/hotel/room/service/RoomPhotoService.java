@@ -21,6 +21,7 @@ public class RoomPhotoService {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Transactional
     public RoomPhotoDto insert(RoomPhotoDto roomPhotoDto) {
         if (roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         Room room = roomRepository.findById(roomPhotoDto.getRoomId()).orElseThrow();
@@ -32,6 +33,7 @@ public class RoomPhotoService {
         return toDto(roomPhotoRepository.save(clone), true);
     }
 
+    @Transactional
     public RoomPhotoDto update(RoomPhotoDto roomPhotoDto) {
         if (roomPhotoDto.getSid() == null || roomPhotoDto.getImagePath() == null) throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         RoomPhoto origin = roomPhotoRepository.findById(roomPhotoDto.getSid()).orElseThrow();
@@ -50,14 +52,14 @@ public class RoomPhotoService {
         return toDto(roomPhotoRepository.save(clone), true);
     }
 
+    @Transactional
     public RoomPhotoDto delete(Long id) {
         RoomPhoto photo = roomPhotoRepository.findById(id).orElseThrow();
-        if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        photo.setDeleted(true);
-        photo.setDeletedAt(LocalDateTime.now());
-        return toDto(roomPhotoRepository.save(photo), true);
+        roomPhotoRepository.delete(photo);
+        return toDto(photo, true);
     }
 
+    @Transactional
     public RoomPhotoDto findById(Long id) {
         RoomPhoto photo = roomPhotoRepository.findById(id).orElseThrow();
         if (photo.getDeleted() != null && photo.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");

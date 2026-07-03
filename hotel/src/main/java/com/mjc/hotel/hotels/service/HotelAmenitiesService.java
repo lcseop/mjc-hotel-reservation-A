@@ -53,8 +53,8 @@ public class HotelAmenitiesService {
 
     @Transactional
     public HotelAmenitiesDto delete(Long id) {
-        hotelInAmenitiesRepository.deleteByAmenitiesSid(id);
         HotelAmenities amenities = hotelAmenitiesRepository.findById(id).orElseThrow();
+        hotelInAmenitiesRepository.deleteByAmenitiesSid(id);
         hotelAmenitiesRepository.delete(amenities);
         return toDto(amenities, true);
     }

@@ -39,7 +39,7 @@ public class ReservationService {
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
         Member member = memberRepository.findById(requestDto.getMemberId()).orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. ID: " + requestDto.getMemberId()));
 
-        Room room = roomRepository.findById(requestDto.getRoomTagId()).orElseThrow(() -> new IllegalArgumentException("객실을 찾을 수 없습니다. ID: " + requestDto.getRoomTagId()));
+        Room room = roomRepository.findById(requestDto.getRoomId()).orElseThrow(() -> new IllegalArgumentException("객실을 찾을 수 없습니다. ID: " + requestDto.getRoomId()));
 
         long totalNights = ChronoUnit.DAYS.between(requestDto.getCheckInDate().toLocalDate(), requestDto.getCheckOutDate().toLocalDate());
 

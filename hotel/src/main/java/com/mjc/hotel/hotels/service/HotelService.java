@@ -211,4 +211,17 @@ public class HotelService {
                 .toList();
         return new PageImpl<>(review, pageable, inReviews.getTotalElements());
     }
+
+    public List<HotelPhotoDto> findHotelInPhotos(Long hotelId) {
+        List<HotelPhoto> photos = hotelPhotoRepository.findByHotelSid(hotelId);
+        return photos.stream()
+                .filter(p -> !p.getDeleted())
+                .map(p -> HotelPhotoDto.builder()
+                        .sid(p.getSid())
+                        .hotelId(p.getHotel().getSid())
+                        .imagePath(p.getImagePath())
+                        .build())
+                .toList();
+
+    }
 }
