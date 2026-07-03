@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     Review findBySidAndDeletedFalse(Long sid);
@@ -25,7 +23,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("select distinct r from review r inner join review_photo p on r = p.review where r.hotel = :hotelId and r.deleted = false")
     Page<Review> findByHotelSidAndExistsPhotoAndDeletedFalse(Long hotelId, Pageable pageable);
-
-    Page<Review> findByHotelSidAndDeletedFalse(Long hotelId, Sort sort, Pageable pageable);
 
 }

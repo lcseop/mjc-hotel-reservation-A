@@ -260,9 +260,9 @@ public class ReviewService {
     }
 
     /**
-     호텔에 달린 리뷰를 찾는 메소드
+     호텔에 달린 리뷰를 정렬 조건에 맞춰 찾는 메소드
      @param hotelId 호텔Id
-     @param pageable 페이징 조건
+     @param pageable 정렬 조건
      *
      **/
     public Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
@@ -271,27 +271,9 @@ public class ReviewService {
         return responses;
     }
     /**
-     호텔에 달린 리뷰를 정렬 기준에 맞게 찾는 메소드
+    호텔에 달린 긍정 리뷰만 정렬 조건에 맞춰 찾는 메소드 (평점 4점이상)
      @param hotelId 호텔Id
-     @param sortType 정렬 기준
-     @param pageable 페이징 조건
-     *
-     **/
-    public Page<ReviewResponse> sortingReviewsInHotel(Long hotelId, SortType sortType, Pageable pageable) {
-        Sort sort = switch (sortType) {
-            case LATEST -> Sort.by(Sort.Direction.DESC, "createdAt");
-            case RATING_HIGH -> Sort.by(Sort.Direction.DESC, "rating");
-            case RATING_LOW -> Sort.by(Sort.Direction.ASC, "rating");
-            case LIKE_COUNT -> Sort.by(Sort.Direction.DESC, "likeCount");
-        };
-        Page<Review> reviews = reviewRepository.findByHotelSidAndDeletedFalse(hotelId, sort, pageable);
-        Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
-        return responses;
-    }
-    /**
-    호텔에 달린 긍정 리뷰만 찾는 메소드 (평점 4점이상)
-     @param hotelId 호텔Id
-     @param pageable 페이징 조건
+     @param pageable 정렬 조건
     *
      **/
     public Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
@@ -300,9 +282,9 @@ public class ReviewService {
         return responses;
     }
     /**
-     호텔에 달린 리뷰중 사진이 있는 리뷰를 찾는 메소드
+     호텔에 달린 리뷰중 사진이 있는 리뷰를 정렬 조건에 맞춰 정렬하여 찾는 메소드
      @param hotelId 호텔Id
-     @param pageable 페이징 조건
+     @param pageable 정렬 조건
      *
      **/
     public Page<ReviewResponse> existsPhotoReviewsInHotel(Long hotelId, Pageable pageable) {
@@ -311,7 +293,7 @@ public class ReviewService {
         return responses;
     }
 
-    private @NonNull Page<ReviewResponse> toPageReviewResponse(Pageable pageable, Page<Review> reviews) {
+    private Page<ReviewResponse> toPageReviewResponse(Pageable pageable, Page<Review> reviews) {
         List<ReviewResponse> results = reviews.stream()
                 .map(review -> {
                     List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
