@@ -1,6 +1,7 @@
 package com.mjc.hotel.promotion.service;
 
 import com.mjc.hotel.promotion.dto.PromotionDto;
+import com.mjc.hotel.promotion.dto.PromotionSearchRequestDto;
 import com.mjc.hotel.promotion.entity.*;
 import com.mjc.hotel.promotion.mapper.PromotionMapper;
 import com.mjc.hotel.promotion.repository.*;
@@ -10,9 +11,11 @@ import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -112,5 +115,9 @@ public class PromotionService {
         return conditions.stream()
                 .map(c -> PromotionMapper.toDto(c.getPromotion(), c))
                 .collect(Collectors.toList());
+    }
+
+    public Page<PromotionDto> search(PromotionSearchRequestDto req, Pageable pageable) {
+        return promotionRepository.search(req, pageable);
     }
 }
