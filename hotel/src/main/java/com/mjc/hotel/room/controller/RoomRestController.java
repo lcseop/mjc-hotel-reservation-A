@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/room")
 @RequiredArgsConstructor
-@Tag(name = "Room", description = "객실 API")
+@Tag(name = "객실", description = "객실 데이터의 전반적인 부분을 관리합니다.")
 public class RoomRestController {
 
     @Autowired
