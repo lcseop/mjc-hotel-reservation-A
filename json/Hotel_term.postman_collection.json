@@ -1,0 +1,155 @@
+{
+  "info": {
+    "_postman_id": "20f81449-be59-4795-a20c-efcdc0f87652",
+    "name": "Hotel_term",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53671660",
+    "_collection_link": "https://go.postman.co/collection/53671660-20f81449-be59-4795-a20c-efcdc0f87652?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Term Copy",
+      "item": [
+        {
+          "name": "약관_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"termType\": \"개인정보\",\n  \"title\": \"개인정보동의\",\n  \"version\": \"1.1\",\n  \"isRequired\": false,\n  \"effectiveAt\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/term/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "term",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "약관_부분_조회",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"termId\": 0,\n  \"termType\": \"\",\n  \"title\": \"\",\n  \"version\": \"\",\n  \"isRequired\": false,\n  \"effectiveAt\": \"\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/term/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "term",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "약관_목록_조회",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"termId\": 0,\n  \"termType\": \"\",\n  \"title\": \"\",\n  \"version\": \"\",\n  \"isRequired\": false,\n  \"effectiveAt\": \"\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/term",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "term"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "약관_수정",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sid\": 1,\n  \"termType\": \"\",\n  \"title\": \"개인정보동의여부\",\n  \"version\": \"\",\n  \"isRequired\": false,\n  \"effectiveAt\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/term",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "term"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "약관_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"termId\": 0,\n  \"termType\": \"\",\n  \"title\": \"개인정보\",\n  \"version\": \"\",\n  \"isRequired\": false,\n  \"effectiveAt\": \"\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/term/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "term",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
