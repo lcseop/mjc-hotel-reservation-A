@@ -31,7 +31,6 @@ public class ReviewPhotoController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<List<ReviewPhotoResponse>>> insert(@ModelAttribute ReviewPhotoCreateRequest request) {
         List<ReviewPhotoResponse> responses = reviewPhotoService.insertReviewPhotos(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review photos insert ok", responses)
         );

@@ -1,7 +1,6 @@
 package com.mjc.hotel.review.response;
 
 import com.mjc.hotel.review.entity.enums.TravelType;
-import com.mjc.hotel.review.request.ReviewTagRequest;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -30,6 +29,10 @@ public class ReviewResponse {
     private Integer likeCount;
 
     private Integer dislikeCount;
+
+    private String roomName;
+
+    private Integer totalNights;
 
     private List<ReviewCategoryResponse> categories;
 

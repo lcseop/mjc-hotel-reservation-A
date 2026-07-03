@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    Page<Review> findBySidAndDeletedFalse(Long sid, Pageable pageable);
     Review findBySidAndDeletedFalse(Long sid);
     Page<Review> findByHotelSid(Long hotelId, Pageable pageable);
     Page<Review> findByMemberSid(Long memberId, Pageable pageable);
+    Boolean existsByReservationSid(Long reservationId);
 }

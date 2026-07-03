@@ -1,6 +1,5 @@
 package com.mjc.hotel.review.controller;
 
-import com.mjc.hotel.review.entity.enums.ReactionType;
 import com.mjc.hotel.review.request.ReviewReactionRequest;
 import com.mjc.hotel.review.response.ReviewReactionResponse;
 import com.mjc.hotel.review.service.ReviewReactionService;
@@ -46,11 +45,11 @@ public class ReviewReactionController {
             summary = "리뷰의 모든 좋아요 싫어요 찾기",
             description = "특정 리뷰에 대해 모든 좋아요 수 혹은 싫어요 수를 찾습니다."
     )
-    @GetMapping("/findAllByReactionType")
-    public ResponseEntity<ApiResponse<Long>> findAllByReactionType(@RequestParam Long reviewId, @RequestParam String reactionTypeName){
-        Long size = reviewReactionService.findAllByReviewIdAndReactionType(reviewId,reactionTypeName);
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Long>> search(@RequestParam Long reviewId, @RequestParam String reactionType){
+        Long size = reviewReactionService.findAllByReviewIdAndReactionType(reviewId,reactionType);
         return ResponseEntity.status(HttpStatus.OK).body(
-                new ApiResponse<>(ResponseCode.SUCCESS,"review_reaction findAllByReactionType ok",size)
+                new ApiResponse<>(ResponseCode.SUCCESS,"review_reaction search ok",size)
         );
     }
 }
