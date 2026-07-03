@@ -57,13 +57,12 @@ public class TermRestController {
             summary = "약관 데이터 수정",
             description = "약관 데이터를 수정합니다."
     )
-    @PutMapping("/{sid}")
+    @PatchMapping
     public ResponseEntity<ApiResponse<TermResponseDto>> update(
-            @PathVariable Long sid,
             @RequestBody TermRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "term update success", termService.updateTerm(sid, dto))
+                new ApiResponse<>(ResponseCode.SUCCESS, "term update success", termService.updateTerm(dto.getSid(), dto))
         );
     }
 

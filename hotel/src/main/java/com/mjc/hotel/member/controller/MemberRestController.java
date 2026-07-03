@@ -57,13 +57,12 @@ public class MemberRestController {
         );
     }
 
-    @PutMapping("/{sid}")
+    @PatchMapping
     public ResponseEntity<ApiResponse<MemberResponseDto>> update(
-            @PathVariable Long sid,
             @RequestBody MemberRequestDto dto
     ) {
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(sid, memberDtoMapper.toEntity(dto))))
+                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(dto.getSid(), memberDtoMapper.toEntity(dto))))
         );
     }
 
