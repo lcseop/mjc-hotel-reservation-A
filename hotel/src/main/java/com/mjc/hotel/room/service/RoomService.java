@@ -1,12 +1,10 @@
 package com.mjc.hotel.room.service;
 
+import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
-import com.mjc.hotel.room.dto.RoomInTagDto;
-import com.mjc.hotel.room.dto.RoomPhotoDto;
-import com.mjc.hotel.room.dto.RoomRequestDto;
-import com.mjc.hotel.room.dto.RoomResponseDto;
+import com.mjc.hotel.room.dto.*;
 import com.mjc.hotel.room.entity.*;
 import com.mjc.hotel.room.mapper.RoomMapper;
 import com.mjc.hotel.room.repository.*;
@@ -93,10 +91,57 @@ public class RoomService {
         return response(room);
     }
 
-    public List<RoomInTagDto> findRoomInTags(Long id) {
+    public List<RoomTagDto> findRoomInTags(Long id) {
         List<RoomInTag> roomInTags = roomInTagRepository.findByRoomSid(id);
         return roomInTags.stream()
-                .map(r -> RoomInTagDto.builder().sid(r.getSid()).roomId(r.getRoom().getSid()).roomTagId(r.getTag().getSid()).build())
+                .map(r -> {
+                    RoomTag roomTag = roomTagRepository.findById(r.getTag().getSid()).orElseThrow();
+                    return RoomTagDto.builder()
+                            .sid(roomTag.getSid())
+                            .title(roomTag.getTitle())
+                            .build();
+                })
+                .toList();
+    }
+
+    public List<RoomPhotoDto> findRoomInImages(Long id) {
+        List<RoomPhoto> photos = roomPhotoRepository.findByRoomSid(id);
+        return photos.stream()
+                .filter(p -> !p.getDeleted())
+                .map(p -> RoomPhotoDto
+                        .builder()
+                        .sid(p.getSid())
+                        .roomId(p.getRoom().getSid())
+                        .imagePath(p.getImagePath())
+                        .build())
+                .toList();
+    }
+
+    public List<RoomResponseDto> findByRoomType(Long typeId) {
+        List<Room> rooms = roomRepository.findByRoomTypeIdSid(typeId);
+        return rooms.stream()
+                .filter(r -> !r.getDeleted())
+                .map(r -> {
+                    HotelInPhotoResponseDto hotel = HotelMapper.photoResponse(r.getHotelId());
+                    return RoomResponseDto
+                            .builder()
+                            .sid(r.getSid())
+                            .hotel(hotel)
+                            .roomTypeTitle(r.getRoomTypeId().getTitle())
+                            .roomName(r.getRoomName())
+                            .roomPrice(r.getRoomPrice())
+                            .roomNumber(r.getRoomNumber())
+                            .floor(r.getFloor())
+                            .area(r.getArea())
+                            .maximumPeople(r.getMaximumPeople())
+                            .checkInTime(r.getCheckInTime())
+                            .checkOutTime(r.getCheckOutTime())
+                            .parking(r.getParking())
+                            .pet(r.getPet())
+                            .smoke(r.getSmoke())
+                            .idCard(r.getIdCard())
+                            .build();
+                })
                 .toList();
     }
 

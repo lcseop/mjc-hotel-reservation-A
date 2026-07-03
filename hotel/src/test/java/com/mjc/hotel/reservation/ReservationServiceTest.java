@@ -126,7 +126,7 @@ public class ReservationServiceTest {
     public void createReservationTest() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(7))
                 .checkOutDate(LocalDateTime.now().plusDays(9))
                 .adults(2)
@@ -153,7 +153,7 @@ public class ReservationServiceTest {
     public void createReservationWithPointTest() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(10))
                 .checkOutDate(LocalDateTime.now().plusDays(12))
                 .adults(1)
@@ -176,7 +176,7 @@ public class ReservationServiceTest {
     public void cancelReservationFullRefundTest() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(5))
                 .checkOutDate(LocalDateTime.now().plusDays(7))
                 .adults(2)
@@ -205,7 +205,7 @@ public class ReservationServiceTest {
     public void getReservationTest() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(3))
                 .checkOutDate(LocalDateTime.now().plusDays(6))
                 .adults(1)
@@ -232,7 +232,7 @@ public class ReservationServiceTest {
     public void chckInTest() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(1))
                 .checkOutDate(LocalDateTime.now().plusDays(2))
                 .adults(2)
@@ -257,7 +257,7 @@ public class ReservationServiceTest {
     public void checkOutTset() {
         ReservationRequestDto requestDto = ReservationRequestDto.builder()
                 .memberId(1L)
-                .roomTagId(1L)
+                .roomId(1L)
                 .checkInDate(LocalDateTime.now().plusDays(1))
                 .checkOutDate(LocalDateTime.now().plusDays(2))
                 .adults(1)
