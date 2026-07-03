@@ -15,6 +15,9 @@ import com.mjc.hotel.review.request.*;
 import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
+import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
+import com.mjc.hotel.room.entity.Room;
+import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +51,7 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final RoomRepository roomRepository;
 
     public ReviewResponse insertReview(ReviewCreateRequest request) {
         Hotel hotel = hotelRepository.findById(request.getHotelId())
@@ -302,5 +306,33 @@ public class ReviewService {
                 })
                 .toList();
         return new PageImpl<>(results, pageable, reviews.getTotalElements());
+    }
+
+//    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request) {
+//        Room room = roomRepository.findById(request.getRoomId())
+//                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Exist"));
+//        Member member = memberRepository.findById(request.getMemberId())
+//                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Member Not Found"));
+//        Hotel hotel = hotelRepository.findById(room.getHotelId().getSid())
+//                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
+//
+//        Reservation reservation = reservationRepository.findFirstByMemberSidAndRoomSidAndReservationStatusEqualCHECKED_OUTAndDeletedFalse(member.getSid(),room.getSid());
+//        if(reservation == null) {
+//            return this.toReviewWriteStatusResponse(false,null,false,null);
+//        }
+//        Review review = reviewRepository.findByReservationSidAndDeletedFalse(reservation.getSid());
+//        if(review == null){
+//            return this.toReviewWriteStatusResponse(true,reservation.getSid(),false,null);
+//        }
+//        return this.toReviewWriteStatusResponse(true,reservation.getSid(),true,review.getSid());
+//    }
+
+    private ReviewWriteStatusResponse toReviewWriteStatusResponse(Boolean checked, Long reservationId, Boolean existsReview, Long reviewId) {
+        return ReviewWriteStatusResponse.builder()
+                .checked(checked)
+                .reservationId(reservationId)
+                .existsReview(existsReview)
+                .reviewId(reviewId)
+                .build();
     }
 }
