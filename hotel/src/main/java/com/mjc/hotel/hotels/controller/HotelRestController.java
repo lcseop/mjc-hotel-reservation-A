@@ -8,6 +8,7 @@ import com.mjc.hotel.room.dto.RoomResponseNoHotelDto;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/hotel")
 @RequiredArgsConstructor
+@Tag(name = "Hotel", description = "호텔 API")
 public class HotelRestController {
 
     @Autowired

@@ -5,6 +5,7 @@ import com.mjc.hotel.hotels.service.HotelTypeService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/hoteltype")
 @RequiredArgsConstructor
+@Tag(name = "HotelType", description = "호텔 타입 API")
 public class HotelTypeRestController {
     @Autowired
     private HotelTypeService hotelTypeService;
