@@ -21,7 +21,7 @@ public class RoomTypeRestController {
     private final RoomTypeService roomTypeService;
 
     @Operation(
-            summary = "객실 타입 삭제",
+            summary = "객실 타입 생성",
             description = "객실 타입을 만듭니다."
     )
     @PostMapping
