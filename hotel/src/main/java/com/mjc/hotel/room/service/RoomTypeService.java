@@ -1,8 +1,10 @@
 package com.mjc.hotel.room.service;
 
+import com.mjc.hotel.promotion.repository.PromotionRepository;
 import com.mjc.hotel.room.dto.RoomTypeDto;
 import com.mjc.hotel.room.entity.RoomType;
 import com.mjc.hotel.room.repository.RoomInTagRepository;
+import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
@@ -16,7 +18,9 @@ public class RoomTypeService {
     @Autowired
     private RoomTypeRepository roomTypeRepository;
     @Autowired
-    private Room
+    private RoomRepository roomRepository;
+    @Autowired
+    private PromotionRepository promotionRepository;
 
     @Transactional
     public RoomTypeDto insert(RoomTypeDto roomTypeDto) {
@@ -47,31 +51,36 @@ public class RoomTypeService {
 
     @Transactional
     public RoomTypeDto delete(Long id) {
-        RoomType tag = roomTypeRepository.findById(id).orElseThrow();
-        if ()
-        if (tag.getDeleted() != null && tag.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        roomTypeRepository.delete(tag);
-        return toDto(roomTypeRepository.save(tag), true);
+        RoomType type = roomTypeRepository.findById(id).orElseThrow();
+        if (roomRepository.existsByRoomTypeIdSid(id)) {
+            throw new IllegalStateException("이 타입을 사용 중인 객실이 있습니다.");
+        }
+        if (promotionRepository.existsByRoomTypeSid(id)) {
+            throw new IllegalStateException("이 타입을 사용 중인 프로모션이 있습니다.");
+        }
+        if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        roomTypeRepository.delete(type);
+        return toDto(roomTypeRepository.save(type), true);
     }
 
     @Transactional
     public RoomTypeDto findById(Long id) {
-        RoomType tag = roomTypeRepository.findById(id).orElseThrow();
-        if (tag.getDeleted() != null && tag.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
-        return toDto(tag, true);
+        RoomType type = roomTypeRepository.findById(id).orElseThrow();
+        if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        return toDto(type, true);
     }
 
-    private RoomTypeDto toDto(RoomType tag, boolean sid) {
+    private RoomTypeDto toDto(RoomType type, boolean sid) {
         if (sid) {
             return RoomTypeDto
                     .builder()
-                    .sid(tag.getSid())
-                    .title(tag.getTitle())
+                    .sid(type.getSid())
+                    .title(type.getTitle())
                     .build();
         } else {
             return RoomTypeDto
                     .builder()
-                    .title(tag.getTitle())
+                    .title(type.getTitle())
                     .build();
         }
     }

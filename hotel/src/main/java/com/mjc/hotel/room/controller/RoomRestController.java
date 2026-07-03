@@ -1,27 +1,15 @@
 package com.mjc.hotel.room.controller;
 
-import com.mjc.hotel.hotels.dto.HotelRequestDto;
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
-import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
-import com.mjc.hotel.hotels.entity.Hotel;
-import com.mjc.hotel.hotels.mapper.HotelMapper;
-import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.room.dto.RoomPhotoDto;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.dto.RoomTagDto;
-import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.mapper.RoomMapper;
-import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/room")
 @RequiredArgsConstructor
-public class RoomController {
+public class RoomRestController {
 
     @Autowired
     private final RoomService roomService;
