@@ -21,7 +21,7 @@ public class RoomInTagRestController {
     private final RoomInTagService roomInTagService;
 
     @Operation(
-            summary = "객실 태그 매핑 데이터 생성",
+            summary = "객실 태그 매핑 데이터 삭제",
             description = "객실과 태그의 매핑 데이터를 만듭니다."
     )
     @PostMapping
