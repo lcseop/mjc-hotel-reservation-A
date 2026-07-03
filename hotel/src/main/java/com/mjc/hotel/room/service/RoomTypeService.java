@@ -60,7 +60,7 @@ public class RoomTypeService {
         }
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         roomTypeRepository.delete(type);
-        return toDto(roomTypeRepository.save(type), true);
+        return toDto(type, true);
     }
 
     @Transactional

@@ -56,7 +56,7 @@ public class RoomPhotoService {
     public RoomPhotoDto delete(Long id) {
         RoomPhoto photo = roomPhotoRepository.findById(id).orElseThrow();
         roomPhotoRepository.delete(photo);
-        return toDto(roomPhotoRepository.save(photo), true);
+        return toDto(photo, true);
     }
 
     @Transactional
