@@ -21,6 +21,10 @@ import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -254,5 +258,48 @@ public class ReviewService {
         return results;
     }
 
+    /**
+     호텔에 달린 리뷰를 찾는 메소드
+     @param hotelId 호텔Id
+     @param pageable 정렬 조건
+     *
+     **/
+    private Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByHotelSidAndDeletedFalse(hotelId, pageable);
+        Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
+        return responses;
+    }
+    /**
+    호텔에 달린 긍정 리뷰만 찾는 메소드 (평점 4점이상)
+     @param hotelId 호텔Id
+     @param pageable 정렬 조건
+    *
+     **/
+    private Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByHotelSidAndRatingGreaterThanEqualAndDeletedFalse(hotelId, 4, pageable);
+        Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
+        return responses;
+    }
+    /**
+     호텔에 달린 리뷰중 사진이 있는 리뷰를 찾는 메소드
+     @param hotelId 호텔Id
+     @param pageable 정렬 조건
+     *
+     **/
+    private Page<ReviewResponse> existingPhotoReviewsInHotel(Long hotelId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByHotelSidAndExistsPhotoAndDeletedFalse(hotelId, pageable);
+        Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
+        return responses;
+    }
 
+    private @NonNull Page<ReviewResponse> toPageReviewResponse(Pageable pageable, Page<Review> reviews) {
+        List<ReviewResponse> results = reviews.stream()
+                .map(review -> {
+                    List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
+                    List<ReviewTag> tags = reviewTagRepository.findByReviewSid(review.getSid());
+                    return this.toReviewResponse(review, categories, tags);
+                })
+                .toList();
+        return new PageImpl<>(results, pageable, reviews.getTotalElements());
+    }
 }
