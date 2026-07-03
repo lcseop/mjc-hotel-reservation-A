@@ -10,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, Long>, HotelRepositorySub {
-
+    boolean existsByTypeSid(Long sid);
 }

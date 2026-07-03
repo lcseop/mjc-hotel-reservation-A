@@ -22,10 +22,10 @@ public class ReservationRequestDto {
     private Long memberId;
 
     @NotNull(message = "객실 ID는 필수입니다")
-    private Integer roomTagId;
+    private Long roomTagId;
 
     @NotNull(message = "쿠폰 ID는 양수여야 합니다")
-    private Long coupon;
+    private Long couponIssueId;
 
     @NotNull(message = "체크인 날짜는 필수입니다")
     @Future(message = "체크인 날짜는 현재 이후여야 합니다")

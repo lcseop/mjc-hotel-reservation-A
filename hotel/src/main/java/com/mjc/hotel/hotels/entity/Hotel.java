@@ -22,10 +22,6 @@ public class Hotel extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private HotelType type;
 
-    @JoinColumn(name = "photo_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private HotelPhoto photo;
-
     @Column(name = "hotel_name", length = 50, nullable = false)
     private String hotelName;
 

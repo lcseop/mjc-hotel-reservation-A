@@ -1,5 +1,7 @@
 package com.mjc.hotel.hotels.mapper;
 
+import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
+import com.mjc.hotel.hotels.dto.HotelPhotoDto;
 import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
@@ -17,18 +19,17 @@ import java.util.List;
 @Component
 public class HotelMapper {
 
-    public static Hotel clone(Hotel origin, HotelRequestDto hotel, boolean sid, HotelType type, HotelPhoto photo) {
-        if (hotel == null || photo == null
+    public static Hotel clone(Hotel origin, HotelRequestDto hotel, boolean sid, HotelType type) {
+        if (hotel == null
                 || type == null || hotel.getHotelName() == null
                 || hotel.getHotelPrice() == null || hotel.getLocation() == null) {
-            return null;
+            throw new IllegalArgumentException("not null 속성이 null인 값이 있습니다.");
         }
         if (sid && hotel.getSid() == null) {
-            return null;
+            throw new IllegalArgumentException("sid가 입력되지 않았습니다.");
         }
         Hotel clone = Hotel
                 .builder()
-                .photo(photo)
                 .type(type)
                 .hotelName(hotel.getHotelName())
                 .hotelPrice(hotel.getHotelPrice())
@@ -50,12 +51,26 @@ public class HotelMapper {
         return clone;
     }
 
-    public static HotelResponseDto response(Hotel hotel) {
+    public static HotelResponseDto response(Hotel hotel, List<HotelPhotoDto> photos) {
         return HotelResponseDto
                 .builder()
                 .sid(hotel.getSid())
                 .typeTitle(hotel.getType().getTitle())
-                .photoPath(hotel.getPhoto().getImagePath())
+                .hotelName(hotel.getHotelName())
+                .hotelPrice(hotel.getHotelPrice())
+                .location(hotel.getLocation())
+                .starRating(hotel.getStarRating())
+                .description(hotel.getDescription())
+                .latitude(hotel.getLatitude())
+                .longitude(hotel.getLongitude())
+                .build();
+    }
+
+    public static HotelInPhotoResponseDto photoResponse(Hotel hotel) {
+        return HotelInPhotoResponseDto
+                .builder()
+                .sid(hotel.getSid())
+                .typeTitle(hotel.getType().getTitle())
                 .hotelName(hotel.getHotelName())
                 .hotelPrice(hotel.getHotelPrice())
                 .location(hotel.getLocation())

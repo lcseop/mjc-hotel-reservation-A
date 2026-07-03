@@ -43,4 +43,13 @@ public class CouponService {
                 .totalQuantity(saved.getTotalQuantity())
                 .build();
     }
+
+    @Transactional
+    public void delete(Long id) {
+        Coupon coupon = couponRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+
+        couponRepository.delete(coupon);
+
+    }
 }

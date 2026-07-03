@@ -3,17 +3,13 @@ package com.mjc.hotel.room.service;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.room.dto.RoomInTagDto;
+import com.mjc.hotel.room.dto.RoomPhotoDto;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
-import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.entity.RoomPhoto;
-import com.mjc.hotel.room.entity.RoomTag;
-import com.mjc.hotel.room.entity.RoomType;
+import com.mjc.hotel.room.entity.*;
 import com.mjc.hotel.room.mapper.RoomMapper;
-import com.mjc.hotel.room.repository.RoomPhotoRepository;
-import com.mjc.hotel.room.repository.RoomRepository;
-import com.mjc.hotel.room.repository.RoomTagRepository;
-import com.mjc.hotel.room.repository.RoomTypeRepository;
+import com.mjc.hotel.room.repository.*;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +32,15 @@ public class RoomService {
     private RoomPhotoRepository roomPhotoRepository;
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private RoomInTagRepository roomInTagRepository;
 
     @Transactional
     public RoomResponseDto insert(RoomRequestDto room) {
         Hotel hotel = hotelRepository.findById(room.getHotelId()).orElseThrow();
-        RoomTag tag = roomTagRepository.findById(room.getRoomTagId()).orElseThrow();
-        RoomPhoto photo = roomPhotoRepository.findById(room.getRoomTagId()).orElseThrow();
-        RoomType type = roomTypeRepository.findById(room.getRoomTagId()).orElseThrow();
+        RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElseThrow();
 
-        Room insert = RoomMapper.clone(null, room, false, hotel, tag, type, photo);
+        Room insert = RoomMapper.clone(null, room, false, hotel, type);
 
         Room saved = roomRepository.save(insert);
 
@@ -62,11 +58,9 @@ public class RoomService {
         }
 
         Hotel hotel = hotelRepository.findById(room.getHotelId()).orElseThrow();
-        RoomTag tag = roomTagRepository.findById(room.getRoomTagId()).orElseThrow();
-        RoomPhoto photo = roomPhotoRepository.findById(room.getRoomPhotoId()).orElseThrow();
         RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElseThrow();
 
-        Room update =  RoomMapper.clone(origin, room, true, hotel, tag, type, photo);
+        Room update =  RoomMapper.clone(origin, room, true, hotel, type);
 
         Room saved = roomRepository.save(update);
 
@@ -82,10 +76,6 @@ public class RoomService {
         if (target.getDeleted() != null && target.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, target.getRoomName() + " is not found");
         }
-        Hotel hotel = hotelRepository.findById(target.getHotelId().getSid()).orElseThrow();
-        RoomTag tag = roomTagRepository.findById(target.getRoomTagId().getSid()).orElseThrow();
-        RoomPhoto photo = roomPhotoRepository.findById(target.getRoomPhotoId().getSid()).orElseThrow();
-        RoomType type = roomTypeRepository.findById(target.getRoomTypeId().getSid()).orElseThrow();
 
         target.setDeleted(true);
         target.setDeletedAt(LocalDateTime.now());
@@ -97,12 +87,16 @@ public class RoomService {
         return dto;
     }
 
-    public List<RoomResponseDto> findByHotelId(Long id) {
-        Hotel hotel = hotelRepository.findById(id).orElseThrow();
-        List<Room> rooms = roomRepository.findByHotelId(hotel);
+    public RoomResponseDto findById(Long id) {
+        Room room = roomRepository.findById(id).orElseThrow();
+        if (room.getDeleted() != null && room.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        return response(room);
+    }
 
-        return rooms.stream()
-                .map(RoomMapper::response)
+    public List<RoomInTagDto> findRoomInTags(Long id) {
+        List<RoomInTag> roomInTags = roomInTagRepository.findByRoomSid(id);
+        return roomInTags.stream()
+                .map(r -> RoomInTagDto.builder().sid(r.getSid()).roomId(r.getRoom().getSid()).roomTagId(r.getTag().getSid()).build())
                 .toList();
     }
 
@@ -110,9 +104,7 @@ public class RoomService {
         RoomResponseDto dto = RoomResponseDto
                 .builder()
                 .sid(saved.getSid())
-                .hotel(HotelMapper.response(saved.getHotelId()))
-                .roomTagTitle(saved.getRoomTagId().getTitle())
-                .roomPhotoPath(saved.getRoomPhotoId().getImagePath())
+                .hotel(HotelMapper.photoResponse(saved.getHotelId()))
                 .roomTypeTitle(saved.getRoomTypeId().getTitle())
                 .roomName(saved.getRoomName())
                 .roomPrice(saved.getRoomPrice())

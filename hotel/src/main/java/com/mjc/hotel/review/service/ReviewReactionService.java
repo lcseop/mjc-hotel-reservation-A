@@ -10,6 +10,8 @@ import com.mjc.hotel.review.repository.ReviewReactionRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewReactionRequest;
 import com.mjc.hotel.review.response.*;
+import com.mjc.hotel.util.ResponseCode;
+import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,15 +25,18 @@ public class ReviewReactionService {
 
     private final ReviewReactionRepository reviewReactionRepository;
 
-    public ReviewReactionResponse addReviewReaction(ReviewReactionRequest reviewReactionRequest) {
-        Review review = reviewRepository.findById(reviewReactionRequest.getReviewId()).orElseThrow();
-        Member member = memberRepository.findById(reviewReactionRequest.getMemberId()).orElseThrow();
+    public ReviewReactionResponse addReviewReaction(ReviewReactionRequest request) {
+        Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
+        if(review == null){
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
+        Member member = memberRepository.findById(request.getMemberId()).orElseThrow();
 
-        if(reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+        if(request.getReactionType() == ReactionType.GOOD){
             review.increaseLike();
             reviewRepository.save(review);
         }
-        else if(reviewReactionRequest.getReactionType() == ReactionType.BAD){
+        else if(request.getReactionType() == ReactionType.BAD){
             review.increaseDislike();
             reviewRepository.save(review);
         }
@@ -39,7 +44,7 @@ public class ReviewReactionService {
         ReviewReaction reviewReaction = ReviewReaction.builder()
                 .review(review)
                 .member(member)
-                .reactionType(reviewReactionRequest.getReactionType())
+                .reactionType(request.getReactionType())
                 .build();
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
@@ -48,36 +53,39 @@ public class ReviewReactionService {
         return result;
     }
 
-    public ReviewReactionResponse updateReviewReaction(ReviewReactionRequest reviewReactionRequest) {
-        ReviewReactionId reviewReactionId = new ReviewReactionId(reviewReactionRequest.getReviewId(), reviewReactionRequest.getMemberId());
+    public ReviewReactionResponse updateReviewReaction(ReviewReactionRequest request) {
+        ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
-        Review review = reviewRepository.findById(find.getReview().getSid()).orElseThrow();
+        Review review = reviewRepository.findBySidAndDeletedFalse(find.getReview().getSid());
+        if(review == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
         //좋아요에서 취소상태 (삭제)
-        if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
+        if(find.getReactionType() == ReactionType.GOOD && request.getReactionType() == ReactionType.NONE){
             review.decreaseLike();
         }
         //싫어요에서 취소상태 (삭제)
-        if(find.getReactionType() == ReactionType.BAD && reviewReactionRequest.getReactionType() == ReactionType.NONE){
+        if(find.getReactionType() == ReactionType.BAD && request.getReactionType() == ReactionType.NONE){
             review.decreaseDislike();
         }
         //좋아요에서 싫어요
-        if(find.getReactionType() == ReactionType.GOOD && reviewReactionRequest.getReactionType() == ReactionType.BAD){
+        if(find.getReactionType() == ReactionType.GOOD && request.getReactionType() == ReactionType.BAD){
             review.decreaseLike();
             review.increaseDislike();
         }
         //싫어요에서 좋아요
-        if(find.getReactionType() == ReactionType.BAD && reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+        if(find.getReactionType() == ReactionType.BAD && request.getReactionType() == ReactionType.GOOD){
             review.increaseLike();
             review.decreaseDislike();
         }
         //취소상태에서 좋아요
-        if(find.getReactionType() == ReactionType.NONE && reviewReactionRequest.getReactionType() == ReactionType.GOOD){
+        if(find.getReactionType() == ReactionType.NONE && request.getReactionType() == ReactionType.GOOD){
             review.increaseLike();
         }
         //취소상태에서 싫어요
-        if(find.getReactionType() == ReactionType.NONE && reviewReactionRequest.getReactionType() == ReactionType.BAD){
+        if(find.getReactionType() == ReactionType.NONE && request.getReactionType() == ReactionType.BAD){
             review.increaseDislike();
         }
         reviewRepository.save(review);
@@ -85,8 +93,11 @@ public class ReviewReactionService {
         ReviewReaction reviewReaction = ReviewReaction.builder()
                 .review(review)
                 .member(find.getMember())
-                .reactionType(reviewReactionRequest.getReactionType())
+                .reactionType(request.getReactionType())
                 .build();
+
+        //생성일 그대로 넘겨주기
+        reviewReaction.setCreatedAt(find.getCreatedAt());
 
         ReviewReaction save = reviewReactionRepository.save(reviewReaction);
 
@@ -94,8 +105,8 @@ public class ReviewReactionService {
         return result;
     }
 
-    public ReviewReactionResponse findReviewReaction(ReviewReactionRequest reviewReactionRequest) {
-        ReviewReactionId reviewReactionId = new ReviewReactionId(reviewReactionRequest.getReviewId(), reviewReactionRequest.getMemberId());
+    public ReviewReactionResponse findReviewReaction(ReviewReactionRequest request) {
+        ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId).orElseThrow();
 
@@ -115,8 +126,12 @@ public class ReviewReactionService {
     }
 
     public Long findAllByReviewIdAndReactionType(Long reviewId, String reactionTypeName) {
+        Review find = reviewRepository.findBySidAndDeletedFalse(reviewId);
+        if(find == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
         ReactionType reactionType = reactionTypeName.equals("GOOD") ? ReactionType.GOOD : reactionTypeName.equals("BAD") ? ReactionType.BAD : ReactionType.NONE;
-        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionType(reviewId,reactionType);
+        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionType(find.getSid(),reactionType);
         return Long.valueOf(reviewReactions.size());
     }
 }

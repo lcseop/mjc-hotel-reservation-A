@@ -1,5 +1,6 @@
 package com.mjc.hotel.hotels.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 // 호텔 편의 시설 - 호텔을 연결
-public class HotelInAmenities {
+public class HotelInAmenities extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

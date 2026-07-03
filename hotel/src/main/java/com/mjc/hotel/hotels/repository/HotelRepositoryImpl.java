@@ -2,7 +2,6 @@ package com.mjc.hotel.hotels.repository;
 
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.QHotel;
 import com.mjc.hotel.reservations.entity.QReservation;
 import com.mjc.hotel.reservations.entity.QReservationCancel;
@@ -21,10 +20,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class HotelRepositoryImpl implements HotelRepositorySub {
+
     private final JPAQueryFactory queryFactory;
 
     @Override
     public Page<HotelResponseDto> search(HotelSearchRequestDto req, Pageable pageable) {
+
         QHotel h = QHotel.hotel;
         QRoom r = QRoom.room;
         QReservation res = QReservation.reservation;
@@ -35,7 +36,6 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         HotelResponseDto.class,
                         h.sid,
                         h.type.title,
-                        h.photo.imagePath,
                         h.hotelName,
                         h.hotelPrice,
                         h.location,
@@ -51,6 +51,8 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         existsAvailableRoom(h, r, res, rc, req)
                 )
                 .distinct()
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
 
         Long total = queryFactory
@@ -75,7 +77,8 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
     }
 
     private BooleanExpression existsAvailableRoom(
-            QHotel h, QRoom r, QReservation res, QReservationCancel rc, HotelSearchRequestDto req
+            QHotel h, QRoom r, QReservation res, QReservationCancel rc,
+            HotelSearchRequestDto req
     ) {
         return JPAExpressions
                 .selectOne()
@@ -109,8 +112,8 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
     }
 
     private BooleanExpression noReservationConflict(
-            QRoom r, QReservation res, QReservationCancel rc
-            , LocalDateTime checkIn, LocalDateTime checkOut
+            QRoom r, QReservation res, QReservationCancel rc,
+            LocalDateTime checkIn, LocalDateTime checkOut
     ) {
         if (checkIn == null || checkOut == null) return null;
 
@@ -126,6 +129,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                                         .from(rc)
                         ),
 
+                        // 날짜 겹침 조건
                         res.checkInDate.lt(checkOut),
                         res.checkOutDate.gt(checkIn)
                 )

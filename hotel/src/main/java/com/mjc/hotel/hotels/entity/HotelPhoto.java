@@ -18,6 +18,10 @@ public class HotelPhoto extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
+    @JoinColumn(name = "hotel_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Hotel hotel;
+
     @Column(name = "image_path", length = 255, nullable = false)
     private String imagePath;
 }

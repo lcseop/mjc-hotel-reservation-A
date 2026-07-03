@@ -1,5 +1,6 @@
 package com.mjc.hotel.room.dto;
 
+import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.room.entity.*;
@@ -16,9 +17,7 @@ import lombok.*;
 @Setter
 public class RoomResponseDto {
     private Long sid;
-    private HotelResponseDto hotel;
-    private String roomTagTitle;
-    private String roomPhotoPath;
+    private HotelInPhotoResponseDto hotel;
     private String roomTypeTitle;
     private String roomName;
     private Integer roomPrice;

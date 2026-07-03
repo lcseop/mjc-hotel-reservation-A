@@ -33,13 +33,6 @@ public class HotelServiceTest {
 
         hotelAmenitiesRepository.save(hotelAmenities);
 
-        HotelPhoto hotelPhoto = HotelPhoto
-                .builder()
-                .imagePath("https://cf.bstatic.com/xdata/images/hotel/max1024x768/27025252.jpg?k=cec48daabc79a9a6a85840aa1cf63b268fc689835c8cebe0abda01975ea156dc&o=")
-                .build();
-
-        hotelPhotoRepository.save(hotelPhoto);
-
         HotelType hotelType = HotelType
                 .builder()
                 .title("호텔")
@@ -47,11 +40,9 @@ public class HotelServiceTest {
 
         hotelTypeRepository.save(hotelType);
 
-
         Hotel hotel = Hotel
                 .builder()
                 .type(hotelType)
-                .photo(hotelPhoto)
                 .hotelName("골든 서울 호텔")
                 .hotelPrice(300000)
                 .location("서울 강서구 염창동 공항대로 663")
@@ -60,6 +51,14 @@ public class HotelServiceTest {
                 .build();
 
         hotelRepository.save(hotel);
+
+        HotelPhoto hotelPhoto = HotelPhoto
+                .builder()
+                .hotel(hotel)
+                .imagePath("https://cf.bstatic.com/xdata/images/hotel/max1024x768/27025252.jpg?k=cec48daabc79a9a6a85840aa1cf63b268fc689835c8cebe0abda01975ea156dc&o=")
+                .build();
+
+        hotelPhotoRepository.save(hotelPhoto);
     }
 
     @Test
@@ -125,15 +124,8 @@ public class HotelServiceTest {
     @Test
     @Commit
     public void hotelInAmenitiesAdd() {
-        Hotel hotel = Hotel
-                .builder()
-                .sid(1L)
-                .build();
-
-        HotelAmenities hotelAmenities = HotelAmenities
-                .builder()
-                .sid(1L)
-                .build();
+        Hotel hotel = hotelRepository.findById(1L).orElseThrow();
+        HotelAmenities hotelAmenities = hotelAmenitiesRepository.findById(1L).orElseThrow();
 
         HotelInAmenities hotelInAmenities = HotelInAmenities
                 .builder()

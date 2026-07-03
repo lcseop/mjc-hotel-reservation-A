@@ -7,10 +7,10 @@ import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.request.ReviewAnswerCreateRequest;
 import com.mjc.hotel.review.request.ReviewAnswerUpdateRequest;
 import com.mjc.hotel.review.response.*;
+import com.mjc.hotel.util.ResponseCode;
+import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +18,17 @@ public class ReviewAnswerService {
     private final ReviewAnswerRepository reviewAnswerRepository;
     private final ReviewRepository reviewRepository;
 
-    public ReviewAnswerResponse insertReviewAnswer(ReviewAnswerCreateRequest reviewAnswerRequest) {
-        Review review = reviewRepository.findById(reviewAnswerRequest.getReviewId()).orElseThrow();
-
+    public ReviewAnswerResponse insertReviewAnswer(ReviewAnswerCreateRequest request) {
+        Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
+        if(review == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
+        if(reviewAnswerRepository.existsByReviewSidAndDeletedFalse(review.getSid())) {
+            throw new IllegalArgumentException("Review Answer Is Already Exists");
+        }
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
                 .review(review)
-                .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
+                .reviewAnswer(request.getReviewAnswer())
                 .build();
 
         reviewAnswer.prePersist();
@@ -34,14 +39,21 @@ public class ReviewAnswerService {
         return result;
     }
 
-    public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest reviewAnswerRequest) {
-        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(reviewAnswerRequest.getSid());
+    public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest request) {
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(request.getSid());
+        if(find == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Answer Not Found");
+        }
 
         ReviewAnswer reviewAnswer = ReviewAnswer.builder()
                 .sid(find.getSid())
                 .review(find.getReview())
-                .reviewAnswer(reviewAnswerRequest.getReviewAnswer())
+                .reviewAnswer(request.getReviewAnswer())
                 .build();
+
+        //생성시간 그대로 넘겨주기
+        reviewAnswer.setCreatedAt(find.getCreatedAt());
+        reviewAnswer.prePersist();
 
         ReviewAnswer save = reviewAnswerRepository.save(reviewAnswer);
 
@@ -49,17 +61,22 @@ public class ReviewAnswerService {
         return result;
     }
 
-    public ReviewAnswerResponse findReviewAnswer(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
+    public ReviewAnswerResponse findBySidReviewAnswer(Long sid) {
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(sid);
+        if(find == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Answer Not Found");
+        }
 
         ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
 
         return result;
     }
 
-    public ReviewAnswerResponse deleteReviewAnswerId(Long id) {
-        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(id);
-
+    public ReviewAnswerResponse deleteReviewAnswer(Long sid) {
+        ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(sid);
+        if(find == null) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Answer Not Found");
+        }
         find.markDeleted();
 
         ReviewAnswer save = reviewAnswerRepository.save(find);

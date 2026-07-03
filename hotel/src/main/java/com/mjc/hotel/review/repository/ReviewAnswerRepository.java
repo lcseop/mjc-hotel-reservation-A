@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReviewAnswerRepository extends JpaRepository<ReviewAnswer, Long> {
     ReviewAnswer findBySidAndDeletedFalse(Long sid);
+    ReviewAnswer findByReviewSidAndDeletedFalse(Long reviewId);
+    Boolean existsByReviewSidAndDeletedFalse(Long sid);
 }

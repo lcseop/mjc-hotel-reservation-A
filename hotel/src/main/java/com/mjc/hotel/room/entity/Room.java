@@ -24,14 +24,6 @@ public class Room extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Hotel hotelId;
 
-    @JoinColumn(name = "room_tag_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private RoomTag roomTagId;
-
-    @JoinColumn(name = "room_photo_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private RoomPhoto roomPhotoId;
-
     @JoinColumn(name = "room_type_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private RoomType roomTypeId;

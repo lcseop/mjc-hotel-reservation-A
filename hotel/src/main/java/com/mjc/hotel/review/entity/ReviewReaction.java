@@ -9,10 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Entity(name = "review_reaction")
 @AllArgsConstructor
@@ -20,7 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @IdClass(ReviewReactionId.class)
-public class ReviewReaction {
+public class ReviewReaction extends  BaseEntity {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")
@@ -34,12 +30,4 @@ public class ReviewReaction {
     @Enumerated(EnumType.STRING)
     @Column(name = "reaction_type")
     private ReactionType reactionType;
-
-    @CreatedDate
-    @Column(name = "create_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "update_at", nullable = false)
-    private LocalDateTime updatedAt;
 }
