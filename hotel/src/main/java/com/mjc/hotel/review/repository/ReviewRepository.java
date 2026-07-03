@@ -3,6 +3,7 @@ package com.mjc.hotel.review.repository;
 import com.mjc.hotel.review.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -24,5 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("select distinct r from review r inner join review_photo p on r = p.review where r.hotel = :hotelId and r.deleted = false")
     Page<Review> findByHotelSidAndExistsPhotoAndDeletedFalse(Long hotelId, Pageable pageable);
+
+    Page<Review> findByHotelSidAndDeletedFalse(Long hotelId, Sort sort, Pageable pageable);
 
 }
