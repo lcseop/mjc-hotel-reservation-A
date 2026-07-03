@@ -7,6 +7,7 @@ import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,22 @@ public class CouponRestController {
         couponService.delete(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "coupon delete success", null)
+        );
+    }
+
+    @Operation(
+            summary = "쿠폰 수정",
+            description = "기존 쿠폰 정보를 수정합니다."
+    )
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<CouponDto>> update(
+            @PathVariable Long id,
+            @RequestBody CouponDto dto) {
+
+        couponService.update(id, dto);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "coupon update success", null)
         );
     }
 }

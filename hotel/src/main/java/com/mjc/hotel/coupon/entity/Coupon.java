@@ -41,4 +41,13 @@ public class Coupon {
     @Column(name="total_quantity")
     private Integer totalQuantity;
 
+    public void update(String couponName, CouponDiscountType discountType, Double discountValue, Integer minOrderAmount, LocalDateTime startDate, LocalDateTime endDate, Integer totalQuantity) {
+        this.couponName = couponName;
+        this.discountType = discountType;
+        this.discountValue = discountValue;
+        this.minOrderAmount = minOrderAmount;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.totalQuantity = totalQuantity;
+    }
 }
