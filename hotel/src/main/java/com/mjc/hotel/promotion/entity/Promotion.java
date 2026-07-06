@@ -33,4 +33,8 @@ public class Promotion extends BaseEntity {
 
     @Column(name="end_date")
     private LocalDateTime endDate;
+
+    public void update(String promotionName) {
+        this.promotionName = promotionName;
+    }
 }
