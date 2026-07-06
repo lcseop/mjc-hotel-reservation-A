@@ -1,6 +1,7 @@
 package com.mjc.hotel.reservations.dto;
 
 
+import com.mjc.hotel.reservations.entity.ReservationChannel;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,6 @@ public class ReservationRequestDto {
     @NotNull(message = "객실 ID는 필수입니다")
     private Long roomId;
 
-    @NotNull(message = "쿠폰 ID는 양수여야 합니다")
     private Long couponIssueId;
 
     @NotNull(message = "체크인 날짜는 필수입니다")
@@ -50,4 +50,8 @@ public class ReservationRequestDto {
 
     @Min(value = 0, message = "사용 포인트는 0 이상이어야 합니다")
     private Integer usePoint;
+
+    @Builder.Default
+    private ReservationChannel reservationChannel = ReservationChannel.DIRECT;
+
 }
