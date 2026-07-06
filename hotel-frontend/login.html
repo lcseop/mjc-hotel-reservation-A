@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/login.css">
+    <title>호텔 예약 시스템</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+
+    <main>
+        <div class="login-page">
+            <div class="login-card">
+
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-hotel"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h2>StayNow</h2>
+                        <p>최고의 호텔을 최저가로</p>
+                    </div>
+                </div>
+
+                <h3>다시 만나서 반가워요! 👋</h3>
+                <span class="sub-title">
+                    로그인하고 즐거운 여행을 떠나보세요.
+                </span>
+
+                <!-- 소셜 로그인 -->
+                <div class="social-login">
+
+                    <button class="kakao-btn">
+                        카카오 로그인
+                    </button>
+
+                    <button class="naver-btn">
+                        네이버 로그인
+                    </button>
+
+                    <button class="google-btn">
+                        Google 로그인
+                    </button>
+
+                </div>
+
+                <div class="divider">
+                    <span>또는 이메일로 로그인</span>
+                </div>
+
+                <!-- 로그인 폼 -->
+                <form id="loginForm">
+
+                    <div class="input-group">
+
+                        <label>이메일</label>
+
+                        <input
+                                type="email"
+                                id="email"
+                                placeholder="이메일을 입력하세요">
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <div class="password-title">
+
+                            <label>비밀번호</label>
+
+                            <a href="#">비밀번호 찾기</a>
+
+                        </div>
+
+                        <div class="password-box">
+
+                            <input
+                                    type="password"
+                                    id="password"
+                                    placeholder="비밀번호">
+
+                            <button
+                                    type="button"
+                                    id="togglePassword">
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="login-option">
+
+                        <label>
+
+                            <input type="checkbox" id="remember">
+
+                            로그인 상태 유지
+
+                        </label>
+
+                    </div>
+
+                    <button
+                            type="submit"
+                            class="login-btn"
+                            id="loginBtn">
+
+                        로그인
+
+                    </button>
+
+                </form>
+
+                <div class="signup">
+
+                    아직 회원이 아니신가요?
+
+                    <a href="/signup">
+                        회원가입
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+    
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+    
+</body>
+
+<script src="js/include.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/login.js"></script>
+</html>
