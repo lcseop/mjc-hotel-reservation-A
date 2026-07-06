@@ -42,7 +42,7 @@ public class Review extends BaseEntity {
     @Column(name = "travel_type", nullable = true)
     private TravelType travelType;
 
-    @Column(name = "content",  nullable = true, length = 1000)
+    @Column(name = "content",  nullable = false, length = 1000)
     private String content;
 
     @Column(name = "like_count", nullable = false)

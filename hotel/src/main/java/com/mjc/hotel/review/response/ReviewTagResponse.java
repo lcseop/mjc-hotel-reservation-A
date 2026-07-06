@@ -7,7 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-
 public class ReviewTagResponse {
     private Long reviewId;
     private Long reviewTagId;
