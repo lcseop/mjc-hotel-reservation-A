@@ -72,7 +72,8 @@ public class ReviewPhotoService {
         }
         //사진 첫 등록일 때
         if(!duplicate) {
-            Member member = memberRepository.findById(review.getMember().getSid()).orElseThrow();
+            Member member = memberRepository.findById(review.getMember().getSid())
+                    .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Member Not Found"));
             member.setPoint(member.getPoint() + 500);
             Member updatedMember = memberRepository.save(member);
 

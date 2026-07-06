@@ -7,6 +7,7 @@ import com.mjc.hotel.review.service.ReviewAnswerService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/review-answer")
 @RequiredArgsConstructor
+@Tag(name = "리뷰 사진", description = "리뷰 답변 저장, 수정, 검색, 삭제, 리뷰 검색하는 API")
 public class ReviewAnswerController {
     private final ReviewAnswerService reviewAnswerService;
 
@@ -64,5 +66,17 @@ public class ReviewAnswerController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ApiResponse<>(ResponseCode.SUCCESS,"review_answer delete ok",response)
         );
+    }
+    @Operation(
+            summary = "리뷰 리뷰 답변 검색",
+            description = "리뷰에 달린 리뷰 답변을 검색합니다."
+    )
+    @GetMapping("/review-search")
+    public ResponseEntity<ApiResponse<ReviewAnswerResponse>> reviewSearch(@RequestParam Long reviewId){
+        ReviewAnswerResponse response = reviewAnswerService.findByReviewSid(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ApiResponse<>(ResponseCode.SUCCESS,"review_answer review_search ok",response)
+        );
+
     }
 }

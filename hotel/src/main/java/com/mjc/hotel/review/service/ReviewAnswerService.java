@@ -97,4 +97,10 @@ public class ReviewAnswerService {
                 .deleted(reviewAnswer.getDeleted())
                 .build();
     }
+
+    public ReviewAnswerResponse findByReviewSid(Long reviewId){
+        ReviewAnswer find = reviewAnswerRepository.findByReviewSidAndDeletedFalse(reviewId);
+        ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
+        return result;
+    }
 }
