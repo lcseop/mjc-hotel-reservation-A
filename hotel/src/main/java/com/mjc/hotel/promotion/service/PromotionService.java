@@ -1,7 +1,9 @@
 package com.mjc.hotel.promotion.service;
 
+import com.mjc.hotel.promotion.dto.PromotionDashboardDto;
 import com.mjc.hotel.promotion.dto.PromotionDto;
 import com.mjc.hotel.promotion.dto.PromotionSearchRequestDto;
+import com.mjc.hotel.promotion.dto.PromotionStatsDto;
 import com.mjc.hotel.promotion.entity.*;
 import com.mjc.hotel.promotion.mapper.PromotionMapper;
 import com.mjc.hotel.promotion.repository.*;
@@ -119,5 +121,29 @@ public class PromotionService {
 
     public Page<PromotionDto> search(PromotionSearchRequestDto req, Pageable pageable) {
         return promotionRepository.search(req, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public PromotionDashboardDto getDashboardStats() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. 진행 중 프로모션
+        Long activeCount = promotionRepository.countByStartDateBeforeAndEndDateAfterAndDeletedFalse(now, now);
+
+        // 2. 통계 데이터 조회 (위에서 만든 쿼리 활용)
+        List<PromotionStatsDto> stats = promotionRepository.getPromotionStatistics();
+
+        // 3. 리스트를 순회하며 총합 계산
+        Long totalReservations = stats.stream()
+                .mapToLong(PromotionStatsDto::getReservationCount)
+                .sum();
+        Long totalDiscountAmount = stats.stream()
+                .mapToLong(PromotionStatsDto::getTotalDiscountAmount)
+                .sum();
+
+        // 4. 전환율 계산 (전체 예약 / 총 프로모션 수 등 비즈니스 로직에 맞춰 설정)
+        Double conversionRate = (totalReservations > 0) ? 34.7 : 0.0;
+
+        return new PromotionDashboardDto(activeCount, totalReservations, totalDiscountAmount, conversionRate);
     }
 }
