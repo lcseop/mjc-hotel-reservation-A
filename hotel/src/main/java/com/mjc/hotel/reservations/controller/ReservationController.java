@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/reservation")
 @RequiredArgsConstructor
-@Tag(name = "Reservation", description = "예약 관리 API")
+@Tag(name = "예약", description = "예약 관리 API")
 public class ReservationController {
 
     private final ReservationService reservationService;
