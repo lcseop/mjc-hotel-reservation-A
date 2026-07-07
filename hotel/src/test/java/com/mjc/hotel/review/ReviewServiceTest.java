@@ -108,7 +108,7 @@ public class ReviewServiceTest {
     public void insertReviewTagMaster(){
         ReviewTagMaster reviewTagMaster = ReviewTagMaster.builder()
                 .reviewTagName("청결함")
-                .reviewTagCategory(ReviewTagCategory.CONS)
+                .reviewTagCategory(ReviewTagCategory.PROS)
                 .build();
         reviewTagMasterRepository.save(reviewTagMaster);
     }
