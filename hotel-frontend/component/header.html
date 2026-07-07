@@ -49,10 +49,19 @@
                 위시리스트
             </button>
 
-            <button type="button" class="user-btn">
-                <i class="fa-solid fa-user" aria-hidden="true"></i>
-                김민준님
-            </button>
+            <div class="user-menu">
+                <button type="button" class="user-btn auth-user-btn">
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    <span class="auth-user-name">로그인</span>
+                    <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true"></i>
+                </button>
+
+                <div class="user-dropdown">
+                    <p class="auth-user-email">로그인이 필요합니다</p>
+                    <a href="login.html" class="login-link">로그인하기</a>
+                    <button type="button" class="logout-btn">로그아웃</button>
+                </div>
+            </div>
         </div>
 
         <button type="button" class="hamburger" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mobileMenu">
@@ -97,9 +106,18 @@
             위시리스트
         </button>
 
-        <button type="button" class="user-btn">
-            <i class="fa-solid fa-user" aria-hidden="true"></i>
-            김민준님
-        </button>
+        <div class="mobile-user-panel">
+            <button type="button" class="user-btn auth-user-btn">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <span class="auth-user-name">로그인</span>
+                <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true"></i>
+            </button>
+
+            <div class="user-dropdown">
+                <p class="auth-user-email">로그인이 필요합니다</p>
+                <a href="login.html" class="login-link">로그인하기</a>
+                <button type="button" class="logout-btn">로그아웃</button>
+            </div>
+        </div>
     </div>
 </div>

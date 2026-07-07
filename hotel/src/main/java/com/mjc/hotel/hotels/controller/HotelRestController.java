@@ -65,10 +65,22 @@ public class HotelRestController {
     }
 
     @Operation(
+            summary = "호텔 단건 조회",
+            description = "호텔 ID로 호텔 데이터를 가져옵니다."
+    )
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> findById(@PathVariable Long id) {
+        HotelResponseDto search = hotelService.findById(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
+        );
+    }
+
+    @Operation(
             summary = "호텔 데이터 검색",
             description = "호텔 데이터를 필터에 맞추어 검색합니다."
     )
-    @GetMapping
+    @PostMapping("/search")
     public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
                                                            @PageableDefault(size = 5) Pageable pageable) {
         Page<HotelResponseDto> search = hotelService.search(dto, pageable);

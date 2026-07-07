@@ -5,12 +5,15 @@ $(function () {
 });
 
 function init() {
+    setDefaultSearchValues();
+    guestPicker();
     cardHover();
     travelTypeSelect();
     categoryTab();
     searchValidation();
     dealButton();
     recommendButton();
+    loadFlashDeals();
     scrollAnimation();
 }
 
@@ -25,6 +28,17 @@ function travelTypeSelect() {
         $(".travel-card").removeClass("selected");
 
         $(this).addClass("selected");
+
+        const index = $(".travel-card").index(this);
+        const presets = [
+            { location: "", roomTypeIds: [1], star: null },
+            { location: "", roomTypeIds: [3], star: null },
+            { location: "", roomTypeIds: [2], star: null },
+            { location: "", roomTypeIds: [1], star: 5 },
+            { location: "커플", roomTypeIds: [1], star: null }
+        ];
+
+        goHotelSearch(makePresetSearchRequest(presets[index]));
 
     });
 
@@ -78,15 +92,15 @@ function categoryTab() {
 
 function searchValidation() {
 
-    $(".search-btn").click(function () {
+    $(document).on("click", ".search-btn", function (e) {
 
-        let location = $(".location input").val();
+        e.preventDefault();
 
-        let checkIn = $(".search-item input[type='date']").eq(0).val();
+        let request = makeHotelSearchRequest();
+        let checkInDate = $("#searchCheckIn").val();
+        let checkOutDate = $("#searchCheckOut").val();
 
-        let checkOut = $(".search-item input[type='date']").eq(1).val();
-
-        if (location == "") {
+        if (request.location === "") {
 
             alert("여행지를 입력하세요.");
 
@@ -94,7 +108,7 @@ function searchValidation() {
 
         }
 
-        if (checkIn == "") {
+        if (checkInDate === "") {
 
             alert("체크인 날짜를 선택하세요.");
 
@@ -102,7 +116,7 @@ function searchValidation() {
 
         }
 
-        if (checkOut == "") {
+        if (checkOutDate === "") {
 
             alert("체크아웃 날짜를 선택하세요.");
 
@@ -110,8 +124,195 @@ function searchValidation() {
 
         }
 
-        alert("검색 기능은 Spring Boot와 연결될 예정입니다.");
+        if (new Date(checkInDate) >= new Date(checkOutDate)) {
 
+            alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
+
+            return;
+
+        }
+
+        searchHotels(request);
+
+    });
+
+}
+
+function setDefaultSearchValues() {
+
+    const today = new Date();
+    const tomorrow = new Date();
+
+    tomorrow.setDate(today.getDate() + 1);
+
+    if ($("#searchCheckIn").val() === "") {
+        $("#searchCheckIn").val(toDateInputValue(today));
+    }
+
+    if ($("#searchCheckOut").val() === "") {
+        $("#searchCheckOut").val(toDateInputValue(tomorrow));
+    }
+
+}
+
+function toDateInputValue(date) {
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return year + "-" + month + "-" + day;
+
+}
+
+function makeHotelSearchRequest() {
+
+    const checkIn = $("#searchCheckIn").val();
+    const checkOut = $("#searchCheckOut").val();
+    const adult = Number($("#adultCount").text());
+    const child = Number($("#childCount").text());
+
+    return {
+        location: $("#searchLocation").val().trim(),
+        checkIn: checkIn ? checkIn + "T15:00:00" : null,
+        checkOut: checkOut ? checkOut + "T11:00:00" : null,
+        adult: adult,
+        child: child,
+        minPrice: null,
+        maxPrice: null,
+        star: null,
+        roomTypeIds: []
+    };
+
+}
+
+function guestPicker() {
+
+    $("#guestToggle").click(function (e) {
+        e.stopPropagation();
+        $("#guestPopover").toggleClass("open");
+    });
+
+    $("#guestPopover").click(function (e) {
+        e.stopPropagation();
+    });
+
+    $(document).click(function () {
+        $("#guestPopover").removeClass("open");
+    });
+
+    $(".guest-plus").click(function () {
+        changeGuestCount($(this).data("target"), 1);
+    });
+
+    $(".guest-minus").click(function () {
+        changeGuestCount($(this).data("target"), -1);
+    });
+
+    updateGuestToggle();
+
+}
+
+function changeGuestCount(type, delta) {
+
+    const target = type === "adult" ? $("#adultCount") : $("#childCount");
+    const min = type === "adult" ? 1 : 0;
+    const max = 10;
+    const next = Math.max(min, Math.min(max, Number(target.text()) + delta));
+
+    target.text(next);
+    updateGuestToggle();
+
+}
+
+function updateGuestToggle() {
+
+    const adult = Number($("#adultCount").text());
+    const child = Number($("#childCount").text());
+
+    $("#guestToggle").text("성인 " + adult + "명 · 어린이 " + child + "명");
+    $(".guest-minus[data-target='adult']").prop("disabled", adult <= 1);
+    $(".guest-minus[data-target='child']").prop("disabled", child <= 0);
+    $(".guest-plus").prop("disabled", adult + child >= 10);
+
+}
+
+function searchHotels(request) {
+
+    $(".search-btn")
+        .addClass("disabled")
+        .html('<i class="fa-solid fa-spinner fa-spin"></i> 검색중');
+
+    $.ajax({
+        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(request),
+        timeout: 5000,
+
+        success: function (result) {
+
+            sessionStorage.setItem("hotelSearchRequest", JSON.stringify(request));
+            sessionStorage.setItem("hotelSearchResult", JSON.stringify(result));
+            location.href = "hotel-search.html";
+
+        },
+
+        error: function () {
+
+            alert("호텔 검색 중 오류가 발생했습니다.");
+
+        },
+
+        complete: function () {
+
+            $(".search-btn")
+                .removeClass("disabled")
+                .html('<i class="fa-solid fa-magnifying-glass"></i> 검색');
+
+        }
+    });
+
+}
+
+function makePresetSearchRequest(preset) {
+
+    const checkIn = $("#searchCheckIn").val();
+    const checkOut = $("#searchCheckOut").val();
+    const adult = Number($("#adultCount").text());
+    const child = Number($("#childCount").text());
+
+    return {
+        location: preset.location,
+        checkIn: checkIn ? checkIn + "T15:00:00" : null,
+        checkOut: checkOut ? checkOut + "T11:00:00" : null,
+        adult: adult,
+        child: child,
+        minPrice: null,
+        maxPrice: null,
+        star: preset.star,
+        roomTypeIds: preset.roomTypeIds || []
+    };
+
+}
+
+function goHotelSearch(request) {
+
+    $.ajax({
+        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(request),
+
+        success: function (result) {
+            sessionStorage.setItem("hotelSearchRequest", JSON.stringify(request));
+            sessionStorage.setItem("hotelSearchResult", JSON.stringify(result));
+            location.href = "hotel-search.html";
+        },
+
+        error: function () {
+            alert("호텔 검색 중 오류가 발생했습니다.");
+        }
     });
 
 }
@@ -122,11 +323,13 @@ function searchValidation() {
 
 function dealButton() {
 
-    $(".deal-body button").click(function () {
+    $(document).on("click", ".deal-body button", function () {
 
-        let hotel = $(this).siblings("h3").text();
+        const hotelId = $(this).data("hotel-id");
 
-        alert(hotel + "\n예약 페이지로 이동합니다.");
+        if (hotelId) {
+            location.href = "hotel-detail.html?id=" + hotelId;
+        }
 
     });
 
@@ -138,39 +341,63 @@ function dealButton() {
 
 function recommendButton() {
 
-    let title = [
-
-        "제주에서 힐링하기",
-        "부산 오션뷰 여행",
-        "서울 호캉스",
-        "강릉 바다 여행",
-        "여름 휴양지 BEST"
-
+    const recommendations = [
+        {
+            title: "서울 프리미엄 호캉스",
+            desc: "5성급 호텔 중심으로 조용하고 편한 숙소를 추천합니다.",
+            request: { location: "서울", roomTypeIds: [1], star: 5 }
+        },
+        {
+            title: "커플을 위한 로맨틱 스테이",
+            desc: "이름과 설명에 커플 감성이 담긴 호텔을 찾아볼게요.",
+            request: { location: "커플", roomTypeIds: [1], star: null }
+        },
+        {
+            title: "리조트에서 쉬어가는 하루",
+            desc: "리조트 타입 객실 중심으로 여유로운 숙소를 추천합니다.",
+            request: { location: "", roomTypeIds: [2], star: null }
+        }
     ];
 
-    let desc = [
+    const auth = getStoredAuth();
+    let currentIndex = new Date().getDate() % recommendations.length;
 
-        "AI가 분석한 최고의 제주 호텔입니다.",
+    $(".recommend .section-header h2").text((auth && auth.name ? auth.name + "님" : "고객님") + "을 위한 맞춤 추천");
+    renderRecommendation(recommendations[currentIndex]);
 
-        "부산 인기 호텔을 추천합니다.",
-
-        "도심 속 럭셔리 호텔을 만나보세요.",
-
-        "동해가 보이는 숙소를 추천합니다.",
-
-        "이번 시즌 인기 여행지입니다."
-
-    ];
-
-    $(".recommend-text button").click(function () {
-
-        let random = Math.floor(Math.random() * title.length);
-
-        $(".recommend-text h2").text(title[random]);
-
-        $(".recommend-text p").text(desc[random]);
-
+    $(".recommend-text button").click(function (e) {
+        e.preventDefault();
+        goHotelSearch(makePresetSearchRequest(recommendations[currentIndex].request));
     });
+
+    $(".recommend .section-header a").click(function (e) {
+        e.preventDefault();
+        currentIndex = (currentIndex + 1) % recommendations.length;
+        renderRecommendation(recommendations[currentIndex]);
+    });
+
+}
+
+function renderRecommendation(recommendation) {
+
+    $(".recommend-text h2").text(recommendation.title);
+    $(".recommend-text p").text(recommendation.desc);
+
+}
+
+function getStoredAuth() {
+
+    const stored = localStorage.getItem("staynowAuth") || sessionStorage.getItem("staynowAuth");
+
+    if (!stored) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(stored);
+    } catch (e) {
+        return null;
+    }
 
 }
 
@@ -284,7 +511,7 @@ function drawPopularHotels(hotels) {
     $.each(hotels, function(index, hotel){
 
         let card = `
-            <div class="hotel-card">
+            <a class="hotel-card" href="hotel-detail.html?id=${hotel.sid}">
 
                 <div class="hotel-image">
                     <img src="${hotel.firstImage}">
@@ -305,12 +532,147 @@ function drawPopularHotels(hotels) {
 
                 </div>
 
-            </div>
+            </a>
         `;
 
         $(".hotel-grid").append(card);
 
     });
+
+}
+
+function loadFlashDeals() {
+
+    $(".flash").hide();
+
+    const request = makePresetSearchRequest({
+        location: "",
+        roomTypeIds: [],
+        star: null
+    });
+
+    $.ajax({
+        url: "http://localhost:33000/api/hotel/search?page=0&size=20",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(request),
+
+        success: function (result) {
+            const hotels = (result.data && result.data.content ? result.data.content : [])
+                .filter(function (hotel) {
+                    return hotel.maxDiscountRate && hotel.maxDiscountRate > 0;
+                })
+                .slice(0, 3);
+
+            if (hotels.length === 0) {
+                $(".flash").hide();
+                return;
+            }
+
+            drawFlashDeals(hotels);
+            $(".flash").show();
+        },
+
+        error: function () {
+            $(".flash").hide();
+        }
+    });
+
+}
+
+function drawFlashDeals(hotels) {
+
+    $(".deal-grid").empty();
+
+    $.each(hotels, function (index, hotel) {
+        const discountRate = hotel.maxDiscountRate || 0;
+        const price = hotel.hotelPrice || 0;
+        const discountedPrice = Math.floor(price * (100 - discountRate) / 100);
+        const card = `
+            <div class="deal-card" data-hotel-id="${hotel.sid}">
+                <div class="discount">-${discountRate}%</div>
+                <img src="https://gunsancci.korcham.net/images/no-image01.gif" alt="${hotel.hotelName}">
+
+                <div class="deal-body">
+                    <h3>${hotel.hotelName}</h3>
+                    <p class="old-price" data-price-role="old">₩${price.toLocaleString()}</p>
+                    <p class="new-price" data-price-role="new">₩${discountedPrice.toLocaleString()}</p>
+                    <button type="button" data-hotel-id="${hotel.sid}">예약하기</button>
+                </div>
+            </div>
+        `;
+
+        $(".deal-grid").append(card);
+        loadDealImage(hotel.sid);
+        loadDealRoomPrice(hotel.sid, discountRate);
+    });
+
+}
+
+function loadDealRoomPrice(hotelId, discountRate) {
+
+    $.ajax({
+        url: "http://localhost:33000/api/hotel/inroom/" + hotelId,
+        type: "GET",
+
+        success: function (result) {
+            const rooms = result.data || [];
+
+            if (rooms.length === 0) {
+                return;
+            }
+
+            const minRoomPrice = rooms.reduce(function (min, room) {
+                const price = room.roomPrice || min;
+                return Math.min(min, price);
+            }, rooms[0].roomPrice || 0);
+
+            const discountedPrice = Math.floor(minRoomPrice * (100 - discountRate) / 100);
+            const dealCard = $(".deal-card[data-hotel-id='" + hotelId + "']");
+
+            dealCard.find("[data-price-role='old']").text("₩" + minRoomPrice.toLocaleString());
+            dealCard.find("[data-price-role='new']").text("₩" + discountedPrice.toLocaleString());
+        }
+    });
+
+}
+
+function loadDealImage(hotelId) {
+
+    $.ajax({
+        url: "http://localhost:33000/api/hotel/inimage/" + hotelId,
+        type: "GET",
+
+        success: function (result) {
+            const photos = result.data || [];
+
+            if (photos.length === 0 || !photos[0].imagePath) {
+                return;
+            }
+
+            $(".deal-card[data-hotel-id='" + hotelId + "'] img")
+                .attr("src", normalizeImagePath(photos[0].imagePath));
+        }
+    });
+
+}
+
+function normalizeImagePath(imagePath) {
+
+    if (!imagePath) {
+        return "https://gunsancci.korcham.net/images/no-image01.gif";
+    }
+
+    if (
+        imagePath.startsWith("http://") ||
+        imagePath.startsWith("https://") ||
+        imagePath.startsWith("/") ||
+        imagePath.startsWith("data:")
+    ) {
+        return imagePath;
+    }
+
+    return imagePath;
 
 }
 

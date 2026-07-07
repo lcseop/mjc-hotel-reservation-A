@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/hotel-detail.css">
+    <title>호텔 예약</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+
+    <main class="detail-page">
+        <nav class="breadcrumb">
+            <a href="index.html">홈</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <a href="hotel-search.html">호텔</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span id="breadcrumbHotel">호텔 상세</span>
+        </nav>
+
+        <section class="gallery-section">
+            <div class="main-photo">
+                <img id="mainHotelImage" src="https://gunsancci.korcham.net/images/no-image01.gif" alt="호텔 대표 이미지">
+                <span id="detailSaleBadge" class="sale-badge"></span>
+                <span id="photoCounter" class="photo-counter">1 / 1</span>
+            </div>
+
+            <div id="thumbnailList" class="thumbnail-list"></div>
+        </section>
+
+        <section class="hotel-summary card">
+            <div class="summary-main">
+                <div id="hotelStars" class="stars">☆☆☆☆☆</div>
+                <h1 id="hotelName">호텔 정보를 불러오는 중입니다</h1>
+                <p class="location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span id="hotelLocation">위치 정보 확인 중</span>
+                </p>
+            </div>
+
+            <div class="summary-actions">
+                <button type="button">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    공유
+                </button>
+                <button type="button">
+                    <i class="fa-regular fa-heart"></i>
+                    찜하기
+                </button>
+            </div>
+        </section>
+
+        <section class="score-strip card">
+            <div class="score-box">
+                <strong id="reviewScore">0.0</strong>
+                <span>평점</span>
+            </div>
+
+            <div class="score-metrics">
+                <div><span>청결도</span><b></b></div>
+                <div><span>서비스</span><b></b></div>
+                <div><span>위치</span><b></b></div>
+                <div><span>시설</span><b></b></div>
+            </div>
+
+            <div class="score-stat">
+                <strong id="reviewCount">0</strong>
+                <span>리뷰</span>
+            </div>
+        </section>
+
+        <nav class="detail-tabs card">
+            <a href="#overview" class="active">숙박 선택</a>
+            <a href="#amenities">편의시설</a>
+            <a href="#location">위치/교통</a>
+            <a href="#reviews">리뷰</a>
+        </nav>
+
+        <section id="overview" class="card">
+            <h2>호텔 소개</h2>
+            <p id="hotelDescription">호텔 소개를 불러오고 있습니다.</p>
+        </section>
+
+        <section id="amenities" class="card">
+            <h2>주요 편의시설</h2>
+            <div id="amenityGrid" class="amenity-grid"></div>
+        </section>
+
+        <section id="rooms" class="card">
+            <div class="section-title">
+                <h2>객실 선택</h2>
+                <span id="roomCount">0개 객실</span>
+            </div>
+            <div id="roomList" class="room-list"></div>
+        </section>
+
+        <section id="location" class="card">
+            <h2>위치 및 교통</h2>
+            <div class="map-placeholder">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span id="mapAddress">위치 정보를 불러오는 중입니다.</span>
+            </div>
+        </section>
+
+        <section id="reviews" class="card">
+            <div class="section-title">
+                <h2>투숙객 리뷰</h2>
+                <span id="reviewTotalText">0개 리뷰</span>
+            </div>
+            <div id="reviewList" class="review-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+
+    <script src="js/include.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/hotel-detail.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>
