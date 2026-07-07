@@ -6,6 +6,8 @@ import com.mjc.hotel.payments.dto.PaymentsResponseDto;
 import com.mjc.hotel.payments.service.PaymentsService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag( name = "결제", description = "결제 데이터 전반을 관리합니다.")
 public class PaymentsRestController {
 
     @Autowired
@@ -22,6 +25,11 @@ public class PaymentsRestController {
     @Autowired
     private PaymentsDtoMapper paymentsDtoMapper;
 
+    @Operation(
+            summary = "결제 데이터 생성",
+            description = "결제 데이터를 만듭니다."
+    )
+
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> insert(@RequestBody PaymentsRequestDto dto) {
         PaymentsResponseDto insert = paymentsDtoMapper.toResponseDto(paymentsService.savePayment(dto));
@@ -29,6 +37,11 @@ public class PaymentsRestController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments insert success", insert)
         );
     }
+
+    @Operation(
+            summary = "결제 전체 데이터 조회",
+            description = "결제 전체 데이터를 조회합니다."
+    )
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PaymentsResponseDto>>> getPayments() {
@@ -41,12 +54,22 @@ public class PaymentsRestController {
         );
     }
 
+    @Operation(
+            summary = "결제 데이터 단일 조회",
+            description = "결제 데이터 한개를 조회합니다."
+    )
+
     @GetMapping("/{sid}")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> getPayment(@PathVariable Long sid) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments select success", paymentsDtoMapper.toResponseDto(paymentsService.getPayment(sid)))
         );
     }
+
+    @Operation(
+            summary = "결제 데이터 수정",
+            description = "결제 데이터를 수정합니다."
+    )
 
     @PatchMapping
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> update(
@@ -56,6 +79,11 @@ public class PaymentsRestController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments update success", paymentsDtoMapper.toResponseDto(paymentsService.updatePayment(dto.getSid(), dto)))
         );
     }
+
+    @Operation(
+            summary = "결제 데이터 삭제",
+            description = "결제 데이터를 삭제합니다."
+    )
 
     @DeleteMapping("/{sid}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
