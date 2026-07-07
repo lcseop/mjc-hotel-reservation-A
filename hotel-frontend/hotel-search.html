@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/hotel-search.css">
+    <title>호텔 검색 결과</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+
+    <section class="search-top">
+        <div class="search-bar">
+            <div class="search-field location">
+                <label>여행지</label>
+                <input type="text" id="resultLocation" placeholder="서울특별시">
+            </div>
+
+            <div class="search-field">
+                <label>체크인</label>
+                <input type="date" id="resultCheckIn">
+            </div>
+
+            <div class="search-field">
+                <label>체크아웃</label>
+                <input type="date" id="resultCheckOut">
+            </div>
+
+            <div class="search-field">
+                <label>성인</label>
+                <input type="number" id="resultAdult" min="1" max="10" value="2">
+            </div>
+
+            <div class="search-field">
+                <label>아이</label>
+                <input type="number" id="resultChild" min="0" max="10" value="0">
+            </div>
+
+            <button type="button" id="researchBtn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                검색
+            </button>
+        </div>
+    </section>
+
+    <main class="result-layout">
+        <aside class="filter-panel">
+            <div class="filter-title">
+                <button type="button" id="filterPanelToggle">
+                    <span>
+                        <strong id="filterLocation">검색 결과</strong>
+                        <small id="filterCount">0개 호텔</small>
+                    </span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+            </div>
+
+            <div class="filter-body">
+                <div class="filter-group">
+                    <div class="filter-heading">
+                        <h3>가격 범위</h3>
+                    </div>
+
+                    <div class="price-inputs">
+                        <input type="number" id="minPrice" placeholder="최소">
+                        <input type="number" id="maxPrice" placeholder="최대">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-heading">
+                        <h3>호텔 등급</h3>
+                    </div>
+
+                    <label class="check-row">
+                        <input type="radio" name="star" value="" checked>
+                        <span>전체</span>
+                    </label>
+
+                    <label class="check-row">
+                        <input type="radio" name="star" value="5">
+                        <span>5성급</span>
+                    </label>
+
+                    <label class="check-row">
+                        <input type="radio" name="star" value="4">
+                        <span>4성급</span>
+                    </label>
+
+                    <label class="check-row">
+                        <input type="radio" name="star" value="3">
+                        <span>3성급</span>
+                    </label>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-heading">
+                        <h3>객실 타입</h3>
+                    </div>
+
+                    <label class="check-row">
+                        <input type="checkbox" class="room-type" value="1">
+                        <span>호텔</span>
+                    </label>
+
+                    <label class="check-row">
+                        <input type="checkbox" class="room-type" value="2">
+                        <span>리조트</span>
+                    </label>
+
+                    <label class="check-row">
+                        <input type="checkbox" class="room-type" value="3">
+                        <span>펜션/풀빌라</span>
+                    </label>
+                </div>
+
+                <button type="button" id="resetFilterBtn">필터 초기화</button>
+            </div>
+        </aside>
+
+        <section class="result-main">
+            <div class="result-header">
+                <div>
+                    <p id="resultPeriod">체크인과 체크아웃을 선택해주세요</p>
+                    <h1><span id="resultTitle">호텔</span> 검색 결과</h1>
+                </div>
+
+                <div class="sort-box">
+                    <label for="sortSelect">정렬</label>
+                    <select id="sortSelect">
+                        <option value="recommended">추천순</option>
+                        <option value="priceAsc">가격 낮은순</option>
+                        <option value="priceDesc">가격 높은순</option>
+                        <option value="starDesc">성급 높은순</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="notice">
+                <i class="fa-solid fa-tag"></i>
+                조건에 맞는 객실이 있는 호텔만 표시됩니다.
+            </div>
+
+            <div id="hotelResultList" class="hotel-result-list"></div>
+
+            <div id="emptyState" class="empty-state">
+                <i class="fa-regular fa-face-smile"></i>
+                <h2>검색 결과가 없습니다</h2>
+                <p>날짜, 지역, 가격 조건을 조금 넓혀서 다시 검색해보세요.</p>
+            </div>
+
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                호텔을 검색하고 있습니다
+            </div>
+
+            <div id="pagination" class="pagination"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+
+    <script src="js/include.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/hotel-search.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

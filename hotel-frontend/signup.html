@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/signup.css">
+    <title>호텔 예약 시스템</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+
+    <main>
+        <div class="signup-page">
+            <div class="signup-card">
+
+                <div class="signup-logo">
+                    <div class="logo-icon">S</div>
+                    <div class="logo-text">
+                        <h2>StayNow</h2>
+                        <p>최고의 호텔을 최저가로</p>
+                    </div>
+                </div>
+
+                <h3>함께해요, StayNow! 🎉</h3>
+                <span class="sub-title">
+                    지금 가입하고 특별한 혜택을 누리세요
+                </span>
+
+                <div class="benefit-box">
+                    <div class="benefit-icon">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <div class="benefit-text">
+                        <strong>신규 가입 혜택</strong>
+                        <span>가입 즉시 5,000P 지급 + 첫 예약 10% 추가 할인 쿠폰</span>
+                    </div>
+                    <span class="benefit-badge">신규</span>
+                </div>
+
+                <div class="social-login">
+                    <button type="button" class="kakao-btn">
+                        <i class="fa-solid fa-comment"></i>
+                        카카오로 가입하기
+                    </button>
+
+                    <button type="button" class="naver-btn">
+                        <span>N</span>
+                        네이버로 가입하기
+                    </button>
+
+                    <button type="button" class="google-btn">
+                        <span>G</span>
+                        Google로 가입하기
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span>또는 이메일로 가입</span>
+                </div>
+
+                <form id="signupForm">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="name">이름</label>
+                            <div class="input-box">
+                                <i class="fa-regular fa-user"></i>
+                                <input
+                                        type="text"
+                                        id="name"
+                                        placeholder="홍길동"
+                                        autocomplete="name">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="phone">휴대폰 번호</label>
+                            <div class="input-box">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                <input
+                                        type="tel"
+                                        id="phone"
+                                        placeholder="010-0000-0000"
+                                        autocomplete="tel">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="email">이메일</label>
+                        <div class="input-box has-status">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input
+                                    type="email"
+                                    id="email"
+                                    placeholder="hello@staynow.kr"
+                                    autocomplete="email">
+                            <i class="fa-regular fa-circle-check status-icon"></i>
+                        </div>
+                        <p class="field-message" id="emailMessage">사용 가능한 이메일입니다</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">비밀번호</label>
+                        <div class="input-box password-box">
+                            <i class="fa-solid fa-lock"></i>
+                            <input
+                                    type="password"
+                                    id="password"
+                                    placeholder="비밀번호를 입력하세요. (8자 이상)"
+                                    autocomplete="new-password">
+                            <button type="button" class="toggle-password" data-target="#password">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <div class="strength">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="strength-label">
+                            <span>비밀번호 강도</span>
+                            <strong id="strengthText">보통</strong>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="passwordConfirm">비밀번호 확인</label>
+                        <div class="input-box password-box">
+                            <i class="fa-solid fa-lock"></i>
+                            <input
+                                    type="password"
+                                    id="passwordConfirm"
+                                    placeholder="비밀번호를 다시 입력하세요"
+                                    autocomplete="new-password">
+                            <button type="button" class="toggle-password" data-target="#passwordConfirm">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="terms-box">
+                        <label class="term-all">
+                            <input type="checkbox" id="agreeAll">
+                            <span>전체 동의하기</span>
+                        </label>
+
+                        <div class="term-list">
+                            <label>
+                                <input type="checkbox" class="required-term">
+                                <span class="required">필수</span>
+                                이용약관 동의
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </label>
+
+                            <label>
+                                <input type="checkbox" class="required-term">
+                                <span class="required">필수</span>
+                                개인정보 수집 및 이용 동의
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </label>
+
+                            <label>
+                                <input type="checkbox" class="optional-term">
+                                <span>선택</span>
+                                마케팅 정보 수신 동의
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </label>
+                        </div>
+
+                        <p class="terms-note">
+                            동의 시 특가 알림, 쿠폰, 이벤트 혜택을 받을 수 있어요
+                        </p>
+                    </div>
+
+                    <button
+                            type="submit"
+                            class="signup-btn"
+                            id="signupBtn"
+                            disabled>
+                        <i class="fa-solid fa-user-plus"></i>
+                        무료 회원가입
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    이미 계정이 있으신가요?
+                    <a href="login.html">로그인하기 <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+</body>
+
+<script src="js/include.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/signup.js"></script>
+<script src="component/header.js"></script>
+</html>

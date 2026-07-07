@@ -65,31 +65,61 @@
 
                 <div class="search-item location">
                     <label>여행지 또는 호텔명</label>
-                    <input type="text" placeholder="서울특별시">
+                    <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시">
                 </div>
 
                 <div class="search-item">
                     <label>체크인</label>
-                    <input type="date">
+                    <input type="date" id="searchCheckIn">
                 </div>
 
                 <div class="search-item">
                     <label>체크아웃</label>
-                    <input type="date">
+                    <input type="date" id="searchCheckOut">
                 </div>
 
                 <div class="search-item">
-                    <label>인원 / 객실</label>
+                    <label>인원</label>
 
-                    <select>
-                        <option>성인 2명 · 객실 1개</option>
-                    </select>
+                    <div class="guest-picker">
+                        <button type="button" id="guestToggle" class="guest-toggle">
+                            성인 2명 · 어린이 0명
+                        </button>
+
+                        <div id="guestPopover" class="guest-popover">
+                            <div class="guest-row">
+                                <div>
+                                    <strong>성인</strong>
+                                    <span>만 13세 이상</span>
+                                </div>
+
+                                <div class="guest-stepper">
+                                    <button type="button" class="guest-minus" data-target="adult">-</button>
+                                    <span id="adultCount">2</span>
+                                    <button type="button" class="guest-plus" data-target="adult">+</button>
+                                </div>
+                            </div>
+
+                            <div class="guest-row">
+                                <div>
+                                    <strong>어린이</strong>
+                                    <span>만 12세 이하</span>
+                                </div>
+
+                                <div class="guest-stepper">
+                                    <button type="button" class="guest-minus" data-target="child">-</button>
+                                    <span id="childCount">0</span>
+                                    <button type="button" class="guest-plus" data-target="child">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <button class="search-btn">
+                <a href="hotel-search.html" class="search-btn" id="searchLink">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     검색
-                </button>
+                </a>
 
             </div>
 

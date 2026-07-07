@@ -127,6 +127,16 @@ public class HotelService {
         return hotelRepository.search(dto, pageable);
     }
 
+    public HotelResponseDto findById(Long id) {
+        Hotel hotel = hotelRepository.findById(id).orElseThrow();
+
+        if (hotel.getDeleted() != null && hotel.getDeleted()) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, hotel.getHotelName() + " is not found");
+        }
+
+        return HotelMapper.response(hotel, null);
+    }
+
 
     public List<HotelAmenitiesDto> findHotelInAmenities(Long hotelId) {
         List<HotelInAmenities> inAmenities = hotelInAmenitiesRepository.findByHotelSid(hotelId);
