@@ -6,6 +6,8 @@ import com.mjc.hotel.member.dto.MemberTermAgreementResponseDto;
 import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,10 +22,16 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag( name = "회원 약관 동의", description = "회원 약관 동의를 관리합니다.")
 public class MemberTermAgreementRestController {
 
     private final MemberService memberService;
     private final MemberDtoMapper memberDtoMapper;
+
+    @Operation(
+            summary = "회원 약관 동의 생성",
+            description = "회원 약관 동의를 만듭니다."
+    )
 
     @PostMapping("/api/member-term-agreements")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> insertTermAgreement(
@@ -38,6 +46,11 @@ public class MemberTermAgreementRestController {
         );
     }
 
+    @Operation(
+            summary = "단일 회원 약관 동의 조회",
+            description = "단일 회원의 약관 동의를 조회합니다."
+    )
+
     @GetMapping("/api/member-term-agreements/{sid}")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> getTermAgreement(@PathVariable Long sid) {
         return ResponseEntity.ok(
@@ -48,6 +61,11 @@ public class MemberTermAgreementRestController {
                 )
         );
     }
+
+    @Operation(
+            summary = "전체 회원 약관 동의 조회",
+            description = "전체 회원의 약관 동의를 조회합니다."
+    )
 
     @GetMapping("/api/member/{memberSid}/term-agreements")
     public ResponseEntity<ApiResponse<List<MemberTermAgreementResponseDto>>> getTermAgreementsByMember(
@@ -62,6 +80,11 @@ public class MemberTermAgreementRestController {
         );
     }
 
+    @Operation(
+            summary = "회원 약관 동의 수정",
+            description = "회원 약관 동의 데이터를 수정합니다."
+    )
+
     @PatchMapping("/api/member-term-agreements")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> updateTermAgreement(
             @RequestBody MemberTermAgreementRequestDto request
@@ -74,6 +97,11 @@ public class MemberTermAgreementRestController {
                 )
         );
     }
+
+    @Operation(
+            summary = "회원 약관 동의 데이터 삭제",
+            description = "회원 약관 동의 데이터를 삭제합니다."
+    )
 
     @DeleteMapping("/api/member-term-agreements/{sid}")
     public ResponseEntity<ApiResponse<Void>> deleteTermAgreement(@PathVariable Long sid) {
