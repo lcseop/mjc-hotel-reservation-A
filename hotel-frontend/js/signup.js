@@ -165,6 +165,7 @@ function makeSignupPayload(formData, terms) {
         role: "USER",
         emailVerified: true,
         phoneVerified: false,
+        point: 0,
         authAccount: {
             provider: "LOCAL",
             providerUserId: formData.email,

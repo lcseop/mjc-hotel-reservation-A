@@ -175,11 +175,6 @@ function validateRequest(request) {
         return false;
     }
 
-    if ((request.minPrice && !request.maxPrice) || (!request.minPrice && request.maxPrice)) {
-        alert("가격 범위는 최소/최대 금액을 함께 입력해주세요.");
-        return false;
-    }
-
     if (request.minPrice && request.maxPrice && request.minPrice > request.maxPrice) {
         alert("최대 금액은 최소 금액보다 커야 합니다.");
         return false;

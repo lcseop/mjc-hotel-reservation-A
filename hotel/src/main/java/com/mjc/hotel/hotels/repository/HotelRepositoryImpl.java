@@ -73,6 +73,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         notDeletedHotel(h),
                         keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
                 .distinct()
@@ -87,6 +88,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         notDeletedHotel(h),
                         keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
                 .fetchOne();
@@ -113,6 +115,12 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
         return star != null ? h.starRating.eq(star) : null;
     }
 
+    private BooleanExpression hotelTypeCond(QHotel h, List<Long> typeIds) {
+        return (typeIds != null && !typeIds.isEmpty())
+                ? h.type.sid.in(typeIds)
+                : null;
+    }
+
     private BooleanExpression existsAvailableRoom(
             QHotel h, QRoom r, QReservation res, QReservationCancel rc,
             HotelSearchRequestDto req
@@ -126,7 +134,6 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
 
                         capacityCond(r, req.getTotalPeople()),
                         priceCond(r, req.getMinPrice(), req.getMaxPrice()),
-                        roomTypeCond(r, req.getRoomTypeIds()),
 
                         noReservationConflict(r, res, rc,
                                 req.getCheckIn(), req.getCheckOut())
@@ -147,14 +154,10 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
     }
 
     private BooleanExpression priceCond(QRoom r, Integer min, Integer max) {
-        if (min == null || max == null) return null;
-        return r.roomPrice.between(min, max);
-    }
-
-    private BooleanExpression roomTypeCond(QRoom r, List<Long> roomTypeIds) {
-        return (roomTypeIds != null && !roomTypeIds.isEmpty())
-                ? r.roomTypeId.sid.in(roomTypeIds)
-                : null;
+        if (min != null && max != null) return r.roomPrice.between(min, max);
+        if (min != null) return r.roomPrice.goe(min);
+        if (max != null) return r.roomPrice.loe(max);
+        return null;
     }
 
     private BooleanExpression noReservationConflict(

@@ -55,6 +55,7 @@ public class ReservationService {
         Integer totalAmount = originalAmount;
         Integer couponDiscount = 0;
         Integer pointDiscount = 0;
+        Integer memberPoint = member.getPoint() != null ? member.getPoint() : 0;
 
         CouponIssue couponIssue = null;
         if (requestDto.getCouponIssueId() != null) {
@@ -72,12 +73,13 @@ public class ReservationService {
 
         Integer usePoint = requestDto.getUsePoint() != null ? requestDto.getUsePoint() : 0;
         if (usePoint > 0) {
-            if (member.getPoint() < usePoint) {
+            if (memberPoint < usePoint) {
                 throw new IllegalArgumentException("보유 포인트가 부족합니다.");
             }
             pointDiscount = usePoint;
             totalAmount = Math.max(0, totalAmount - usePoint);
-            member.setPoint(member.getPoint() - usePoint);
+            memberPoint -= usePoint;
+            member.setPoint(memberPoint);
         }
 
         Integer discountAmount = couponDiscount + pointDiscount;
@@ -98,6 +100,7 @@ public class ReservationService {
                 .specialRequests(requestDto.getSpecialRequests())
                 .originalAmount(originalAmount)
                 .discountAmount(discountAmount)
+                .couponDiscount(couponDiscount)
                 .pointDiscount(pointDiscount)
                 .totalNights((int) totalNights)
                 .guestName(requestDto.getGuestName())
@@ -117,7 +120,8 @@ public class ReservationService {
 
         Integer earnPoint = (int) (totalAmount * 0.05);
         if (earnPoint > 0) {
-            member.setPoint(member.getPoint() + earnPoint);
+            member.setPoint(memberPoint + earnPoint);
+            savedReservation.setEarnedPoint(earnPoint);
             PointHistory earnHistory = PointHistory.builder()
                     .reservation(savedReservation)
                     .member(member)

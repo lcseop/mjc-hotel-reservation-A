@@ -2,6 +2,8 @@ const API_BASE = "http://localhost:33000/api";
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
 
 let hotelImages = [];
+let currentHotel = null;
+let currentRooms = [];
 
 $(function () {
     const hotelId = new URLSearchParams(location.search).get("id");
@@ -33,14 +35,45 @@ function bindEvent() {
     $(document).on("click", ".room-price a", function (e) {
         e.preventDefault();
 
+        const roomId = $(this).data("room-id");
+        const room = currentRooms.find(function (item) {
+            return String(item.sid) === String(roomId);
+        });
+        const searchRequest = readJson("hotelSearchRequest") || {};
+        const auth = getAuthData();
+
+        if (!auth || !auth.memberSid) {
+            alert("예약을 진행하려면 로그인이 필요합니다.");
+            sessionStorage.setItem("afterLoginRedirect", location.href);
+            location.href = "login.html";
+            return;
+        }
+
         const selected = {
             hotelId: new URLSearchParams(location.search).get("id"),
-            roomId: $(this).data("room-id")
+            roomId: roomId,
+            hotel: currentHotel || {},
+            room: room || {},
+            searchRequest: searchRequest,
+            selectedAt: new Date().toISOString()
         };
 
         sessionStorage.setItem("selectedReservationRoom", JSON.stringify(selected));
-        alert("객실이 선택되었습니다. 예약 정보 입력 화면과 연결하면 바로 이어서 사용할 수 있습니다.");
+        location.href = "reservation.html";
     });
+}
+
+function readJson(key) {
+    try {
+        const value = sessionStorage.getItem(key) || localStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function getAuthData() {
+    return readJson("staynowAuth");
 }
 
 function loadHotelDetail(hotelId) {
@@ -57,6 +90,7 @@ function loadHotelDetail(hotelId) {
 }
 
 function drawHotel(hotel) {
+    currentHotel = hotel;
     const description = hotel.description || "편안한 휴식과 여행을 위한 StayNow 추천 호텔입니다. 객실과 편의시설을 확인하고 원하는 숙박 옵션을 선택해보세요.";
     const maxDiscountRate = hotel.maxDiscountRate || 0;
 
@@ -170,6 +204,7 @@ function loadRooms(hotelId) {
 function drawRooms(rooms) {
     const list = $("#roomList");
 
+    currentRooms = rooms || [];
     list.empty();
     $("#roomCount").text(rooms.length + "개 객실");
 
@@ -225,6 +260,15 @@ function loadRoomImage(roomId) {
 
             $(".room-card[data-room-id='" + roomId + "'] .room-image img")
                 .attr("src", normalizeImagePath(photos[0].imagePath));
+
+            currentRooms = currentRooms.map(function (room) {
+                if (String(room.sid) === String(roomId)) {
+                    return Object.assign({}, room, {
+                        roomPhotoPath: normalizeImagePath(photos[0].imagePath)
+                    });
+                }
+                return room;
+            });
         }
     });
 }
