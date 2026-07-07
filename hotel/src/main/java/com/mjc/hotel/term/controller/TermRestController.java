@@ -6,6 +6,7 @@ import com.mjc.hotel.term.service.TermService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/term")
 @RequiredArgsConstructor
+@Tag(name = "약관", description = "약관 데이터 전반을 관리합니다.")
 public class TermRestController {
 
     private final TermService termService;
