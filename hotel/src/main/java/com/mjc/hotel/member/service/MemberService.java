@@ -2,7 +2,6 @@ package com.mjc.hotel.member.service;
 
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberAuthAccountRequestDto;
-import com.mjc.hotel.member.dto.MemberSignupRequestDto;
 import com.mjc.hotel.member.dto.MemberTermAgreementRequestDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
@@ -17,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -99,31 +97,6 @@ public class MemberService {
         }
 
         return savedMember;
-    }
-
-    @Transactional
-    public Member signup(MemberSignupRequestDto request) {
-        List<MemberTermAgreement> termAgreements = Collections.emptyList();
-
-        if (request.getTermAgreements() != null) {
-            termAgreements = request.getTermAgreements().stream()
-                    .map(termAgreementRequest -> {
-                        Term term = termRepository.findById(termAgreementRequest.getSid())
-                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + termAgreementRequest.getSid()));
-                        return memberDtoMapper.toTermAgreement(termAgreementRequest, term);
-                    })
-                    .toList();
-        }
-
-        MemberAuthAccount authAccount = memberDtoMapper.toAuthAccount(request.getAuthAccount());
-        if (authAccount != null) {
-            authAccount.setPasswordHash(resolvePasswordHash(
-                    request.getAuthAccount().getPassword(),
-                    request.getAuthAccount().getPasswordHash()
-            ));
-        }
-
-        return createMember(memberDtoMapper.toEntity(request), authAccount, termAgreements);
     }
 
     @Transactional
