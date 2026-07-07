@@ -34,6 +34,11 @@ public class EmailLog extends BaseEntity {
     @Column(name = "email_status", nullable = false)
     private EmailStatus emailStatus;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "email_type", nullable = false)
+    @Builder.Default
+    private EmailType emailType = EmailType.RESERVATION_CONFIRMATION;
+
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)
     private LocalDateTime sentAt;

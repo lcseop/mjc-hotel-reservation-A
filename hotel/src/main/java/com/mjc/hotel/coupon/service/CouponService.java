@@ -33,7 +33,7 @@ public class CouponService {
 
         return CouponDto
                 .builder()
-                .sid(saved.getId())
+                .sid(saved.getSid())
                 .couponName(saved.getCouponName())
                 .discountType(saved.getDiscountType())
                 .discountValue(saved.getDiscountValue())
@@ -46,7 +46,7 @@ public class CouponService {
 
     @Transactional
     public void delete(Long id) {
-        couponIssueRepository.deleteByCouponId(id);
+        couponIssueRepository.deleteByCouponSid(id);
 
         Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));

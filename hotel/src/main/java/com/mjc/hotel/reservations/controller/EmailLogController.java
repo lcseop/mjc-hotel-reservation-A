@@ -29,4 +29,8 @@ public class EmailLogController {
         return emailLogService.getLogsByReservation(reservationSid);
     }
 
+    @GetMapping("/{emailLogSid}/resend")
+    public EmailLogResponseDto resendLog(@PathVariable Long emailLogSid) {
+        return emailLogService.resendEmail(emailLogSid);
+    }
 }

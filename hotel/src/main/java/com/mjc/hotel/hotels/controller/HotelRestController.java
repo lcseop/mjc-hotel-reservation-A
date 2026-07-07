@@ -125,4 +125,16 @@ public class HotelRestController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel photos search success", search)
         );
     }
+
+    @Operation(
+            summary = "인기 호텔 4개 검색",
+            description = "가장 인기있는 호텔 4개를 검색합니다."
+    )
+    @GetMapping("/pop4")
+    public ResponseEntity<ApiResponse<List<HotelPopularResponseDto>>> findHotelInReviews() {
+        List<HotelPopularResponseDto> search = hotelService.findPopularHotels();
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotels search success", search)
+        );
+    }
 }

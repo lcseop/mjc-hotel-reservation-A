@@ -1,8 +1,12 @@
 package com.mjc.hotel.promotion.repository;
 
+import com.mjc.hotel.coupon.entity.QCoupon;
+import com.mjc.hotel.coupon.entity.QCouponIssue;
 import com.mjc.hotel.promotion.dto.PromotionDto;
 import com.mjc.hotel.promotion.dto.PromotionSearchRequestDto;
+import com.mjc.hotel.promotion.dto.PromotionStatsDto;
 import com.mjc.hotel.promotion.entity.*;
+import com.mjc.hotel.reservations.entity.QReservation;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -73,5 +77,32 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
     private BooleanExpression dateCond(QPromotion p, LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) return null;
         return p.startDate.loe(end).and(p.endDate.goe(start));
+    }
+
+    @Override
+    public List<PromotionStatsDto> getPromotionStatistics() {
+        QReservation reservation = QReservation.reservation;
+        QPromotion promo = QPromotion.promotion;
+        QCouponIssue couponIssue = QCouponIssue.couponIssue;
+        QCoupon coupon = QCoupon.coupon;
+
+        return queryFactory
+                .select(Projections.fields(PromotionStatsDto.class,
+                        promo.sid.as("promotionSid"),
+                        reservation.count().as("reservationCount"),
+                        reservation.totalAmount.sum().coalesce(0).as("totalDiscountAmount")
+                ))
+                .from(promo)
+                // 1. Coupon 테이블의 promotion_sid 컬럼과 promo.sid를 직접 비교
+                .leftJoin(coupon).on(coupon.sid.eq(Expressions.numberPath(Long.class, "promotion_sid")))
+
+                // 2. CouponIssue와 Coupon 조인
+                .leftJoin(couponIssue).on(couponIssue.coupon.sid.eq(coupon.sid))
+
+                // 3. Reservation과 CouponIssue 조인
+                .leftJoin(reservation).on(reservation.couponIssue.sid.eq(couponIssue.sid))
+
+                .groupBy(promo.sid)
+                .fetch();
     }
 }

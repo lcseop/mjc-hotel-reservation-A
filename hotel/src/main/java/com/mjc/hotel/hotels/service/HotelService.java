@@ -163,6 +163,25 @@ public class HotelService {
                 .toList();
     }
 
+    public List<HotelPopularResponseDto> findPopularHotels() {
+        List<Hotel> populars = hotelRepository.findTop4Popular();
+        return populars.stream()
+                .filter(h -> !h.getDeleted())
+                .map(h -> {
+                    HotelPhoto photo = hotelPhotoRepository.findRandomPhoto(h.getSid());
+                    String imagePath = (photo == null || photo.getImagePath() == null) ? "https://gunsancci.korcham.net/images/no-image01.gif" : photo.getImagePath();
+                    return HotelPopularResponseDto.builder()
+                            .sid(h.getSid())
+                            .hotelName(h.getHotelName())
+                            .location(h.getLocation())
+                            .firstImage(imagePath)
+                            .rating(5d)
+                            .price(h.getHotelPrice())
+                            .build();
+                })
+                .toList();
+    }
+
     public Page<ReviewResponse> findHotelInReviews(Long hotelId, Pageable pageable) {
         Page<Review> inReviews = reviewRepository.findByHotelSid(hotelId, pageable);
         List<ReviewResponse> review = inReviews.stream()

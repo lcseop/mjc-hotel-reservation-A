@@ -58,6 +58,29 @@ public class Reservation extends BaseEntity {
     @Column(name = "reservation_status", nullable = false)
     private ReservationStatus reservationStatus;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reservation_channel", nullable = false)
+    @Builder.Default
+    private ReservationChannel reservationChannel = ReservationChannel.DIRECT;
+
+    @Column(name = "original_Amount", nullable = false)
+    private Integer originalAmount;
+
+    @Column(name = "discount_Amount", nullable = false)
+    private Integer discountAmount;
+
+    @Column(name = "coupon_discount")
+    @Builder.Default
+    private Integer couponDiscount = 0;
+
+    @Column(name = "point_discount")
+    @Builder.Default
+    private Integer pointDiscount = 0;
+
+    @Column(name = "earned_Point")
+    @Builder.Default
+    private Integer earnedPoint = 0;
+
     @Column(name = "total_amount", nullable = false)
     private Integer totalAmount;
 

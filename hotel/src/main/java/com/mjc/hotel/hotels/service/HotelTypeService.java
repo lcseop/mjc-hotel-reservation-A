@@ -9,10 +9,14 @@ import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -63,6 +67,16 @@ public class HotelTypeService {
         HotelType type = hotelTypeRepository.findById(id).orElseThrow();
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         return toDto(type, true);
+    }
+
+    public Slice<HotelTypeDto> findByTitleContain(String title, Pageable pageable) {
+        Slice<HotelType> slc = hotelTypeRepository.findByTitleContains(title, pageable);
+        List<HotelTypeDto> dtos = slc
+                .stream()
+                .map(t -> HotelTypeDto.builder()
+                        .sid(t.getSid()).title(t.getTitle()).build())
+                .toList();
+        return new SliceImpl<>(dtos, slc.getPageable(), slc.hasNext());
     }
 
     private HotelTypeDto toDto(HotelType type, boolean sid) {

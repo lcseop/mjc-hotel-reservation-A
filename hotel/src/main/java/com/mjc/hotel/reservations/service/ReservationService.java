@@ -1,12 +1,11 @@
 package com.mjc.hotel.reservations.service;
 
+import com.mjc.hotel.coupon.entity.Coupon;
 import com.mjc.hotel.coupon.entity.CouponIssue;
 import com.mjc.hotel.coupon.repository.CouponIssueRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
-import com.mjc.hotel.reservations.dto.ReservationCancelDto;
-import com.mjc.hotel.reservations.dto.ReservationRequestDto;
-import com.mjc.hotel.reservations.dto.ReservationResponseDto;
+import com.mjc.hotel.reservations.dto.*;
 import com.mjc.hotel.reservations.entity.*;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationCancelRepository;
@@ -15,17 +14,19 @@ import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.repository.RoomRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-//@Transactional(readOnly = true)
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
@@ -34,12 +35,15 @@ public class ReservationService {
     private final CouponIssueRepository couponIssueRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final ReservationCancelRepository reservationCancelRepository;
+    private final EmailLogService emailLogService;
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
-        Member member = memberRepository.findById(requestDto.getMemberId()).orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. ID: " + requestDto.getMemberId()));
+        Member member = memberRepository.findById(requestDto.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. ID: " + requestDto.getMemberId()));
 
-        Room room = roomRepository.findById(requestDto.getRoomId()).orElseThrow(() -> new IllegalArgumentException("객실을 찾을 수 없습니다. ID: " + requestDto.getRoomId()));
+        Room room = roomRepository.findById(requestDto.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("객실을 찾을 수 없습니다. ID: " + requestDto.getRoomId()));
 
         long totalNights = ChronoUnit.DAYS.between(requestDto.getCheckInDate().toLocalDate(), requestDto.getCheckOutDate().toLocalDate());
 
@@ -47,16 +51,20 @@ public class ReservationService {
             throw new IllegalArgumentException("체크아웃 날짜는 체크인 날짜보다 이후여야 합니다.");
         }
 
-        Integer totalAmount = room.getRoomPrice() * (int) totalNights;
+        Integer originalAmount = room.getRoomPrice() * (int) totalNights;
+        Integer totalAmount = originalAmount;
+        Integer couponDiscount = 0;
+        Integer pointDiscount = 0;
 
         CouponIssue couponIssue = null;
         if (requestDto.getCouponIssueId() != null) {
-            couponIssue = couponIssueRepository.findById(requestDto.getCouponIssueId()).orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다. ID: " + requestDto.getCouponIssueId()));
+            couponIssue = couponIssueRepository.findById(requestDto.getCouponIssueId())
+                    .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다. ID: " + requestDto.getCouponIssueId()));
 
             validateCoupon(couponIssue, member, totalAmount);
 
-            Integer discountAmount = calculateDiscount(couponIssue.getCoupon(), totalAmount);
-            totalAmount = Math.max(0, totalAmount - discountAmount);
+            couponDiscount = calculateDiscount(couponIssue.getCoupon(), totalAmount);
+            totalAmount = Math.max(0, totalAmount - couponDiscount);
 
             couponIssue.setIsUsed(true);
             couponIssue.setUsedAt(LocalDateTime.now());
@@ -67,33 +75,70 @@ public class ReservationService {
             if (member.getPoint() < usePoint) {
                 throw new IllegalArgumentException("보유 포인트가 부족합니다.");
             }
+            pointDiscount = usePoint;
             totalAmount = Math.max(0, totalAmount - usePoint);
             member.setPoint(member.getPoint() - usePoint);
         }
 
+        Integer discountAmount = couponDiscount + pointDiscount;
         String reservationNumber = generateReservationNumber();
 
-        Reservation reservation = Reservation.builder().member(member).room(room).couponIssue(couponIssue).reservationNumber(reservationNumber).checkInDate(requestDto.getCheckInDate()).checkOutDate(requestDto.getCheckOutDate()).adults(requestDto.getAdults()).children(requestDto.getChildren() != null ? requestDto.getChildren() : 0).reservationStatus(ReservationStatus.CONFIRMED).totalAmount(totalAmount).specialRequests(requestDto.getSpecialRequests()).totalNights((int) totalNights).guestName(requestDto.getGuestName()).build();
+        Reservation reservation = Reservation.builder()
+                .member(member)
+                .room(room)
+                .couponIssue(couponIssue)
+                .reservationNumber(reservationNumber)
+                .checkInDate(requestDto.getCheckInDate())
+                .checkOutDate(requestDto.getCheckOutDate())
+                .adults(requestDto.getAdults())
+                .children(requestDto.getChildren() != null ? requestDto.getChildren() : 0)
+                .reservationStatus(ReservationStatus.CONFIRMED)
+                .reservationChannel(requestDto.getReservationChannel() != null ? requestDto.getReservationChannel() : ReservationChannel.DIRECT)
+                .totalAmount(totalAmount)
+                .specialRequests(requestDto.getSpecialRequests())
+                .originalAmount(originalAmount)
+                .discountAmount(discountAmount)
+                .pointDiscount(pointDiscount)
+                .totalNights((int) totalNights)
+                .guestName(requestDto.getGuestName())
+                .build();
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
         if (usePoint > 0) {
-            PointHistory pointHistory = PointHistory.builder().reservation(savedReservation).member(member).amount(-usePoint).pointStatus(PointStatus.USE).build();
+            PointHistory pointHistory = PointHistory.builder()
+                    .reservation(savedReservation)
+                    .member(member)
+                    .amount(-usePoint)
+                    .pointStatus(PointStatus.USE)
+                    .build();
             pointHistoryRepository.save(pointHistory);
         }
 
         Integer earnPoint = (int) (totalAmount * 0.05);
         if (earnPoint > 0) {
             member.setPoint(member.getPoint() + earnPoint);
-            PointHistory earnHistory = PointHistory.builder().reservation(savedReservation).member(member).amount(earnPoint).pointStatus(PointStatus.ACCUMULATION).build();
+            PointHistory earnHistory = PointHistory.builder()
+                    .reservation(savedReservation)
+                    .member(member)
+                    .amount(earnPoint)
+                    .pointStatus(PointStatus.ACCUMULATION)
+                    .build();
             pointHistoryRepository.save(earnHistory);
         }
+
+        String qrCode = generateQRCode(savedReservation);
+        savedReservation.setCheckInQr(qrCode);
+
+        sendConfirmationEmailSafely(savedReservation, member);
+
         return convertToResponseDto(savedReservation);
     }
 
 
     public ReservationResponseDto getReservation(Long reservationId) {
-        Reservation reservation = reservationRepository.findByIdWithDetails(reservationId).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+        Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
         return convertToResponseDto(reservation);
     }
 
@@ -101,9 +146,24 @@ public class ReservationService {
         return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
     }
 
+    public Page<ReservationResponseDto> searchReservations(ReservationStatus status, Long memberId, Pageable pageable){
+        Page<Reservation> page;
+        if(memberId != null && status != null) {
+            page = reservationRepository.findByMember_SidAndReservationStatus(memberId, status, pageable);
+        } else if(memberId != null) {
+            page = reservationRepository.findByMember_Sid(memberId, pageable);
+        } else if(status != null) {
+            page = reservationRepository.findByReservationStatus(status, pageable);
+        } else {
+            page = reservationRepository.findAll(pageable);
+        }
+        return page.map(this::convertToResponseDto);
+    }
+
     @Transactional
     public void cancelReservation(ReservationCancelDto cancelDto) {
-        Reservation reservation = reservationRepository.findById(cancelDto.getSid()).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + cancelDto.getSid()));
+        Reservation reservation = reservationRepository.findById(cancelDto.getSid())
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + cancelDto.getSid()));
 
         if (reservation.getReservationStatus() == ReservationStatus.CANCELLED) {
             throw new IllegalArgumentException("이미 취소된 예약입니다.");
@@ -113,25 +173,19 @@ public class ReservationService {
             throw new IllegalArgumentException("이미 완료된 예약은 취소할 수 없습니다.");
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(now, reservation.getCheckInDate());
-
-        Integer refundAmount = 0;
-        if (daysUntilCheckIn >= 3) {
-            refundAmount = reservation.getTotalAmount();
-        } else if (daysUntilCheckIn >= 1) {
-            refundAmount = (int) (reservation.getTotalAmount() * 0.5); // 50% 환불
-        }
+        Integer refundAmount = calculateRefundAmount(reservation);
 
         Member member = reservation.getMember();
-        List<PointHistory> useHistories = pointHistoryRepository.findAll().stream().filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.USE).collect(Collectors.toList());
-
+        List<PointHistory> useHistories = pointHistoryRepository.findAll().stream()
+                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.USE)
+                .toList();
         for (PointHistory history : useHistories) {
             member.setPoint(member.getPoint() - history.getAmount());
         }
 
-        List<PointHistory> earnHistories = pointHistoryRepository.findAll().stream().filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.ACCUMULATION).collect(Collectors.toList());
-
+        List<PointHistory> earnHistories = pointHistoryRepository.findAll().stream()
+                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.ACCUMULATION)
+                .toList();
         for (PointHistory history : earnHistories) {
             member.setPoint(Math.max(0, member.getPoint() - history.getAmount()));
         }
@@ -144,28 +198,31 @@ public class ReservationService {
 
         reservation.setReservationStatus(ReservationStatus.CANCELLED);
 
-        ReservationCancel reservationCancel = ReservationCancel.builder().reservation(reservation).cancelReason(cancelDto.getCancelReason()).refundAmount(refundAmount).build();
+        ReservationCancel reservationCancel = ReservationCancel.builder()
+                .reservation(reservation)
+                .cancelReason(cancelDto.getCancelReason())
+                .refundAmount(refundAmount)
+                .build();
         reservationCancelRepository.save(reservationCancel);
     }
 
     @Transactional
     public ReservationResponseDto checkIn(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
         if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED) {
             throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
         }
 
         reservation.setReservationStatus(ReservationStatus.CHECKED_IN);
-        String qrCode = generateQRCode(reservation);
-        reservation.setCheckInQr(qrCode);
-
         return convertToResponseDto(reservation);
     }
 
     @Transactional
     public ReservationResponseDto checkOut(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
         if (reservation.getReservationStatus() != ReservationStatus.CHECKED_IN) {
             throw new IllegalArgumentException("체크인 예약만 체크아웃 가능합니다.");
@@ -175,13 +232,53 @@ public class ReservationService {
         return convertToResponseDto(reservation);
     }
 
+    private Integer calculateRefundAmount(Reservation reservation) {
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        if (daysUntilCheckIn >= 3) {
+            return reservation.getTotalAmount();
+        } else if (daysUntilCheckIn >= 1) {
+            return (int) (reservation.getTotalAmount() * 0.5);
+        }
+        return 0;
+    }
+
+    private List<CancellationPolicyDto> buildCancellationPolicies(Reservation reservation) {
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        Integer totalAmount = reservation.getTotalAmount();
+
+        List<CancellationPolicyDto> policies = new ArrayList<>();
+        policies.add(CancellationPolicyDto.builder()
+                .periodDescription("체크인 3일 전까지")
+                .refundPercentage(100)
+                .expectedRefundAmount(totalAmount)
+                .applicable(daysUntilCheckIn >= 3)
+                .build());
+        policies.add(CancellationPolicyDto.builder()
+                .periodDescription("체크인 1~2일 전")
+                .refundPercentage(50)
+                .expectedRefundAmount((int) (totalAmount * 0.5))
+                .applicable(daysUntilCheckIn >= 1 && daysUntilCheckIn < 3)
+                .build());
+        return policies;
+    }
+
+    private void sendConfirmationEmailSafely(Reservation reservation, Member member) {
+        try {
+            EmailLogRequestDto emailRequest = new EmailLogRequestDto();
+            emailRequest.setSid(reservation.getSid());
+            emailRequest.setRecipientEmail(member.getEmail());
+            emailLogService.sendEmailAndLog(emailRequest);
+        } catch (Exception e) {
+
+        }
+    }
+
     private void validateCoupon(CouponIssue couponIssue, Member member, Integer totalAmount) {
         var coupon = couponIssue.getCoupon();
 
         if (Boolean.TRUE.equals(couponIssue.getIsUsed())) {
             throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
         }
-
         if (!couponIssue.getMember().getSid().equals(member.getSid())) {
             throw new IllegalArgumentException("본인에게 발급된 쿠폰만 사용할 수 있습니다.");
         }
@@ -190,16 +287,15 @@ public class ReservationService {
         if (coupon.getStartDate() != null && now.isBefore(coupon.getStartDate())) {
             throw new IllegalArgumentException("쿠폰 사용 가능 기간이 아닙니다.");
         }
-
         if (coupon.getMinOrderAmount() != null && totalAmount < coupon.getMinOrderAmount()) {
             throw new IllegalArgumentException(String.format("최소 주문 금액 %d원 이상부터 사용 가능한 쿠폰입니다.", coupon.getMinOrderAmount()));
         }
     }
 
-    private Integer calculateDiscount(com.mjc.hotel.coupon.entity.Coupon coupon, Integer totalAmount) {
-        switch(coupon.getDiscountType()) {
+    private Integer calculateDiscount(Coupon coupon, Integer totalAmount) {
+        switch (coupon.getDiscountType()) {
             case PERCENT:
-                return(int)(totalAmount * (coupon.getDiscountValue() / 100.0));
+                return (int) (totalAmount * (coupon.getDiscountValue() / 100.0));
             case FIXED:
                 return coupon.getDiscountValue().intValue();
             default:
@@ -223,17 +319,40 @@ public class ReservationService {
                 .memberName(reservation.getMember().getName())
                 .roomId(reservation.getRoom().getSid())
                 .roomNumber(reservation.getRoom().getRoomNumber())
+                .guestName(reservation.getGuestName())
                 .checkInDate(reservation.getCheckInDate())
                 .checkOutDate(reservation.getCheckOutDate())
+                .totalNights(reservation.getTotalNights())
                 .adults(reservation.getAdults())
                 .children(reservation.getChildren())
-                .reservationStatus(reservation.getReservationStatus())
+                .originalAmount(reservation.getOriginalAmount())
+                .discountAmount(reservation.getDiscountAmount())
+                .couponDiscount(reservation.getCouponDiscount())
+                .pointDiscount(reservation.getPointDiscount())
                 .totalAmount(reservation.getTotalAmount())
+                .earnedPoint(reservation.getEarnedPoint())
+                .reservationStatus(reservation.getReservationStatus())
+                .reservationChannel(reservation.getReservationChannel())
                 .specialRequests(reservation.getSpecialRequests())
-                .guestName(reservation.getGuestName())
                 .checkInQr(reservation.getCheckInQr())
+                .cancellationPolicyDto(buildCancellationPolicies(reservation))
                 .createdAt(reservation.getCreatedAt())
                 .updatedAt(reservation.getUpdatedAt())
                 .build();
     }
+
+    public ReservationStatsDto getReservationStats() {
+        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime todayEnd = todayStart.plusDays(1);
+        LocalDateTime monthStart = LocalDateTime.now().withDayOfMonth(1).toLocalDate().atStartOfDay();
+
+        return ReservationStatsDto.builder()
+                .todayNewReservations(reservationRepository.countByCreatedAtBetween(todayStart, todayEnd))
+                .todayCheckIns(reservationRepository.countByCheckInDateBetween(todayStart, todayEnd))
+                .todayCheckOuts(reservationRepository.countByCheckOutDateBetween(todayStart, todayEnd))
+                .monthlyReservations(reservationRepository.countByCreatedAtBetween(monthStart, todayEnd))
+                .pendingCount(reservationRepository.countByReservationStatus(ReservationStatus.PENDING))
+                .build();
+    }
+
 }
