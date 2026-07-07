@@ -21,13 +21,13 @@ public class ReviewPhoto extends BaseEntity {
     @JoinColumn(name = "review_id")
     private Review review;
 
-    @Column(name = "original_file_name")
+    @Column(name = "original_file_name", nullable = false)
     private String originalFileName;
 
-    @Column(name = "stored_file_name")
+    @Column(name = "stored_file_name", nullable = false)
     private String storedFileName;
 
-    @Column(name = "file_path")
+    @Column(name = "file_path", nullable = false)
     private String filePath;
 
     @Column(name = "image_path", length = 255, nullable = false)

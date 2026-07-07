@@ -21,11 +21,9 @@ import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,6 +119,7 @@ public class ReviewService {
                 .build();
         //생성시간 그대로 넘겨주기
         review.setCreatedAt(find.getCreatedAt());
+        review.setUpdatedAt(find.getUpdatedAt());
         review.prePersist();
 
         Review updateAfter = reviewRepository.save(review);
@@ -139,6 +138,7 @@ public class ReviewService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(review == null){
@@ -152,6 +152,7 @@ public class ReviewService {
         return result;
     }
 
+    @Transactional
     public ReviewResponse deleteReviewId(Long sid) {
         Review find = reviewRepository.findBySidAndDeletedFalse(sid);
         if(find == null){
@@ -182,18 +183,23 @@ public class ReviewService {
     }
 
     private ReviewResponse toReviewResponse(Review review, List<ReviewCategory> categories, List<ReviewTag> tags) {
+        Room room = roomRepository.findById(review.getReservation().getRoom().getSid())
+                .orElseThrow(()-> new  DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Found"));
+        Reservation reservation = reservationRepository.findById(review.getReservation().getSid())
+                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Reservation Not Found"));
+
         return  ReviewResponse.builder()
                 .sid(review.getSid())
                 .hotelId(review.getHotel().getSid())
                 .memberId(review.getMember().getSid())
-                .reservationId(review.getReservation().getSid())
+                .reservationId(reservation.getSid())
                 .rating(review.getRating())
                 .travelType(review.getTravelType())
                 .content(review.getContent())
                 .likeCount(review.getLikeCount())
                 .dislikeCount(review.getDislikeCount())
-                .roomName(review.getReservation().getRoom().getRoomName())
-                .totalNights(review.getReservation().getTotalNights())
+                .roomName(room.getRoomName())
+                .totalNights(reservation.getTotalNights())
                 .categories(
                         categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()
@@ -269,6 +275,7 @@ public class ReviewService {
      @param pageable 정렬 조건
      *
      **/
+    @Transactional
     public Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -280,6 +287,7 @@ public class ReviewService {
      @param pageable 정렬 조건
     *
      **/
+    @Transactional
     public Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndRatingGreaterThanEqualAndDeletedFalse(hotelId, 4, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -291,6 +299,7 @@ public class ReviewService {
      @param pageable 정렬 조건
      *
      **/
+    @Transactional
     public Page<ReviewResponse> existsPhotoReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndExistsPhotoAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -308,6 +317,7 @@ public class ReviewService {
         return new PageImpl<>(results, pageable, reviews.getTotalElements());
     }
 
+//    @Transactional
 //    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request) {
 //        Room room = roomRepository.findById(request.getRoomId())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Exist"));
