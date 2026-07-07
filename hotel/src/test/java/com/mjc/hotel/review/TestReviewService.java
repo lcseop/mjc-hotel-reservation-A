@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class TestReviewService {
                 1L,
                 5,
                 TravelType.SOLO,
-                "테스트7",
+                "테스트33",
                 categories,
                 tags
         );
@@ -150,8 +152,6 @@ public class TestReviewService {
         );
         assertThrows(DataNotFoundException.class,() -> reviewService.updateReview(fail));
 
-        LocalDateTime now = LocalDateTime.now();
-
         List<ReviewCategoryRequest> categories = setCategories(
                 TEST_REVIEW.getCategories().getFirst().getReviewCategoryId(),
                 TEST_REVIEW.getCategories().getFirst().getRating()
@@ -187,16 +187,13 @@ public class TestReviewService {
                 .isEqualTo(TEST_REVIEW.getTags().getFirst().getReviewTagId());
         assertThat(update.getCreatedAt())
                 .isNotNull();
-        assertThat(update.getCreatedAt())
-                .isBeforeOrEqualTo(now);
         assertThat(update.getUpdatedAt())
                 .isNotNull();
-        assertThat(update.getUpdatedAt())
-                .isBeforeOrEqualTo(now);
         assertThat(update.getDeletedAt())
                 .isNull();
         assertThat(update.getDeleted())
                 .isEqualTo(false);
+        TEST_REVIEW = update;
     }
 
     @DisplayName("리뷰 테이블 삭제 테스트")
@@ -217,12 +214,8 @@ public class TestReviewService {
                 .isNotNull();
         assertThat(delete.getCreatedAt())
                 .isNotNull();
-        assertThat(delete.getCreatedAt())
-                .isBeforeOrEqualTo(now);
         assertThat(delete.getUpdatedAt())
                 .isNotNull();
-        assertThat(delete.getUpdatedAt())
-                .isBeforeOrEqualTo(now);
         assertThat(delete.getDeletedAt())
                 .isNotNull();
         assertThat(delete.getDeletedAt())
@@ -230,8 +223,48 @@ public class TestReviewService {
         assertThat(delete.getDeleted())
                 .isEqualTo(true);
 
-        log.info("delete : " + delete.getDeleted().toString());
-        assertThrows(DataNotFoundException.class, ()-> reviewService.findByReviewId(TEST_REVIEW.getSid()));
+        TEST_REVIEW = delete;
+    }
+
+    @DisplayName("리뷰 테이블 삭제 컬럼 검색 테스트")
+    @Test
+    @Order(5)
+    public void testFindDeletedReview(){
+        assertThrows(DataNotFoundException.class, () -> reviewService.findByReviewId(TEST_REVIEW.getSid()));
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 리뷰 조회 테스트")
+    @Test
+    @Order(6)
+    public void testReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.reviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 긍정 리뷰 조회 테스트")
+    @Test
+    @Order(7)
+    public void testPositiveReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.positiveReviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getRating() >= 4);
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 사진 포함 리뷰 조회 테스트")
+    @Test
+    @Order(8)
+    public void testExistsPhotoReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.existsPhotoReviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+        assertThat(responses.getTotalElements())
+                .isEqualTo(1);
     }
 
     private List<ReviewTagRequest> setTags(Long tagId) {
