@@ -141,7 +141,7 @@ public class HotelService {
     public List<HotelAmenitiesDto> findHotelInAmenities(Long hotelId) {
         List<HotelInAmenities> inAmenities = hotelInAmenitiesRepository.findByHotelSid(hotelId);
         return inAmenities.stream()
-                .filter(r -> !r.getDeleted())
+                .filter(r -> !Boolean.TRUE.equals(r.getDeleted()))
                 .map(r -> {
                     HotelAmenities h = hotelAmenitiesRepository.findById(r.getAmenities().getSid()).orElseThrow();
                     return HotelAmenitiesDto.builder().sid(h.getSid()).title(h.getTitle()).description(h.getDescription()).build();
@@ -152,7 +152,7 @@ public class HotelService {
     public List<RoomResponseNoHotelDto> findHotelInRooms(Long hotelId) {
         List<Room> inRooms = roomRepository.findByHotelIdSid(hotelId);
         return inRooms.stream()
-                .filter(r -> !r.getDeleted())
+                .filter(r -> !Boolean.TRUE.equals(r.getDeleted()))
                 .map(r -> RoomResponseNoHotelDto
                             .builder()
                             .sid(r.getSid())
@@ -176,7 +176,7 @@ public class HotelService {
     public List<HotelPopularResponseDto> findPopularHotels() {
         List<Hotel> populars = hotelRepository.findTop4Popular();
         return populars.stream()
-                .filter(h -> !h.getDeleted())
+                .filter(h -> !Boolean.TRUE.equals(h.getDeleted()))
                 .map(h -> {
                     HotelPhoto photo = hotelPhotoRepository.findRandomPhoto(h.getSid());
                     String imagePath = (photo == null || photo.getImagePath() == null) ? "https://gunsancci.korcham.net/images/no-image01.gif" : photo.getImagePath();
@@ -195,7 +195,7 @@ public class HotelService {
     public Page<ReviewResponse> findHotelInReviews(Long hotelId, Pageable pageable) {
         Page<Review> inReviews = reviewRepository.findByHotelSid(hotelId, pageable);
         List<ReviewResponse> review = inReviews.stream()
-                .filter(r -> !r.getDeleted())
+                .filter(r -> !Boolean.TRUE.equals(r.getDeleted()))
                 .map(r -> {
                     List<ReviewCategoryResponse> categories = reviewCategoryRepository.findByReviewSid(r.getSid())
                             .stream()
@@ -244,7 +244,7 @@ public class HotelService {
     public List<HotelPhotoDto> findHotelInPhotos(Long hotelId) {
         List<HotelPhoto> photos = hotelPhotoRepository.findByHotelSid(hotelId);
         return photos.stream()
-                .filter(p -> !p.getDeleted())
+                .filter(p -> !Boolean.TRUE.equals(p.getDeleted()))
                 .map(p -> HotelPhotoDto.builder()
                         .sid(p.getSid())
                         .hotelId(p.getHotel().getSid())
