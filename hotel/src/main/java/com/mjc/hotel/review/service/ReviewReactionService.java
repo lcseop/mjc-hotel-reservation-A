@@ -64,6 +64,8 @@ public class ReviewReactionService {
         if(review == null) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
+        memberRepository.findById(find.getMember().getSid())
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Member Not Found"));
         //좋아요에서 취소상태 (삭제)
         if(find.getReactionType() == ReactionType.GOOD && request.getReactionType() == ReactionType.NONE){
             review.decreaseLike();
@@ -107,8 +109,8 @@ public class ReviewReactionService {
         return result;
     }
 
-    public ReviewReactionResponse findReviewReaction(ReviewReactionRequest request) {
-        ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
+    public ReviewReactionResponse findReviewReaction(Long reviewId, Long memberId) {
+        ReviewReactionId reviewReactionId = new ReviewReactionId(reviewId, memberId);
 
         ReviewReaction find = reviewReactionRepository.findById(reviewReactionId)
                 .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"ReviewReaction Not Found"));
