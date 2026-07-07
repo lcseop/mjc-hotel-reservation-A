@@ -1,20 +1,23 @@
 package com.mjc.hotel.review;
 
+import com.mjc.hotel.review.entity.enums.ReactionType;
 import com.mjc.hotel.review.entity.enums.TravelType;
-import com.mjc.hotel.review.request.ReviewCategoryRequest;
-import com.mjc.hotel.review.request.ReviewCreateRequest;
-import com.mjc.hotel.review.request.ReviewTagRequest;
-import com.mjc.hotel.review.request.ReviewUpdateRequest;
+import com.mjc.hotel.review.request.*;
+import com.mjc.hotel.review.response.ReviewAnswerResponse;
+import com.mjc.hotel.review.response.ReviewReactionResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
+import com.mjc.hotel.review.service.ReviewAnswerService;
+import com.mjc.hotel.review.service.ReviewPhotoService;
+import com.mjc.hotel.review.service.ReviewReactionService;
 import com.mjc.hotel.review.service.ReviewService;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.annotation.Commit;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,24 +28,33 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Slf4j
 public class TestReviewService {
-
+    //카테고리, 태그 마스터 테이블에 데이터가 없다면 TestMasterTable 테스트 클래스를 실행하여 데이터들을 만들것.
     @Autowired
     private ReviewService reviewService;
+    @Autowired
+    private ReviewReactionService reviewReactionService;
+    @Autowired
+    private ReviewPhotoService reviewPhotoService;
+    @Autowired
+    private ReviewAnswerService reviewAnswerService;
 
     private static ReviewResponse TEST_REVIEW;
+    private static ReviewReactionResponse TEST_REVIEW_REACTION;
+    private static ReviewAnswerResponse TEST_REVIEW_ANSWER;
 
     @DisplayName("리뷰 테이블 저장 테스트")
     @Test
     @Order(1)
+    @Commit
     public void testInsertReview() {
-
         LocalDateTime now = LocalDateTime.now();
 
-        List<ReviewCategoryRequest> categories = setCategories(1L,5);
+        List<ReviewCategoryRequest> categories = new ArrayList<>();
+        setCategories(categories,1L,5);
 
-        List<ReviewTagRequest> tags = setTags(1L);
+        List<ReviewTagRequest> tags = new ArrayList<>();
+        setTags(tags, 1L);
 
         ReviewCreateRequest request = new ReviewCreateRequest(
                 1L,
@@ -50,100 +62,103 @@ public class TestReviewService {
                 1L,
                 5,
                 TravelType.SOLO,
-                "테스트33",
+                "리뷰 저장 테스트",
                 categories,
                 tags
         );
 
-        ReviewResponse insert = reviewService.insertReview(request);
+        ReviewResponse inserted = reviewService.insertReview(request);
 
-        assertThat(insert)
+        assertThat(inserted)
                 .isNotNull();
-        assertThat(insert.getSid())
+        assertThat(inserted.getSid())
                 .isNotNull();
-        assertThat(insert.getHotelId())
-                .isEqualTo(request.getHotelId());
-        assertThat(insert.getMemberId())
-                .isEqualTo(request.getMemberId());
-        assertThat(insert.getReservationId())
-                .isEqualTo(request.getReservationId());
-        assertThat(insert.getRating())
-                .isEqualTo(request.getRating());
-        assertThat(insert.getTravelType())
-                .isEqualTo(request.getTravelType());
-        assertThat(insert.getContent())
-                .isEqualTo(request.getContent());
-        assertThat(insert.getCategories().getFirst().getReviewCategoryId())
-                .isEqualTo(request.getCategories().getFirst().getCategoryId());
-        assertThat(insert.getCategories().getFirst().getRating())
-                .isEqualTo(request.getCategories().getFirst().getRating());
-        assertThat(insert.getTags().getFirst().getReviewTagId())
-                .isEqualTo(request.getTags().getFirst().getTagId());
-        assertThat(insert.getCreatedAt())
+        assertThat(inserted.getHotelId())
+                .isEqualTo(1L);
+        assertThat(inserted.getMemberId())
+                .isEqualTo(1L);
+        assertThat(inserted.getReservationId())
+                .isEqualTo(1L);
+        assertThat(inserted.getRating())
+                .isEqualTo(5);
+        assertThat(inserted.getTravelType())
+                .isEqualTo(TravelType.SOLO);
+        assertThat(inserted.getContent())
+                .isEqualTo("리뷰 저장 테스트");
+        assertThat(inserted.getCategories().size())
+                .isEqualTo(1);
+        assertThat(inserted.getCategories().getFirst().getReviewCategoryId())
+                .isEqualTo(1L);
+        assertThat(inserted.getCategories().getFirst().getRating())
+                .isEqualTo(5);
+        assertThat(inserted.getTags().size())
+                .isEqualTo(1);
+        assertThat(inserted.getTags().getFirst().getReviewTagId())
+                .isEqualTo(1L);
+        assertThat(inserted.getCreatedAt())
                 .isNotNull();
-        assertThat(insert.getCreatedAt())
+        assertThat(inserted.getCreatedAt())
                 .isAfterOrEqualTo(now);
-        assertThat(insert.getUpdatedAt())
+        assertThat(inserted.getUpdatedAt())
                 .isNotNull();
-        assertThat(insert.getUpdatedAt())
+        assertThat(inserted.getUpdatedAt())
                 .isAfterOrEqualTo(now);
-        assertThat(insert.getDeletedAt())
+        assertThat(inserted.getDeletedAt())
                 .isNull();
-        assertThat(insert.getDeleted())
+        assertThat(inserted.getDeleted())
                 .isEqualTo(false);
 
-        TEST_REVIEW = insert;
-        log.info("id : " + TEST_REVIEW.getSid().toString());
+        TEST_REVIEW = inserted;
     }
 
     @DisplayName("리뷰 테이블 검색 테스트")
     @Test
     @Order(2)
+    @Commit
     public void testFindByReviewId() {
-        log.info("id : " + TEST_REVIEW.getSid().toString());
         assertThrows(DataNotFoundException.class, () -> reviewService.findByReviewId(0L));
 
-        ReviewResponse find = reviewService.findByReviewId(TEST_REVIEW.getSid());
+        ReviewResponse found = reviewService.findByReviewId(TEST_REVIEW.getSid());
 
-        assertThat(find)
+        assertThat(found)
                 .isNotNull();
-        assertThat(find.getSid())
-                .isNotNull();
-        assertThat(find.getHotelId())
+        assertThat(found.getSid())
+                .isEqualTo(TEST_REVIEW.getSid());
+        assertThat(found.getHotelId())
                 .isEqualTo(TEST_REVIEW.getHotelId());
-        assertThat(find.getMemberId())
+        assertThat(found.getMemberId())
                 .isEqualTo(TEST_REVIEW.getMemberId());
-        assertThat(find.getReservationId())
+        assertThat(found.getReservationId())
                 .isEqualTo(TEST_REVIEW.getReservationId());
-        assertThat(find.getRating())
+        assertThat(found.getRating())
                 .isEqualTo(TEST_REVIEW.getRating());
-        assertThat(find.getTravelType())
+        assertThat(found.getTravelType())
                 .isEqualTo(TEST_REVIEW.getTravelType());
-        assertThat(find.getContent())
+        assertThat(found.getContent())
                 .isEqualTo(TEST_REVIEW.getContent());
-        assertThat(find.getCategories().getFirst().getReviewCategoryId())
+        assertThat(found.getCategories().getFirst().getReviewCategoryId())
                 .isEqualTo(TEST_REVIEW.getCategories().getFirst().getReviewCategoryId());
-        assertThat(find.getCategories().getFirst().getRating())
+        assertThat(found.getCategories().getFirst().getRating())
                 .isEqualTo(TEST_REVIEW.getCategories().getFirst().getRating());
-        assertThat(find.getTags().getFirst().getReviewTagId())
+        assertThat(found.getTags().getFirst().getReviewTagId())
                 .isEqualTo(TEST_REVIEW.getTags().getFirst().getReviewTagId());
-        assertThat(find.getCreatedAt())
-                .isNotNull();
-        assertThat(find.getUpdatedAt())
-                .isNotNull();
-        assertThat(find.getDeletedAt())
-                .isNull();
-        assertThat(find.getDeleted())
-                .isEqualTo(false);
+        assertThat(found.getCreatedAt())
+                .isEqualTo(TEST_REVIEW.getCreatedAt());
+        assertThat(found.getUpdatedAt())
+                .isEqualTo(TEST_REVIEW.getUpdatedAt());
+        assertThat(found.getDeletedAt())
+                .isEqualTo(TEST_REVIEW.getDeletedAt());
+        assertThat(found.getDeleted())
+                .isEqualTo(TEST_REVIEW.getDeleted());
     }
 
     @DisplayName("리뷰 테이블 수정 테스트")
     @Test
     @Order(3)
+    @Commit
     public void testUpdateReview() {
-        log.info("id : " + TEST_REVIEW.getSid().toString());
         ReviewUpdateRequest fail =  new ReviewUpdateRequest(
-                null,
+                0L,
                 null,
                 null,
                 null,
@@ -152,56 +167,433 @@ public class TestReviewService {
         );
         assertThrows(DataNotFoundException.class,() -> reviewService.updateReview(fail));
 
-        List<ReviewCategoryRequest> categories = setCategories(
-                TEST_REVIEW.getCategories().getFirst().getReviewCategoryId(),
-                TEST_REVIEW.getCategories().getFirst().getRating()
-        );
-        List<ReviewTagRequest> tags = setTags(
-                TEST_REVIEW.getTags().getFirst().getReviewTagId()
-        );
+        List<ReviewCategoryRequest> categories = new ArrayList<>();
+        setCategories(categories, 1L, 5);
+        setCategories(categories, 2L, 4);
+
+        List<ReviewTagRequest> tags = new ArrayList<>();
+        setTags(tags, 1L);
+        setTags(tags, 2L);
+
         ReviewUpdateRequest request = new ReviewUpdateRequest(
                 TEST_REVIEW.getSid(),
-                TEST_REVIEW.getRating(),
-                TEST_REVIEW.getTravelType(),
-                TEST_REVIEW.getContent(),
+                4,
+                TravelType.FAMILY,
+                "리뷰 수정 테스트",
                 categories,
                 tags
         );
-        ReviewResponse update = reviewService.updateReview(request);
+        ReviewResponse updated = reviewService.updateReview(request);
 
-        assertThat(update)
+        assertThat(updated)
                 .isNotNull();
-        assertThat(update.getSid())
+        assertThat(updated.getSid())
                 .isNotNull();
-        assertThat(update.getRating())
-                .isEqualTo(request.getRating());
-        assertThat(update.getTravelType())
-                .isEqualTo(request.getTravelType());
-        assertThat(update.getContent())
-                .isEqualTo(request.getContent());
-        assertThat(update.getCategories().getFirst().getReviewCategoryId())
-                .isEqualTo(TEST_REVIEW.getCategories().getFirst().getReviewCategoryId());
-        assertThat(update.getCategories().getFirst().getRating())
-                .isEqualTo(TEST_REVIEW.getCategories().getFirst().getRating());
-        assertThat(update.getTags().getFirst().getReviewTagId())
-                .isEqualTo(TEST_REVIEW.getTags().getFirst().getReviewTagId());
-        assertThat(update.getCreatedAt())
-                .isNotNull();
-        assertThat(update.getUpdatedAt())
-                .isNotNull();
-        assertThat(update.getDeletedAt())
-                .isNull();
-        assertThat(update.getDeleted())
-                .isEqualTo(false);
-        TEST_REVIEW = update;
+
+        assertThat(updated.getRating())
+                .isNotEqualTo(TEST_REVIEW.getRating());
+        assertThat(updated.getRating())
+                .isEqualTo(4);
+
+        assertThat(updated.getTravelType())
+                .isNotEqualTo(TEST_REVIEW.getTravelType());
+        assertThat(updated.getTravelType())
+                .isEqualTo(TravelType.FAMILY);
+
+        assertThat(updated.getContent())
+                .isNotEqualTo(TEST_REVIEW.getContent());
+        assertThat(updated.getContent())
+                .isEqualTo("리뷰 수정 테스트");
+
+        assertThat(updated.getCategories().size())
+                .isNotEqualTo(TEST_REVIEW.getCategories().size());
+        assertThat(updated.getCategories().size())
+                .isEqualTo(2);
+        assertThat(updated.getCategories().getFirst().getReviewCategoryId())
+                .isEqualTo(1L);
+        assertThat(updated.getCategories().getFirst().getRating())
+                .isEqualTo(5);
+        assertThat(updated.getCategories().getLast().getReviewCategoryId())
+                .isEqualTo(2L);
+        assertThat(updated.getCategories().getLast().getRating())
+                .isEqualTo(4);
+
+        assertThat(updated.getTags().size())
+                .isNotEqualTo(TEST_REVIEW.getTags().size());
+        assertThat(updated.getTags().size())
+                .isEqualTo(2);
+        assertThat(updated.getTags().getFirst().getReviewTagId())
+                .isEqualTo(1L);
+        assertThat(updated.getTags().getLast().getReviewTagId())
+                .isEqualTo(2L);
+
+        TEST_REVIEW = updated;
     }
+
+    @DisplayName("리뷰 좋아요 싫어요 테이블 저장 테스트")
+    @Test
+    @Order(4)
+    @Commit
+    public void testAddReviewReaction(){
+        LocalDateTime now = LocalDateTime.now();
+
+        ReviewReactionRequest request = new ReviewReactionRequest(
+                TEST_REVIEW.getSid(),
+                TEST_REVIEW.getMemberId(),
+                ReactionType.GOOD
+        );
+        ReviewReactionResponse inserted = reviewReactionService.addReviewReaction(request);
+
+        assertThat(inserted)
+                .isNotNull();
+        assertThat(inserted.getReviewId())
+                .isNotNull();
+        assertThat(inserted.getMemberId())
+                .isNotNull();
+        assertThat(inserted.getReactionType())
+                .isEqualTo(ReactionType.GOOD);
+        assertThat(inserted.getCreatedAt())
+                .isNotNull();
+        assertThat(inserted.getCreatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(inserted.getUpdatedAt())
+                .isNotNull();
+        assertThat(inserted.getUpdatedAt())
+                .isAfterOrEqualTo(now);
+
+        TEST_REVIEW_REACTION = inserted;
+
+        ReviewResponse reviewUpdated = reviewService.findByReviewId(TEST_REVIEW.getSid());
+        assertThat(reviewUpdated)
+                .isNotNull();
+        assertThat(reviewUpdated.getLikeCount())
+                .isEqualTo(1);
+        assertThat(reviewUpdated.getDislikeCount())
+                .isEqualTo(0);
+
+        TEST_REVIEW = reviewUpdated;
+    }
+    @DisplayName("리뷰 좋아요 싫어요 테이블 검색 테스트")
+    @Test
+    @Order(5)
+    @Commit
+    public void testFindReviewReaction(){
+        assertThrows(DataNotFoundException.class, () -> reviewReactionService.findReviewReaction(0L,0L));
+
+        ReviewReactionResponse found = reviewReactionService.findReviewReaction(TEST_REVIEW_REACTION.getReviewId(),TEST_REVIEW_REACTION.getReviewId());
+
+        assertThat(found)
+                .isNotNull();
+        assertThat(found.getReviewId())
+                .isEqualTo(TEST_REVIEW_REACTION.getReviewId());
+        assertThat(found.getMemberId())
+                .isEqualTo(TEST_REVIEW_REACTION.getMemberId());
+        assertThat(found.getReactionType())
+                .isEqualTo(TEST_REVIEW_REACTION.getReactionType());
+        assertThat(found.getCreatedAt())
+                .isEqualTo(TEST_REVIEW_REACTION.getCreatedAt());
+        assertThat(found.getUpdatedAt())
+                .isEqualTo(TEST_REVIEW_REACTION.getUpdatedAt());
+    }
+
+    @DisplayName("리뷰 좋아요 싫어요 테이블 수정 테스트")
+    @Test
+    @Order(6)
+    @Commit
+    public void testUpdateReviewReaction(){
+        ReviewReactionRequest fail1 =  new ReviewReactionRequest(
+                0L,
+                TEST_REVIEW_REACTION.getMemberId(),
+                null
+        );
+        assertThrows(DataNotFoundException.class, ()-> reviewReactionService.updateReviewReaction(fail1));
+
+        ReviewReactionRequest fail2 =  new ReviewReactionRequest(
+                TEST_REVIEW_REACTION.getReviewId(),
+                0L,
+                null
+        );
+        assertThrows(DataNotFoundException.class, ()-> reviewReactionService.updateReviewReaction(fail2));
+
+        ReviewReactionRequest request1 = new ReviewReactionRequest(
+                TEST_REVIEW.getSid(),
+                TEST_REVIEW.getMemberId(),
+                ReactionType.BAD
+        );
+
+        ReviewReactionResponse reactionUpdated1 = reviewReactionService.updateReviewReaction(request1);
+        assertThat(reactionUpdated1)
+                .isNotNull();
+        assertThat(reactionUpdated1.getReviewId())
+                .isNotNull();
+        assertThat(reactionUpdated1.getMemberId())
+                .isNotNull();
+
+        assertThat(reactionUpdated1.getReactionType())
+                .isNotEqualTo(TEST_REVIEW_REACTION.getReactionType());
+        assertThat(reactionUpdated1.getReactionType())
+                .isEqualTo(ReactionType.BAD);
+
+        TEST_REVIEW_REACTION = reactionUpdated1;
+
+        ReviewResponse reviewUpdated1 = reviewService.findByReviewId(TEST_REVIEW.getSid());
+        assertThat(reviewUpdated1)
+                .isNotNull();
+
+        assertThat(reviewUpdated1.getLikeCount())
+                .isNotEqualTo(1);
+        assertThat(reviewUpdated1.getLikeCount())
+                .isEqualTo(0);
+
+        assertThat(reviewUpdated1.getDislikeCount())
+                .isNotEqualTo(0);
+        assertThat(reviewUpdated1.getDislikeCount())
+                .isEqualTo(1);
+
+        TEST_REVIEW = reviewUpdated1;
+
+        ReviewReactionRequest request2 = new ReviewReactionRequest(
+                TEST_REVIEW.getSid(),
+                TEST_REVIEW.getMemberId(),
+                ReactionType.NONE
+        );
+
+        ReviewReactionResponse reactionUpdated2 = reviewReactionService.updateReviewReaction(request2);
+        assertThat(reactionUpdated2)
+                .isNotNull();
+        assertThat(reactionUpdated2.getReviewId())
+                .isNotNull();
+        assertThat(reactionUpdated2.getMemberId())
+                .isNotNull();
+
+        assertThat(reactionUpdated2.getReactionType())
+                .isNotEqualTo(TEST_REVIEW_REACTION.getReactionType());
+        assertThat(reactionUpdated2.getReactionType())
+                .isEqualTo(ReactionType.NONE);
+
+        TEST_REVIEW_REACTION = reactionUpdated2;
+
+        ReviewResponse reviewUpdated2 = reviewService.findByReviewId(TEST_REVIEW.getSid());
+        assertThat(reviewUpdated2)
+                .isNotNull();
+
+        assertThat(reviewUpdated2.getLikeCount())
+                .isNotEqualTo(1);
+        assertThat(reviewUpdated2.getLikeCount())
+                .isEqualTo(0);
+
+        assertThat(reviewUpdated2.getDislikeCount())
+                .isNotEqualTo(1);
+        assertThat(reviewUpdated2.getDislikeCount())
+                .isEqualTo(0);
+
+        TEST_REVIEW = reviewUpdated2;
+    }
+
+    @DisplayName("리뷰 좋아요 싫어요 테이블 리뷰 Id 조회 테스트")
+    @Test
+    @Order(7)
+    @Commit
+    public void testFindAllByReviewIdAndReactionType(){
+        assertThrows(DataNotFoundException.class, () -> reviewReactionService.findAllByReviewIdAndReactionType(0L,null));
+
+        Long goodCount = reviewReactionService.findAllByReviewIdAndReactionType(TEST_REVIEW.getSid(),"GOOD");
+        Long badCount = reviewReactionService.findAllByReviewIdAndReactionType(TEST_REVIEW.getSid(),"BAD");
+
+        assertThat(goodCount)
+                .isEqualTo(0);
+        assertThat(badCount)
+                .isEqualTo(0);
+    }
+
+    @DisplayName("리뷰 답변 테이블 저장 테스트")
+    @Test
+    @Order(8)
+    @Commit
+    public void testInsertReviewAnswer(){
+        LocalDateTime now = LocalDateTime.now();
+        ReviewAnswerCreateRequest request = new ReviewAnswerCreateRequest(
+                TEST_REVIEW.getSid(),
+                "리뷰 답변 저장 테스트"
+        );
+        ReviewAnswerResponse inserted = reviewAnswerService.insertReviewAnswer(request);
+
+        assertThat(inserted)
+                .isNotNull();
+        assertThat(inserted.getSid())
+                .isNotNull();
+        assertThat(inserted.getReviewId())
+                .isEqualTo(TEST_REVIEW.getSid());
+        assertThat(inserted.getReviewAnswer())
+                .isEqualTo("리뷰 답변 저장 테스트");
+        assertThat(inserted.getCreatedAt())
+                .isNotNull();
+        assertThat(inserted.getCreatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(inserted.getUpdatedAt())
+                .isNotNull();
+        assertThat(inserted.getUpdatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(inserted.getDeletedAt())
+                .isNull();
+        assertThat(inserted.getDeleted())
+                .isEqualTo(false);
+
+        TEST_REVIEW_ANSWER = inserted;
+    }
+
+    @DisplayName("리뷰 답변 테이블 검색 테스트")
+    @Test
+    @Order(9)
+    @Commit
+    public void testFindBySidReviewAnswer(){
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.findBySidReviewAnswer(0L));
+
+        ReviewAnswerResponse found = reviewAnswerService.findBySidReviewAnswer(TEST_REVIEW_ANSWER.getSid());
+
+        assertThat(found)
+                .isNotNull();
+        assertThat(found.getSid())
+                .isEqualTo(TEST_REVIEW_ANSWER.getSid());
+        assertThat(found.getReviewId())
+                .isEqualTo(TEST_REVIEW_ANSWER.getReviewId());
+        assertThat(found.getReviewAnswer())
+                .isEqualTo(TEST_REVIEW_ANSWER.getReviewAnswer());
+        assertThat(found.getCreatedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getCreatedAt());
+        assertThat(found.getUpdatedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getUpdatedAt());
+        assertThat(found.getDeletedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getDeletedAt());
+        assertThat(found.getDeleted())
+                .isEqualTo(TEST_REVIEW_ANSWER.getDeleted());
+    }
+
+    @DisplayName("리뷰 답변 테이블 리뷰 Id 검색 테스트")
+    @Test
+    @Order(10)
+    @Commit
+    public void testFindByReviewSid(){
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.findByReviewSid(0L));
+
+        ReviewAnswerResponse found = reviewAnswerService.findByReviewSid(TEST_REVIEW.getSid());
+
+        assertThat(found)
+                .isNotNull();
+        assertThat(found.getSid())
+                .isEqualTo(TEST_REVIEW_ANSWER.getSid());
+        assertThat(found.getReviewId())
+                .isEqualTo(TEST_REVIEW.getSid());
+        assertThat(found.getReviewAnswer())
+                .isEqualTo(TEST_REVIEW_ANSWER.getReviewAnswer());
+        assertThat(found.getCreatedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getCreatedAt());
+        assertThat(found.getUpdatedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getUpdatedAt());
+        assertThat(found.getDeletedAt())
+                .isEqualTo(TEST_REVIEW_ANSWER.getDeletedAt());
+        assertThat(found.getDeleted())
+                .isEqualTo(TEST_REVIEW_ANSWER.getDeleted());
+    }
+
+    @DisplayName("리뷰 답변 테이블 수정 테스트")
+    @Test
+    @Order(11)
+    @Commit
+    public void testUpdateReviewAnswer(){
+        ReviewAnswerUpdateRequest fail = new ReviewAnswerUpdateRequest(
+                0L,
+                null,
+                null
+        );
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.updateReviewAnswer(fail));
+
+        ReviewAnswerUpdateRequest request = new ReviewAnswerUpdateRequest(
+                TEST_REVIEW_ANSWER.getSid(),
+                TEST_REVIEW.getSid(),
+                "리뷰 답변 수정 테스트"
+        );
+        ReviewAnswerResponse updated = reviewAnswerService.updateReviewAnswer(request);
+
+        assertThat(updated)
+                .isNotNull();
+        assertThat(updated.getSid())
+                .isNotNull();
+
+        assertThat(updated.getReviewAnswer())
+                .isNotEqualTo(TEST_REVIEW_ANSWER.getReviewAnswer());
+        assertThat(updated.getReviewAnswer())
+                .isEqualTo(request.getReviewAnswer());
+
+        TEST_REVIEW_ANSWER = updated;
+    }
+
+    @DisplayName("리뷰 답변 테이블 삭제 테스트")
+    @Test
+    @Order(12)
+    @Commit
+    public void testDeleteReviewAnswer(){
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.deleteReviewAnswer(0L));
+
+        ReviewAnswerResponse deleted = reviewAnswerService.deleteReviewAnswer(TEST_REVIEW_ANSWER.getSid());
+
+        assertThat(deleted)
+                .isNotNull();
+        assertThat(deleted.getDeletedAt())
+                .isNotNull();
+        assertThat(deleted.getDeleted())
+                .isEqualTo(true);
+
+        TEST_REVIEW_ANSWER = deleted;
+    }
+
+    @DisplayName("리뷰 답변 테이블 삭제 컬럼 검색 테스트")
+    @Test
+    @Order(13)
+    @Commit
+    public void testFindDeletedReviewAnswer(){
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.findBySidReviewAnswer(TEST_REVIEW_ANSWER.getSid()));
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 리뷰 조회 테스트")
+    @Test
+    @Order(18)
+    public void testReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.reviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 긍정 리뷰 조회 테스트")
+    @Test
+    @Order(19)
+    public void testPositiveReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.positiveReviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getRating() >= 4);
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 사진 포함 리뷰 조회 테스트")
+    @Test
+    @Order(20)
+    public void testExistsPhotoReviewsInHotel(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReviewResponse> responses = reviewService.existsPhotoReviewsInHotel(1L, pageable);
+        assertThat(responses.getContent())
+                .allMatch(response -> response.getHotelId() == 1L);
+        assertThat(responses.getTotalElements())
+                .isEqualTo(1);
+    }
+
 
     @DisplayName("리뷰 테이블 삭제 테스트")
     @Test
-    @Order(4)
+    @Order(21)
     public void testDeleteReview() {
-        log.info("id : " + TEST_REVIEW.getSid().toString());
-
         LocalDateTime now = LocalDateTime.now();
 
         assertThrows(DataNotFoundException.class, () -> reviewService.deleteReviewId(0L));
@@ -228,56 +620,20 @@ public class TestReviewService {
 
     @DisplayName("리뷰 테이블 삭제 컬럼 검색 테스트")
     @Test
-    @Order(5)
+    @Order(22)
     public void testFindDeletedReview(){
         assertThrows(DataNotFoundException.class, () -> reviewService.findByReviewId(TEST_REVIEW.getSid()));
     }
 
-    @DisplayName("리뷰 테이블 호텔 Id 리뷰 조회 테스트")
-    @Test
-    @Order(6)
-    public void testReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.reviewsInHotel(1L, pageable);
-        assertThat(responses.getContent())
-                .allMatch(response -> response.getHotelId() == 1L);
-    }
-
-    @DisplayName("리뷰 테이블 호텔 Id 긍정 리뷰 조회 테스트")
-    @Test
-    @Order(7)
-    public void testPositiveReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.positiveReviewsInHotel(1L, pageable);
-        assertThat(responses.getContent())
-                .allMatch(response -> response.getHotelId() == 1L);
-        assertThat(responses.getContent())
-                .allMatch(response -> response.getRating() >= 4);
-    }
-
-    @DisplayName("리뷰 테이블 호텔 Id 사진 포함 리뷰 조회 테스트")
-    @Test
-    @Order(8)
-    public void testExistsPhotoReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.existsPhotoReviewsInHotel(1L, pageable);
-        assertThat(responses.getContent())
-                .allMatch(response -> response.getHotelId() == 1L);
-        assertThat(responses.getTotalElements())
-                .isEqualTo(1);
-    }
-
-    private List<ReviewTagRequest> setTags(Long tagId) {
-        List<ReviewTagRequest> tags = new ArrayList<>();
-        ReviewTagRequest tag = new ReviewTagRequest(tagId);
-        tags.add(tag);
-        return tags;
-    }
-
-    private List<ReviewCategoryRequest> setCategories(Long categoryId, Integer rating) {
-        List<ReviewCategoryRequest> categories = new ArrayList<>();
+    private List<ReviewCategoryRequest> setCategories(List<ReviewCategoryRequest> categories, Long categoryId, Integer rating) {
         ReviewCategoryRequest category = new ReviewCategoryRequest(categoryId,rating);
         categories.add(category);
         return categories;
+    }
+
+    private List<ReviewTagRequest> setTags(List<ReviewTagRequest> tags , Long tagId) {
+        ReviewTagRequest tag = new ReviewTagRequest(tagId);
+        tags.add(tag);
+        return tags;
     }
 }
