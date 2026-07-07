@@ -100,7 +100,6 @@ public class ReviewService {
         return result;
     }
 
-    @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest request) {
         Review find = reviewRepository.findBySidAndDeletedFalse(request.getSid());
         if(find == null){
@@ -138,7 +137,6 @@ public class ReviewService {
         return result;
     }
 
-    @Transactional(readOnly = true)
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(review == null){
@@ -152,7 +150,6 @@ public class ReviewService {
         return result;
     }
 
-    @Transactional
     public ReviewResponse deleteReviewId(Long sid) {
         Review find = reviewRepository.findBySidAndDeletedFalse(sid);
         if(find == null){
