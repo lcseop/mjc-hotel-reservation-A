@@ -180,12 +180,18 @@ public class HotelService {
                 .map(h -> {
                     HotelPhoto photo = hotelPhotoRepository.findRandomPhoto(h.getSid());
                     String imagePath = (photo == null || photo.getImagePath() == null) ? "https://gunsancci.korcham.net/images/no-image01.gif" : photo.getImagePath();
+                    Double rating = reviewRepository.findByHotelSidAndDeletedFalse(h.getSid(), Pageable.unpaged())
+                            .stream()
+                            .filter(review -> review.getRating() != null)
+                            .mapToInt(Review::getRating)
+                            .average()
+                            .orElse(0d);
                     return HotelPopularResponseDto.builder()
                             .sid(h.getSid())
                             .hotelName(h.getHotelName())
                             .location(h.getLocation())
                             .firstImage(imagePath)
-                            .rating(5d)
+                            .rating(Math.round(rating * 10) / 10.0)
                             .price(h.getHotelPrice())
                             .build();
                 })

@@ -310,6 +310,25 @@ textarea {
     gap: 14px;
 }
 
+.hotel-title.hotel-link {
+    cursor: pointer;
+    border-radius: 14px;
+}
+
+.hotel-title.hotel-link h2 {
+    transition: color .15s ease;
+}
+
+.hotel-title.hotel-link:hover h2,
+.hotel-title.hotel-link:focus-visible h2 {
+    color: #0ea5e9;
+}
+
+.hotel-title.hotel-link:focus-visible {
+    outline: 3px solid rgba(14, 165, 233, .22);
+    outline-offset: 4px;
+}
+
 .hotel-icon {
     width: 58px;
     height: 58px;
@@ -546,6 +565,382 @@ textarea {
     outline: none;
 }
 
+.review-write-overlay {
+    background: rgba(15, 23, 42, .86);
+}
+
+.review-write-modal {
+    width: min(720px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .35);
+}
+
+.review-write-modal > header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 28px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+}
+
+.write-title-icon,
+.write-hotel-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .18);
+}
+
+.review-write-modal header h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.review-write-modal header p {
+    margin: 3px 0 0;
+    color: #dbeafe;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+#reviewCloseBtn {
+    width: 38px;
+    height: 38px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    cursor: pointer;
+}
+
+.write-hotel-row {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 18px 28px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.write-hotel-icon {
+    background: linear-gradient(135deg, #6366f1, #0ea5e9);
+    color: #fff;
+}
+
+.write-hotel-row strong,
+.write-hotel-row span {
+    display: block;
+}
+
+.write-hotel-row strong {
+    color: #0f172a;
+    font-size: 15px;
+}
+
+.write-hotel-row span {
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.write-hotel-row b {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 12px;
+}
+
+.write-section {
+    padding: 22px 28px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.write-section h3,
+.write-content-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    color: #172038;
+    font-size: 16px;
+}
+
+.write-section h3 i,
+.write-content-head i {
+    width: 4px;
+    height: 20px;
+    border-radius: 999px;
+    background: #0ea5e9;
+}
+
+.write-section h3 em {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #fff1f2;
+    color: #fb7185;
+    font-size: 11px;
+    font-style: normal;
+}
+
+.write-section h3 span {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.write-stars {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.write-star-btn,
+.mini-star-btn {
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    cursor: pointer;
+}
+
+.write-star-btn {
+    font-size: 42px;
+}
+
+.mini-star-btn {
+    font-size: 15px;
+}
+
+.write-star-btn.active,
+.mini-star-btn.active {
+    color: #f59e0b;
+}
+
+.write-score-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.write-score-line strong {
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    font-size: 20px;
+}
+
+.write-category-grid,
+.write-tag-area {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.write-category-grid label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-weight: 900;
+}
+
+.mini-stars,
+.write-chip-row,
+.write-tag-area > div,
+.write-photo-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.write-chip-row button,
+.write-tag-chip {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #dbe5f0;
+    border-radius: 999px;
+    background: #fff;
+    color: #64748b;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.write-chip-row button.active,
+.write-tag-chip.active {
+    border-color: #38bdf8;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+}
+
+.write-content-head {
+    justify-content: space-between;
+}
+
+#writeContentCount {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+#reviewContent {
+    width: 100%;
+    min-height: 86px;
+    resize: vertical;
+    padding: 16px;
+    border: 2px solid #38bdf8;
+    border-radius: 10px;
+    color: #172038;
+    font: inherit;
+    line-height: 1.6;
+}
+
+.tag-title {
+    width: 100%;
+    font-size: 13px;
+}
+
+.tag-title.pros {
+    color: #16a34a;
+}
+
+.tag-title.cons {
+    color: #f43f5e;
+}
+
+.write-photo-input {
+    width: 86px;
+    height: 86px;
+    display: grid;
+    place-items: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #94a3b8;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.write-photo-input input {
+    display: none;
+}
+
+.write-photo-preview {
+    margin-top: 10px;
+}
+
+.write-photo-preview-item {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e2e8f0;
+    cursor: pointer;
+}
+
+.write-photo-preview-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.write-photo-preview-item span {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, .74);
+    color: #fff;
+    font-size: 11px;
+}
+
+.write-point-box {
+    display: flex;
+    gap: 12px;
+    margin: 18px 28px;
+    padding: 16px;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.write-point-box span {
+    display: block;
+    margin-top: 4px;
+    color: #16a34a;
+    font-weight: 900;
+}
+
+.review-write-modal > footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 28px;
+    background: #f8fafc;
+}
+
+.review-write-modal footer p {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.review-write-modal footer div {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+.review-write-modal footer button {
+    height: 44px;
+    min-width: 88px;
+    padding: 0 22px;
+    border: 1px solid #dbe5f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #64748b;
+    font-weight: 900;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+#submitReviewBtn {
+    min-width: 120px;
+    border: 0;
+    background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+    color: #fff;
+}
+
 .primary-submit {
     width: 100%;
     height: 48px;
@@ -690,6 +1085,19 @@ textarea {
 #detailStars {
     color: #f59e0b;
     font-weight: 900;
+}
+
+#detailHotelName,
+#infoHotelName {
+    cursor: pointer;
+}
+
+#detailHotelName:hover,
+#detailHotelName:focus-visible,
+#infoHotelName:hover,
+#infoHotelName:focus-visible {
+    color: #0ea5e9;
+    outline: none;
 }
 
 .amenity-tags {
@@ -1002,5 +1410,40 @@ textarea {
     .detail-hero small,
     .detail-hero strong {
         text-align: left;
+    }
+
+    .review-write-modal > header,
+    .write-hotel-row,
+    .write-section,
+    .review-write-modal > footer {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .write-hotel-row,
+    .write-category-grid,
+    .write-tag-area {
+        grid-template-columns: 1fr;
+    }
+
+    .write-stars {
+        gap: 4px;
+    }
+
+    .write-star-btn {
+        font-size: 34px;
+    }
+
+    .review-write-modal > footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .review-write-modal footer div {
+        width: 100%;
+    }
+
+    .review-write-modal footer button {
+        flex: 1;
     }
 }

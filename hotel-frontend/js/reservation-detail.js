@@ -13,8 +13,17 @@ $(function () {
     }
 
     renderDetailProfile();
+    loadLatestDetailProfile();
+    loadDetailReservationCount();
     $("#sideLogoutBtn").on("click", logoutDetail);
     $("#cancelReservationBtn").on("click", cancelDetailReservation);
+    $("#detailHotelName, #infoHotelName").on("click", goDetailHotelPage);
+    $("#detailHotelName, #infoHotelName").on("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            goDetailHotelPage();
+        }
+    });
     loadReservationDetail();
 });
 
@@ -54,7 +63,9 @@ function renderReservationDetail(reservation) {
     const hotelName = reservation.hotelName || "호텔명 없음";
     const locationText = reservation.hotelLocation || "위치 정보 없음";
 
-    $("#detailHotelName, #infoHotelName").text(hotelName);
+    $("#detailHotelName, #infoHotelName")
+        .text(hotelName)
+        .attr({ role: "link", tabindex: "0", title: "호텔 상세 보기" });
     $("#detailLocation, #infoLocation, #guideAddress").text(locationText);
     $("#detailReservationNumber, #infoReservationNumber").text(reservationNumber);
     $("#detailStatus").text(status.label);
@@ -95,6 +106,15 @@ function loadHotelExtras(hotelId) {
             renderAmenities([]);
         }
     });
+}
+
+function goDetailHotelPage() {
+    if (!detailReservation || !detailReservation.hotelId) {
+        alert("호텔 상세 정보를 찾을 수 없습니다.");
+        return;
+    }
+
+    location.href = "hotel-detail.html?id=" + encodeURIComponent(detailReservation.hotelId);
 }
 
 function renderAmenities(items) {
@@ -168,6 +188,41 @@ function renderDetailProfile() {
     $("#profilePoint").text(formatDetailNumber(detailAuth.point || 0));
 }
 
+function loadLatestDetailProfile() {
+    $.ajax({
+        url: DETAIL_API_BASE + "/member/" + detailAuth.memberSid,
+        type: "GET",
+        success: function (result) {
+            const member = result.data || {};
+            detailAuth = Object.assign({}, detailAuth, {
+                name: member.name || detailAuth.name,
+                email: member.email || detailAuth.email,
+                point: Number(member.point || 0)
+            });
+            saveDetailAuth(detailAuth);
+            renderDetailProfile();
+        }
+    });
+}
+
+function loadDetailReservationCount() {
+    $.ajax({
+        url: DETAIL_API_BASE + "/reservation/search",
+        type: "GET",
+        data: {
+            memberId: detailAuth.memberSid,
+            page: 0,
+            size: 1
+        },
+        success: function (page) {
+            $("#totalReservationCount").text(formatDetailNumber(page.totalElements || 0));
+        },
+        error: function () {
+            $("#totalReservationCount").text("0");
+        }
+    });
+}
+
 function mergeDetailCompleted(data) {
     const r = data.reservation || {};
     const h = data.hotel || {};
@@ -211,6 +266,11 @@ function readDetailJson(key) {
     } catch (e) {
         return null;
     }
+}
+
+function saveDetailAuth(auth) {
+    const storage = localStorage.getItem("staynowAuth") ? localStorage : sessionStorage;
+    storage.setItem("staynowAuth", JSON.stringify(auth));
 }
 
 function logoutDetail() {

@@ -520,6 +520,7 @@ function drawPopularHotels(hotels) {
 
     $.each(hotels, function(index, hotel){
 
+        const rating = Number(hotel.rating || 0);
         let card = `
             <a class="hotel-card" href="hotel-detail.html?id=${hotel.sid}">
 
@@ -537,7 +538,7 @@ function drawPopularHotels(hotels) {
                     <p>${hotel.location}</p>
 
                     <div class="card-footer">
-                        <span>⭐ ${hotel.rating}</span>
+                        <span>${formatPopularRating(rating)}</span>
                     </div>
 
                 </div>
@@ -549,6 +550,15 @@ function drawPopularHotels(hotels) {
 
     });
 
+}
+
+function formatPopularRating(rating) {
+    if (!rating || rating <= 0) {
+        return "평점 없음";
+    }
+
+    const filled = Math.max(0, Math.min(5, Math.round(rating)));
+    return '<b class="popular-stars">' + "★".repeat(filled) + "☆".repeat(5 - filled) + '</b> ' + rating.toFixed(1);
 }
 
 function loadFlashDeals() {
