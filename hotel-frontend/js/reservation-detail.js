@@ -38,6 +38,7 @@ function loadReservationDetail() {
 
     $.ajax({
         url: DETAIL_API_BASE + "/reservation/" + id,
+        headers: detailAuthHeaders(),
         success: function (reservation) {
             detailReservation = mergeDetailLocal(reservation);
             renderReservationDetail(detailReservation);
@@ -99,6 +100,7 @@ function loadHotelExtras(hotelId) {
 
     $.ajax({
         url: DETAIL_API_BASE + "/hotel/iname/" + hotelId,
+        headers: detailAuthHeaders(),
         success: function (response) {
             renderAmenities(response.data || []);
         },
@@ -157,6 +159,7 @@ function cancelDetailReservation() {
         url: DETAIL_API_BASE + "/reservation/cancel",
         type: "POST",
         contentType: "application/json",
+        headers: detailAuthHeaders(),
         data: JSON.stringify({ sid: detailReservation.sid, cancelReason: "고객 직접 취소" }),
         success: function () {
             location.href = "my-reservations.html";
@@ -192,6 +195,7 @@ function loadLatestDetailProfile() {
     $.ajax({
         url: DETAIL_API_BASE + "/member/" + detailAuth.memberSid,
         type: "GET",
+        headers: detailAuthHeaders(),
         success: function (result) {
             const member = result.data || {};
             detailAuth = Object.assign({}, detailAuth, {
@@ -209,6 +213,7 @@ function loadDetailReservationCount() {
     $.ajax({
         url: DETAIL_API_BASE + "/reservation/search",
         type: "GET",
+        headers: detailAuthHeaders(),
         data: {
             memberId: detailAuth.memberSid,
             page: 0,
@@ -271,6 +276,10 @@ function readDetailJson(key) {
 function saveDetailAuth(auth) {
     const storage = localStorage.getItem("staynowAuth") ? localStorage : sessionStorage;
     storage.setItem("staynowAuth", JSON.stringify(auth));
+}
+
+function detailAuthHeaders() {
+    return detailAuth && detailAuth.token ? { Authorization: detailAuth.token } : {};
 }
 
 function logoutDetail() {

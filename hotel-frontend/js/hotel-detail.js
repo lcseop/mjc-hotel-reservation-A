@@ -991,6 +991,7 @@ function submitReviewWrite(event) {
         url: API_BASE + "/review",
         type: "POST",
         contentType: "application/json",
+        headers: reviewAuthHeaders(auth),
         data: JSON.stringify(payload),
         success: function (result) {
             const reviewId = result?.data?.sid;
@@ -1180,6 +1181,7 @@ function uploadReviewPhotos(reviewId, done) {
     $.ajax({
         url: API_BASE + "/review-photo",
         type: "POST",
+        headers: reviewAuthHeaders(),
         data: formData,
         processData: false,
         contentType: false,
@@ -1199,6 +1201,7 @@ function sendReviewReaction(reviewId, reactionType) {
         url: API_BASE + "/review-reaction",
         type: "POST",
         contentType: "application/json",
+        headers: reviewAuthHeaders(auth),
         data: JSON.stringify({
             reviewId: Number(reviewId),
             memberId: Number(auth.memberSid),
@@ -1212,6 +1215,7 @@ function sendReviewReaction(reviewId, reactionType) {
                 url: API_BASE + "/review-reaction",
                 type: "PATCH",
                 contentType: "application/json",
+                headers: reviewAuthHeaders(auth),
                 data: JSON.stringify({
                     reviewId: Number(reviewId),
                     memberId: Number(auth.memberSid),
@@ -1311,10 +1315,15 @@ function formatDistance(meters) {
 }
 
 function escapeHtml(value) {
-    return String(value)
+    return String(value == null ? "" : value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function reviewAuthHeaders(auth) {
+    const currentAuth = auth || readJson("staynowAuth");
+    return currentAuth && currentAuth.token ? { Authorization: currentAuth.token } : {};
 }
