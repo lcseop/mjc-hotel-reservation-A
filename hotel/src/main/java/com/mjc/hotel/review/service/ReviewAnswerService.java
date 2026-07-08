@@ -11,6 +11,7 @@ import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class ReviewAnswerService {
     private final ReviewAnswerRepository reviewAnswerRepository;
     private final ReviewRepository reviewRepository;
 
+    @Transactional
     public ReviewAnswerResponse insertReviewAnswer(ReviewAnswerCreateRequest request) {
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
         if(review == null) {
@@ -38,7 +40,7 @@ public class ReviewAnswerService {
         ReviewAnswerResponse result = this.toReviewAnswerResponse(save);
         return result;
     }
-
+    @Transactional
     public ReviewAnswerResponse updateReviewAnswer(ReviewAnswerUpdateRequest request) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(request.getSid());
         if(find == null) {
@@ -60,7 +62,7 @@ public class ReviewAnswerService {
         ReviewAnswerResponse result = this.toReviewAnswerResponse(save);
         return result;
     }
-
+    @Transactional
     public ReviewAnswerResponse findBySidReviewAnswer(Long sid) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(sid);
         if(find == null) {
@@ -71,7 +73,7 @@ public class ReviewAnswerService {
 
         return result;
     }
-
+    @Transactional
     public ReviewAnswerResponse deleteReviewAnswer(Long sid) {
         ReviewAnswer find = reviewAnswerRepository.findBySidAndDeletedFalse(sid);
         if(find == null) {
@@ -97,9 +99,12 @@ public class ReviewAnswerService {
                 .deleted(reviewAnswer.getDeleted())
                 .build();
     }
-
+    @Transactional
     public ReviewAnswerResponse findByReviewSid(Long reviewId){
         ReviewAnswer find = reviewAnswerRepository.findByReviewSidAndDeletedFalse(reviewId);
+        if(find == null){
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
+        }
         ReviewAnswerResponse result = this.toReviewAnswerResponse(find);
         return result;
     }
