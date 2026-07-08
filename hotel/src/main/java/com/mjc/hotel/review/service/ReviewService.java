@@ -214,6 +214,8 @@ public class ReviewService {
                                 .map(reviewTag -> ReviewTagResponse.builder()
                                         .reviewId(reviewTag.getReview().getSid())
                                         .reviewTagId(reviewTag.getReviewTagMaster().getSid())
+                                        .reviewTagName(reviewTag.getReviewTagMaster().getReviewTagName())
+                                        .reviewTagCategory(reviewTag.getReviewTagMaster().getReviewTagCategory())
                                         .build()
                                 )
                                 .toList()
