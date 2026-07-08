@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/mypage.css">
+    <title>예약내역</title>
+</head>
+<body>
+    <navbar><div id="header"></div></navbar>
+    <div id="searchHeader"></div>
+
+    <main class="mypage-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="totalReservationCount">0</strong><span>총 예약</span></div>
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html" class="active"><i class="fa-regular fa-calendar-check"></i> 예약내역 <b id="navReservationCount">0</b></a>
+                <a href="#"><i class="fa-regular fa-heart"></i> 위시리스트</a>
+                <a href="#"><i class="fa-regular fa-star"></i> 나의 리뷰</a>
+                <a href="#"><i class="fa-solid fa-coins"></i> 포인트</a>
+                <a href="#"><i class="fa-solid fa-ticket"></i> 쿠폰함</a>
+                <p>계정 설정</p>
+                <a href="account-settings.html"><i class="fa-regular fa-user"></i> 프로필 수정</a>
+                <a href="account-settings.html"><i class="fa-solid fa-lock"></i> 보안 설정</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>예약내역</b></p>
+                    <h1>예약내역</h1>
+                </div>
+                <select id="sortSelect" aria-label="예약 정렬">
+                    <option value="latest">최신순</option>
+                    <option value="checkInAsc">체크인 빠른순</option>
+                    <option value="amountDesc">결제금액 높은순</option>
+                </select>
+            </div>
+
+            <div class="status-tabs">
+                <button type="button" class="active" data-filter="ALL">전체 <span id="countAll">0</span></button>
+                <button type="button" data-filter="UPCOMING"><i></i> 예정된 여행 <span id="countUpcoming">0</span></button>
+                <button type="button" data-filter="COMPLETED"><i></i> 완료된 여행 <span id="countCompleted">0</span></button>
+                <button type="button" data-filter="CANCELLED"><i></i> 취소된 여행 <span id="countCancelled">0</span></button>
+            </div>
+
+            <div id="reservationList" class="reservation-list">
+                <div class="empty-state">예약 내역을 불러오는 중입니다.</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="reviewModal" class="modal-backdrop review-write-overlay" aria-hidden="true">
+        <form id="myReviewForm" class="review-write-modal">
+            <header>
+                <div class="write-title-icon"><i class="fa-solid fa-pen"></i></div>
+                <div>
+                    <h2>리뷰 작성</h2>
+                    <p id="reviewHotelSub">숙박 경험을 남겨주세요</p>
+                </div>
+                <button type="button" id="reviewCloseBtn" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+
+            <div class="write-hotel-row">
+                <div class="write-hotel-icon"><i class="fa-regular fa-building"></i></div>
+                <div>
+                    <strong id="reviewHotelName">호텔명</strong>
+                    <span id="reviewHotelMeta">숙박 정보</span>
+                </div>
+                <b>리뷰 작성</b>
+            </div>
+
+            <section class="write-section">
+                <h3><i></i> 전체 평점 <em>필수</em></h3>
+                <div class="write-stars" id="writeMainRating"></div>
+                <div class="write-score-line"><strong id="writeScoreText">10.0</strong><span id="writeScoreLabel">5점 최고</span></div>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 항목별 평점 <span>(선택사항)</span></h3>
+                <div class="write-category-grid">
+                    <label><span>청결도</span><div class="mini-stars" data-category-id="1" data-rating="5"></div></label>
+                    <label><span>서비스</span><div class="mini-stars" data-category-id="2" data-rating="5"></div></label>
+                </div>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 여행 유형 <span>(선택사항)</span></h3>
+                <div class="write-chip-row" id="writeTravelType">
+                    <button type="button" class="active" data-value="COUPLE"><i class="fa-solid fa-user-group"></i> 커플 여행</button>
+                    <button type="button" data-value="BUSINESS"><i class="fa-solid fa-briefcase"></i> 비즈니스</button>
+                    <button type="button" data-value="FAMILY"><i class="fa-regular fa-heart"></i> 가족 여행</button>
+                    <button type="button" data-value="SOLO"><i class="fa-regular fa-user"></i> 혼자 여행</button>
+                    <button type="button" data-value="FRIEND"><i class="fa-solid fa-graduation-cap"></i> 친구들과</button>
+                </div>
+            </section>
+
+            <section class="write-section">
+                <div class="write-content-head">
+                    <h3><i></i> 리뷰 내용 <em>필수</em></h3>
+                    <span id="writeContentCount">0 / 1,000자</span>
+                </div>
+                <textarea id="reviewContent" maxlength="1000" required placeholder="이번 숙박은 어떠셨나요? 객실, 직원, 위치, 조식 등을 자유롭게 적어주세요."></textarea>
+                <small>50자 이상 작성 시 포인트가 추가 적립됩니다.</small>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 장단점 태그 <span>(선택사항)</span></h3>
+                <div class="write-tag-area"></div>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 사진 첨부 <span>(선택사항 · 최대 10장)</span></h3>
+                <label class="write-photo-input">
+                    <i class="fa-regular fa-image"></i>
+                    <span>사진 선택</span>
+                    <input id="writeReviewPhotos" type="file" accept="image/*" multiple>
+                </label>
+                <div id="writePhotoPreview" class="write-photo-preview"></div>
+            </section>
+
+            <div class="write-point-box">
+                <i class="fa-solid fa-coins"></i>
+                <div>
+                    <strong>이 리뷰 작성 시 적립 예정 포인트</strong>
+                    <span>기본 리뷰 +200P · 사진 첨부 +500P</span>
+                </div>
+            </div>
+
+            <footer>
+                <p><i class="fa-solid fa-shield-halved"></i> 작성한 리뷰는 검토 후 게시되며, 광고성 내용은 삭제될 수 있습니다.</p>
+                <div>
+                    <button type="button" id="cancelReviewBtn">취소</button>
+                    <button type="submit" id="submitReviewBtn"><i class="fa-regular fa-paper-plane"></i> 리뷰 등록</button>
+                </div>
+            </footer>
+        </form>
+    </div>
+
+    <footer><div id="footer"></div></footer>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/my-reservations.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

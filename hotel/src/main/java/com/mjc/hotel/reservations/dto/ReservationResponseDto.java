@@ -21,6 +21,14 @@ public class ReservationResponseDto {
     private String memberName;
     private Long roomId;
     private Integer roomNumber;
+    private String roomName;
+    private Integer roomPrice;
+    private String roomTypeTitle;
+    private String roomParking;
+    private Long hotelId;
+    private String hotelName;
+    private String hotelLocation;
+    private Integer hotelStarRating;
     private String guestName;
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;

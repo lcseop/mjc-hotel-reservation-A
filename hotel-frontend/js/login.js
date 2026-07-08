@@ -4,9 +4,12 @@ $(function () {
 
 });
 
+const LOGIN_API = "http://localhost:33000/api/auth/login";
+
 function init() {
 
     bindEvent();
+    checkInput();
 
 }
 
@@ -53,16 +56,92 @@ function login(e) {
         return;
     }
 
-    // ===========================
-    // TODO
-    // Spring Boot JWT 로그인
-    // ===========================
-
-    console.log({
+    requestLogin({
         email,
-        password,
-        remember: $("#remember").is(":checked")
+        password
     });
+
+}
+
+function requestLogin(payload) {
+
+    setLoginLoading(true);
+
+    $.ajax({
+        url: LOGIN_API,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+
+        success: function (result) {
+
+            const loginData = result.data;
+
+            if (!loginData || !loginData.accessToken) {
+                alert("로그인 응답이 올바르지 않습니다.");
+                return;
+            }
+
+            saveLoginData(loginData);
+
+            alert(loginData.name + "님, 환영합니다.");
+            const redirectUrl = sessionStorage.getItem("afterLoginRedirect");
+            sessionStorage.removeItem("afterLoginRedirect");
+            location.href = redirectUrl || "index.html";
+
+        },
+
+        error: function (xhr) {
+
+            const message =
+                xhr.responseJSON &&
+                xhr.responseJSON.data
+                    ? xhr.responseJSON.data
+                    : "이메일 또는 비밀번호를 확인해주세요.";
+
+            alert(message);
+            $("#password").focus();
+
+        },
+
+        complete: function () {
+
+            setLoginLoading(false);
+            checkInput();
+
+        }
+    });
+
+}
+
+function saveLoginData(loginData) {
+
+    const storage = $("#remember").is(":checked") ? localStorage : sessionStorage;
+    const token = loginData.tokenType + " " + loginData.accessToken;
+
+    localStorage.removeItem("staynowAuth");
+    sessionStorage.removeItem("staynowAuth");
+
+    storage.setItem("staynowAuth", JSON.stringify({
+        token,
+        accessToken: loginData.accessToken,
+        tokenType: loginData.tokenType,
+        expiresIn: loginData.expiresIn,
+        memberSid: loginData.memberSid,
+        email: loginData.email,
+        name: loginData.name,
+        role: loginData.role,
+        point: Number(loginData.point || 0),
+        loggedInAt: new Date().toISOString()
+    }));
+
+}
+
+function setLoginLoading(loading) {
+
+    $("#loginBtn")
+        .prop("disabled", loading)
+        .text(loading ? "로그인 중..." : "로그인");
 
 }
 

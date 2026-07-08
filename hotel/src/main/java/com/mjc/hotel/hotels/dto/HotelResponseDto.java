@@ -20,4 +20,5 @@ public class HotelResponseDto {
     private String description;
     private Double latitude;
     private Double longitude;
+    private Integer maxDiscountRate;
 }

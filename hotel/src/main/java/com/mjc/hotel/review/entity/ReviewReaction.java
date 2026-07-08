@@ -28,6 +28,6 @@ public class ReviewReaction extends  BaseEntity {
     private Member member;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reaction_type")
+    @Column(name = "reaction_type", nullable = false)
     private ReactionType reactionType;
 }

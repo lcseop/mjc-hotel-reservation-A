@@ -3,6 +3,8 @@ package com.mjc.hotel.hotels.repository;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.QHotel;
+import com.mjc.hotel.promotion.entity.QDiscountRate;
+import com.mjc.hotel.promotion.entity.QPromotion;
 import com.mjc.hotel.reservations.entity.QReservation;
 import com.mjc.hotel.reservations.entity.QReservationCancel;
 import com.mjc.hotel.room.entity.QRoom;
@@ -28,8 +30,12 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
 
         QHotel h = QHotel.hotel;
         QRoom r = QRoom.room;
+        QRoom promoRoom = new QRoom("promoRoom");
         QReservation res = QReservation.reservation;
         QReservationCancel rc = QReservationCancel.reservationCancel;
+        QPromotion p = QPromotion.promotion;
+        QDiscountRate dr = QDiscountRate.discountRate;
+        LocalDateTime now = LocalDateTime.now();
 
         List<HotelResponseDto> content = queryFactory
                 .select(Projections.constructor(
@@ -42,12 +48,32 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         h.starRating,
                         h.description,
                         h.latitude,
-                        h.longitude
+                        h.longitude,
+                        JPAExpressions
+                                .select(dr.sale.max())
+                                .from(dr)
+                                .join(dr.promotion, p)
+                                .where(
+                                        p.roomType.in(
+                                                JPAExpressions
+                                                        .select(promoRoom.roomTypeId)
+                                                        .from(promoRoom)
+                                                        .where(
+                                                                promoRoom.hotelId.eq(h),
+                                                                notDeletedRoom(promoRoom)
+                                                        )
+                                        ),
+                                        notDeletedPromotion(p),
+                                        p.startDate.loe(now),
+                                        p.endDate.goe(now)
+                                )
                 ))
                 .from(h)
                 .where(
-                        locationCond(h, req.getLocation()),
+                        notDeletedHotel(h),
+                        keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
                 .distinct()
@@ -59,8 +85,10 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .select(h.count())
                 .from(h)
                 .where(
-                        locationCond(h, req.getLocation()),
+                        notDeletedHotel(h),
+                        keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
                 .fetchOne();
@@ -68,12 +96,29 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
         return new PageImpl<>(content, pageable, total != null ? total : 0);
     }
 
-    private BooleanExpression locationCond(QHotel h, String location) {
-        return location != null ? h.location.contains(location) : null;
+    private BooleanExpression notDeletedHotel(QHotel h) {
+        return h.deleted.isFalse().or(h.deleted.isNull());
+    }
+
+    private BooleanExpression keywordCond(QHotel h, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
+        }
+
+        String trimmedKeyword = keyword.trim();
+
+        return h.location.contains(trimmedKeyword)
+                .or(h.hotelName.contains(trimmedKeyword));
     }
 
     private BooleanExpression starCond(QHotel h, Integer star) {
         return star != null ? h.starRating.eq(star) : null;
+    }
+
+    private BooleanExpression hotelTypeCond(QHotel h, List<Long> typeIds) {
+        return (typeIds != null && !typeIds.isEmpty())
+                ? h.type.sid.in(typeIds)
+                : null;
     }
 
     private BooleanExpression existsAvailableRoom(
@@ -85,10 +130,10 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .from(r)
                 .where(
                         r.hotelId.eq(h),
+                        notDeletedRoom(r),
 
-                        capacityCond(r, req.getPeople()),
+                        capacityCond(r, req.getTotalPeople()),
                         priceCond(r, req.getMinPrice(), req.getMaxPrice()),
-                        roomTypeCond(r, req.getRoomTypeIds()),
 
                         noReservationConflict(r, res, rc,
                                 req.getCheckIn(), req.getCheckOut())
@@ -96,19 +141,23 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .exists();
     }
 
+    private BooleanExpression notDeletedRoom(QRoom r) {
+        return r.deleted.isFalse().or(r.deleted.isNull());
+    }
+
+    private BooleanExpression notDeletedPromotion(QPromotion p) {
+        return p.deleted.isFalse().or(p.deleted.isNull());
+    }
+
     private BooleanExpression capacityCond(QRoom r, Integer people) {
         return people != null ? r.maximumPeople.goe(people) : null;
     }
 
     private BooleanExpression priceCond(QRoom r, Integer min, Integer max) {
-        if (min == null || max == null) return null;
-        return r.roomPrice.between(min, max);
-    }
-
-    private BooleanExpression roomTypeCond(QRoom r, List<Long> roomTypeIds) {
-        return (roomTypeIds != null && !roomTypeIds.isEmpty())
-                ? r.roomTypeId.sid.in(roomTypeIds)
-                : null;
+        if (min != null && max != null) return r.roomPrice.between(min, max);
+        if (min != null) return r.roomPrice.goe(min);
+        if (max != null) return r.roomPrice.loe(max);
+        return null;
     }
 
     private BooleanExpression noReservationConflict(

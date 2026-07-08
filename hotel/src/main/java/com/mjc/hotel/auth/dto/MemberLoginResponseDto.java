@@ -18,4 +18,5 @@ public class MemberLoginResponseDto {
     private String email;
     private String name;
     private MemberRole role;
+    private Integer point;
 }

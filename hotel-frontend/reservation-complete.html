@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/reservation.css">
+    <title>예약 완료</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+    <div id="searchHeader"></div>
+
+    <main class="complete-page">
+        <section class="complete-hero">
+            <div class="stepper complete-stepper" aria-label="예약 단계">
+                <span class="done"><i class="fa-solid fa-check"></i> 호텔 선택</span>
+                <b></b>
+                <span class="done"><i class="fa-solid fa-check"></i> 객실 선택</span>
+                <b></b>
+                <span class="done"><i class="fa-solid fa-check"></i> 예약 정보 입력</span>
+                <b></b>
+                <span class="done"><i class="fa-solid fa-check"></i> 결제</span>
+                <b></b>
+                <span class="active"><i class="fa-solid fa-check"></i> 예약 완료</span>
+            </div>
+
+            <div class="success-box">
+                <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+                <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+                <h1>예약이 완료되었습니다!</h1>
+                <p id="completeMessage">예약 정보를 불러오는 중입니다.</p>
+                <span id="completeReservationNumber">예약번호 확인 중</span>
+            </div>
+        </section>
+
+        <div class="complete-layout">
+            <section class="card complete-detail">
+                <div class="section-heading">
+                    <h2>예약 상세 정보</h2>
+                    <button type="button" id="printBtn"><i class="fa-solid fa-print"></i> 인쇄</button>
+                </div>
+
+                <div class="complete-hotel">
+                    <div class="hotel-icon"><i class="fa-solid fa-hotel"></i></div>
+                    <div>
+                        <p id="completeStars">☆☆☆☆☆</p>
+                        <h3 id="completeHotel">호텔명</h3>
+                        <span id="completeLocation">위치 정보</span>
+                    </div>
+                </div>
+
+                <div class="complete-info-list">
+                    <div class="complete-info-item blue">
+                        <span class="info-icon"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="info-copy">
+                            <span>예약 번호</span>
+                            <strong id="detailReservationNumber">-</strong>
+                        </div>
+                        <button type="button" id="copyReservationBtn" aria-label="예약번호 복사">
+                            <i class="fa-regular fa-copy"></i>
+                            복사
+                        </button>
+                    </div>
+
+                    <div class="complete-info-item cyan">
+                        <span class="info-icon"><i class="fa-solid fa-right-to-bracket"></i></span>
+                        <div class="info-copy date-cell">
+                            <span>체크인</span>
+                            <strong id="detailCheckIn">-</strong>
+                            <small id="detailCheckInTime">오후 3:00 이후</small>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item violet">
+                        <span class="info-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+                        <div class="info-copy date-cell">
+                            <span>체크아웃</span>
+                            <strong id="detailCheckOut">-</strong>
+                            <small id="detailCheckOutTime">오전 11:00 이전</small>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item amber">
+                        <span class="info-icon"><i class="fa-solid fa-moon"></i></span>
+                        <div class="info-copy">
+                            <span>숙박</span>
+                            <strong id="detailNights">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item sky">
+                        <span class="info-icon"><i class="fa-solid fa-bed"></i></span>
+                        <div class="info-copy">
+                            <span>객실</span>
+                            <strong id="detailRoom">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item green">
+                        <span class="info-icon"><i class="fa-solid fa-users"></i></span>
+                        <div class="info-copy">
+                            <span>투숙객</span>
+                            <strong id="detailGuest">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item rose">
+                        <span class="info-icon"><i class="fa-regular fa-credit-card"></i></span>
+                        <div class="info-copy">
+                            <span>결제 수단</span>
+                            <strong id="detailPayment">신한카드 테스트 결제</strong>
+                        </div>
+                    </div>
+
+                    <div class="complete-info-item total">
+                        <span class="info-icon"><i class="fa-solid fa-wallet"></i></span>
+                        <div class="info-copy">
+                            <span>최종 결제 금액</span>
+                            <strong id="detailAmount">₩0</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="complete-side">
+                <article class="card qr-card">
+                    <h2>체크인 QR코드</h2>
+                    <div class="qr-wrap">
+                        <div class="qr-box qr-fallback" id="qrFallback">
+                            <span></span><span></span><span></span>
+                            <span></span><span></span><span></span>
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="qr-real" id="qrBox" aria-label="체크인 QR코드"></div>
+                    </div>
+                    <strong id="qrNumber">QR 확인 중</strong>
+                    <p>체크인 시 프런트에 제시해주세요</p>
+                </article>
+
+                <article class="card info-card">
+                    <h2>체크인 안내</h2>
+                    <div class="guide-stack">
+                        <div class="guide-item blue">
+                            <i class="fa-regular fa-clock"></i>
+                            <div>
+                                <span>체크인 / 체크아웃</span>
+                                <strong id="guideTime">오후 3:00 / 오전 11:00</strong>
+                            </div>
+                        </div>
+                        <div class="guide-item orange">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <div>
+                                <span>호텔 주소</span>
+                                <strong id="guideAddress">호텔 주소</strong>
+                            </div>
+                        </div>
+                        <div class="guide-item green">
+                            <i class="fa-solid fa-phone"></i>
+                            <div>
+                                <span>호텔 연락처</span>
+                                <strong>02-1234-5678</strong>
+                            </div>
+                        </div>
+                        <div class="guide-item purple">
+                            <i class="fa-solid fa-car"></i>
+                            <div>
+                                <span>주차 안내</span>
+                                <strong id="guideParking">주차 가능 여부 확인 중</strong>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </aside>
+        </div>
+
+        <section class="complete-actions">
+            <a href="my-reservations.html" class="primary-action"><i class="fa-regular fa-calendar-check"></i> 내 예약 확인하기</a>
+            <a href="index.html" class="primary-action"><i class="fa-solid fa-house"></i> 홈으로 돌아가기</a>
+            <a href="hotel-search.html" class="secondary-action"><i class="fa-solid fa-magnifying-glass"></i> 다른 호텔 둘러보기</a>
+        </section>
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/include.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/reservation-complete.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

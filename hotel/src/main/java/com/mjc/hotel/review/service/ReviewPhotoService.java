@@ -5,7 +5,6 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
-import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.Review;
 import com.mjc.hotel.review.entity.ReviewPhoto;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
@@ -88,7 +87,7 @@ public class ReviewPhotoService {
         }
         return result;
     }
-
+    @Transactional
     public ReviewPhotoResponse updateReviewPhoto(ReviewPhotoUpdateRequest request){
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
         if(review == null) {
@@ -99,7 +98,7 @@ public class ReviewPhotoService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }
         MultipartFile photo = request.getPhoto();
-        if(photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
+        if(photo == null || photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
             throw new IllegalArgumentException("Files Cannot Be Empty");
         }
         oldPhoto.markDeleted();
@@ -112,7 +111,8 @@ public class ReviewPhotoService {
         return response;
     }
 
-    public List<ReviewPhotoResponse> findAllByReviewId(Long reviewId){
+    @Transactional
+    public List<ReviewPhotoResponse> findAllByReviewSid(Long reviewId){
         List<ReviewPhoto> photos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId);
         if(photos.isEmpty()){
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photos Not Found");
@@ -123,6 +123,7 @@ public class ReviewPhotoService {
 
         return result;
     }
+    @Transactional
     public Page<ReviewPhotoResponse> search(Long reviewId, Pageable pageable) {
         Page<ReviewPhoto> reviewPhotos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId,pageable);
         if(reviewPhotos.isEmpty()){
@@ -135,9 +136,9 @@ public class ReviewPhotoService {
         Page<ReviewPhotoResponse> responses = new PageImpl<>(list, pageable, reviewPhotos.getTotalElements());
         return responses;
     }
-
-    public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
-        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
+    @Transactional
+    public ReviewPhotoResponse deleteReviewImage(Long sid) {
+        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(sid);
         if(reviewPhoto == null){
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }

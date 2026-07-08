@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.controller;
 
 import com.mjc.hotel.hotels.dto.*;
 import com.mjc.hotel.hotels.service.HotelService;
+import com.mjc.hotel.hotels.service.TourApiHotelImportService;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.dto.RoomResponseNoHotelDto;
@@ -27,6 +28,7 @@ public class HotelRestController {
 
     @Autowired
     private final HotelService hotelService;
+    private final TourApiHotelImportService tourApiHotelImportService;
 
     @Operation(
             summary = "호텔 데이터 생성",
@@ -65,10 +67,22 @@ public class HotelRestController {
     }
 
     @Operation(
+            summary = "호텔 단건 조회",
+            description = "호텔 ID로 호텔 데이터를 가져옵니다."
+    )
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> findById(@PathVariable Long id) {
+        HotelResponseDto search = hotelService.findById(id);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
+        );
+    }
+
+    @Operation(
             summary = "호텔 데이터 검색",
             description = "호텔 데이터를 필터에 맞추어 검색합니다."
     )
-    @GetMapping
+    @PostMapping("/search")
     public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
                                                            @PageableDefault(size = 5) Pageable pageable) {
         Page<HotelResponseDto> search = hotelService.search(dto, pageable);
@@ -135,6 +149,22 @@ public class HotelRestController {
         List<HotelPopularResponseDto> search = hotelService.findPopularHotels();
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotels search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "공공 데이터 활용 호텔 데이터 가져오기",
+            description = "한국관광공사 TourAPI를 이용해 호텔 데이터를 가져와 호텔/사진/기본 객실로 저장합니다."
+    )
+    @PostMapping("/import/tourapi")
+    public ResponseEntity<ApiResponse<TourApiImportResponseDto>> importTourApiHotels(
+            @RequestParam(defaultValue = "서울 호텔") String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        TourApiImportResponseDto result = tourApiHotelImportService.importHotels(keyword, page, size);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "tour api hotels import success", result)
         );
     }
 }

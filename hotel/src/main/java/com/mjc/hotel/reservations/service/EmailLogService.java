@@ -21,7 +21,7 @@ public class EmailLogService {
 
     private final EmailLogRepository emailLogRepository;
     private final ReservationRepository reservationRepository;
-//    private final JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
     public EmailLogResponseDto sendEmailAndLog(EmailLogRequestDto request) {
         Reservation reservation = reservationRepository.findById(request.getSid())
@@ -70,7 +70,7 @@ public class EmailLogService {
             message.setTo(recipientEmail);
             message.setSubject(buildSubject(emailType, reservation));
             message.setText(buildBody(emailType, reservation));
-//            mailSender.send(message);
+            mailSender.send(message);
             return EmailStatus.SEND;
         } catch (Exception e) {
             return EmailStatus.FAILED;

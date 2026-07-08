@@ -93,6 +93,7 @@ public class MemberDtoMapper {
                 .email(member.getEmail())
                 .status(member.getStatus())
                 .role(member.getRole())
+                .point(member.getPoint())
                 .emailVerified(member.getEmailVerified())
                 .phoneVerified(member.getPhoneVerified())
                 .deleted(Boolean.TRUE.equals(member.getDeleted()))

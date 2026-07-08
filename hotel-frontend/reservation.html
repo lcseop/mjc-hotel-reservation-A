@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/reservation.css">
+    <title>객실 예약</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+    <div id="searchHeader"></div>
+
+    <main class="reservation-page">
+        <section class="reserve-hero">
+            <nav class="breadcrumb">
+                <a href="index.html">홈</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <a href="hotel-search.html">호텔</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span>객실 예약</span>
+            </nav>
+
+        </section>
+
+        <div class="reserve-layout">
+            <section class="reserve-main">
+                <article class="card selected-room">
+                    <div class="section-heading">
+                        <h2>선택한 객실</h2>
+                        <a href="#" id="changeRoomBtn"><i class="fa-solid fa-rotate-left"></i> 객실 변경</a>
+                    </div>
+
+                    <div class="room-box">
+                        <img id="roomImage" src="https://gunsancci.korcham.net/images/no-image01.gif" alt="선택 객실 이미지">
+                        <div>
+                            <div class="pill-row" id="roomPills"></div>
+                            <h1 id="roomName">객실 정보를 불러오는 중입니다</h1>
+                            <p id="roomSpecs">객실 상세 정보 확인 중</p>
+                            <div class="stay-dates">
+                                <div>
+                                    <small>체크인</small>
+                                    <strong id="checkInText">-</strong>
+                                    <span>오후 3:00 이후</span>
+                                </div>
+                                <em id="nightText">1박</em>
+                                <div>
+                                    <small>체크아웃</small>
+                                    <strong id="checkOutText">-</strong>
+                                    <span>오전 11:00 이전</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="section-heading">
+                        <h2>투숙객 정보</h2>
+                    </div>
+
+                    <form id="reservationForm" class="guest-form">
+                        <div class="form-grid two">
+                            <label>
+                                <span>투숙객 이름 *</span>
+                                <input type="text" id="guestName" maxlength="50" required>
+                            </label>
+
+                            <label>
+                                <span>연락처 *</span>
+                                <input type="tel" id="guestPhone" placeholder="010-1234-5678" required>
+                            </label>
+                        </div>
+
+                        <div class="form-grid two">
+                            <label>
+                                <span>이메일 *</span>
+                                <input type="email" id="guestEmail" required>
+                            </label>
+
+                            <label>
+                                <span>국적</span>
+                                <select id="nationality">
+                                    <option value="대한민국">대한민국</option>
+                                    <option value="미국">미국</option>
+                                    <option value="일본">일본</option>
+                                    <option value="중국">중국</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <label>
+                            <span>특별 요청 사항</span>
+                            <textarea id="specialRequests" maxlength="200" placeholder="요청 사항을 입력해주세요. 요청이 보장되지는 않을 수 있습니다."></textarea>
+                            <small><b id="requestCount">0</b> / 200자</small>
+                        </label>
+                    </form>
+
+                    <div class="notice">
+                        <i class="fa-solid fa-circle-info"></i>
+                        투숙객 정보는 체크인 시 신분증 확인에 사용됩니다.
+                    </div>
+                </article>
+
+                <article class="card guide-card">
+                    <div class="section-heading">
+                        <h2>체크인 안내</h2>
+                    </div>
+
+                    <div class="guide-grid">
+                        <div><i class="fa-regular fa-clock"></i><span>체크인</span><strong>오후 3:00 이후</strong></div>
+                        <div><i class="fa-solid fa-right-from-bracket"></i><span>체크아웃</span><strong>오전 11:00 이전</strong></div>
+                        <div><i class="fa-solid fa-car"></i><span>주차</span><strong id="parkingText">확인 필요</strong></div>
+                        <div><i class="fa-solid fa-ban-smoking"></i><span>흡연</span><strong id="smokeText">확인 필요</strong></div>
+                        <div><i class="fa-regular fa-id-card"></i><span>신분증</span><strong id="idCardText">체크인 시 확인</strong></div>
+                    </div>
+                </article>
+            </section>
+
+            <aside class="reserve-side">
+                <article class="card summary-card">
+                    <h2>예약 요약</h2>
+
+                    <div class="hotel-mini">
+                        <div class="hotel-icon"><i class="fa-solid fa-hotel"></i></div>
+                        <div>
+                            <h3 id="summaryHotel">호텔명</h3>
+                            <p id="summaryLocation">위치 정보</p>
+                        </div>
+                    </div>
+
+                    <dl class="summary-list">
+                        <div><dt>체크인</dt><dd id="summaryCheckIn">-</dd></div>
+                        <div><dt>체크아웃</dt><dd id="summaryCheckOut">-</dd></div>
+                        <div><dt>숙박</dt><dd id="summaryNights">-</dd></div>
+                        <div><dt>인원</dt><dd id="summaryGuests">-</dd></div>
+                    </dl>
+
+                    <div class="room-summary">
+                        <strong id="summaryRoom">객실명</strong>
+                        <span id="summaryRoomTags">객실 혜택 확인 중</span>
+                    </div>
+
+                    <div class="price-list">
+                        <div><span>객실 요금</span><strong id="originalAmount">₩0</strong></div>
+                        <div><span>카드 수수료</span><strong>무료</strong></div>
+                        <div><span>세금 및 봉사료</span><strong id="taxAmount">₩0</strong></div>
+                    </div>
+
+                    <div class="total-price">
+                        <span>최종 결제금액</span>
+                        <strong id="totalAmount">₩0</strong>
+                    </div>
+
+                    <button type="button" id="payBtn" class="pay-btn">
+                        <i class="fa-regular fa-credit-card"></i>
+                        결제하기
+                    </button>
+
+                    <p class="safe-text"><i class="fa-solid fa-shield-heart"></i> 안전한 테스트 결제입니다</p>
+                </article>
+            </aside>
+        </div>
+    </main>
+
+    <div id="paymentOverlay" class="payment-overlay" aria-hidden="true">
+        <div class="payment-modal">
+            <div class="spinner"></div>
+            <h2>결제를 승인하고 있습니다</h2>
+            <p>카드사 승인 정보를 확인하는 중입니다.</p>
+        </div>
+    </div>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/reservation.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

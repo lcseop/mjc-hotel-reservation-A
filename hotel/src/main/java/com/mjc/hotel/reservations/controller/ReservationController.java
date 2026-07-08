@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/reservation")
@@ -81,6 +82,14 @@ public class ReservationController {
     public ResponseEntity<ReservationResponseDto> checkIn(
             @PathVariable Long reservationId) {
         ReservationResponseDto response = reservationService.checkIn(reservationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/check-in/qr")
+    @Operation(summary = "QR 체크인", description = "체크인 QR 값으로 예약 체크인을 처리합니다")
+    public ResponseEntity<ReservationResponseDto> checkInByQr(
+            @RequestBody Map<String, String> request) {
+        ReservationResponseDto response = reservationService.checkInByQr(request.get("qrValue"));
         return ResponseEntity.ok(response);
     }
 

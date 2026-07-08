@@ -4,11 +4,14 @@ import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
+import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
+import com.mjc.hotel.reservations.service.ReservationService;
 import com.mjc.hotel.review.entity.*;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.*;
@@ -16,16 +19,16 @@ import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
+import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.repository.RoomRepository;
+import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +54,11 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final PointHistoryRepository pointHistoryRepository;
-    private final RoomRepository roomRepository;
 
+    private final RoomService roomService;
+    private final ReservationService reservationService;
+
+    @Transactional
     public ReviewResponse insertReview(ReviewCreateRequest request) {
         Hotel hotel = hotelRepository.findById(request.getHotelId())
                 .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
@@ -61,8 +67,22 @@ public class ReviewService {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Reservation Not Found"));
 
-        //첫 리뷰 등록 여부 판단용
-        Boolean duplicate = reviewRepository.existsByReservationSid(reservation.getSid());
+        if (reservation.getReservationStatus() != ReservationStatus.CHECKED_OUT) {
+            throw new IllegalStateException("CHECKED_OUT 예약만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (!reservation.getMember().getSid().equals(member.getSid())) {
+            throw new IllegalStateException("본인의 예약에만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (!reservation.getRoom().getHotelId().getSid().equals(hotel.getSid())) {
+            throw new IllegalStateException("예약한 호텔에만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (reviewRepository.existsByReservationSid(reservation.getSid())) {
+            throw new IllegalStateException("이미 리뷰를 작성한 예약입니다.");
+        }
+
         //request로 빌더 패턴 사용
         Review review = Review.builder()
                 .hotel(hotel)
@@ -81,27 +101,23 @@ public class ReviewService {
         List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), save);
         List<ReviewTag> tags = this.insertReviewTags(request.getTags(), save);
 
-        //첫 리뷰 등록일 때
-        if(!duplicate) {
-            int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
-            member.setPoint(member.getPoint() + accumulationPoint);
-            Member updatedMember = memberRepository.save(member);
+        int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
+        member.setPoint(member.getPoint() + accumulationPoint);
+        Member updatedMember = memberRepository.save(member);
 
-            PointHistory pointHistory = PointHistory.builder()
-                    .reservation(reservation)
-                    .member(updatedMember)
-                    .amount(accumulationPoint)
-                    .pointStatus(PointStatus.ACCUMULATION)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            pointHistoryRepository.save(pointHistory);
-        }
+        PointHistory pointHistory = PointHistory.builder()
+                .reservation(reservation)
+                .member(updatedMember)
+                .amount(accumulationPoint)
+                .pointStatus(PointStatus.ACCUMULATION)
+                .createdAt(LocalDateTime.now())
+                .build();
+        pointHistoryRepository.save(pointHistory);
 
         ReviewResponse result = this.toReviewResponse(save,categories, tags);
 
         return result;
     }
-
     @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest request) {
         Review find = reviewRepository.findBySidAndDeletedFalse(request.getSid());
@@ -121,6 +137,7 @@ public class ReviewService {
                 .build();
         //생성시간 그대로 넘겨주기
         review.setCreatedAt(find.getCreatedAt());
+        review.setUpdatedAt(find.getUpdatedAt());
         review.prePersist();
 
         Review updateAfter = reviewRepository.save(review);
@@ -138,7 +155,7 @@ public class ReviewService {
 
         return result;
     }
-
+    @Transactional
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(review == null){
@@ -151,7 +168,7 @@ public class ReviewService {
 
         return result;
     }
-
+    @Transactional
     public ReviewResponse deleteReviewId(Long sid) {
         Review find = reviewRepository.findBySidAndDeletedFalse(sid);
         if(find == null){
@@ -209,6 +226,8 @@ public class ReviewService {
                                 .map(reviewTag -> ReviewTagResponse.builder()
                                         .reviewId(reviewTag.getReview().getSid())
                                         .reviewTagId(reviewTag.getReviewTagMaster().getSid())
+                                        .reviewTagName(reviewTag.getReviewTagMaster().getReviewTagName())
+                                        .reviewTagCategory(reviewTag.getReviewTagMaster().getReviewTagCategory())
                                         .build()
                                 )
                                 .toList()
@@ -269,6 +288,7 @@ public class ReviewService {
      @param pageable 정렬 조건
      *
      **/
+    @Transactional
     public Page<ReviewResponse> reviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -280,6 +300,7 @@ public class ReviewService {
      @param pageable 정렬 조건
     *
      **/
+    @Transactional
     public Page<ReviewResponse> positiveReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndRatingGreaterThanEqualAndDeletedFalse(hotelId, 4, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -291,6 +312,7 @@ public class ReviewService {
      @param pageable 정렬 조건
      *
      **/
+    @Transactional
     public Page<ReviewResponse> existsPhotoReviewsInHotel(Long hotelId, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByHotelSidAndExistsPhotoAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
@@ -308,6 +330,7 @@ public class ReviewService {
         return new PageImpl<>(results, pageable, reviews.getTotalElements());
     }
 
+//    @Transactional
 //    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request) {
 //        Room room = roomRepository.findById(request.getRoomId())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Exist"));

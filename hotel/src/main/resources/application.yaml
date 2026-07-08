@@ -8,6 +8,9 @@ spring:
     username: root
     password: 1234
     driver-class-name: org.mariadb.jdbc.Driver
+  mail:
+    host: localhost
+    port: 25
   jpa:
     hibernate:
       ddl-auto: update
@@ -37,3 +40,9 @@ springdoc:
 
 review:
   images: D:/review/images/ #리뷰 사진 저장할 임시 경로
+
+tour-api:
+  service-key: b150552048fb26688f074a89f2c3993e1014fd98825c18dd6cb31f27c410fbda
+  base-url: https://apis.data.go.kr/B551011/KorService2
+  mobile-os: ETC
+  mobile-app: StayNow

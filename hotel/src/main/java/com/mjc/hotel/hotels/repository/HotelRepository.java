@@ -13,6 +13,8 @@ import java.util.List;
 public interface HotelRepository extends JpaRepository<Hotel, Long>, HotelRepositorySub {
     boolean existsByTypeSid(Long sid);
 
+    boolean existsByHotelNameAndLocation(String hotelName, String location);
+
     @Query("SELECT h FROM hotel h ORDER BY RAND() LIMIT 4")
     List<Hotel> findTop4Popular();
 }
