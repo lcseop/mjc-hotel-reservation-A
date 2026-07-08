@@ -1,4 +1,5 @@
 const HOTEL_SEARCH_API = "http://localhost:33000/api/hotel/search";
+const HOTEL_SEARCH_COOKIE = "staynowSearchRequest";
 const PAGE_SIZE = 5;
 let currentHotels = [];
 
@@ -108,7 +109,7 @@ function requestHotels(page) {
 
         success: function (result) {
 
-            sessionStorage.setItem("hotelSearchRequest", JSON.stringify(request));
+            saveStoredRequest(request);
             drawResult(result);
 
         },
@@ -431,12 +432,45 @@ function showLoading(show) {
 function getStoredRequest() {
 
     const stored = sessionStorage.getItem("hotelSearchRequest");
+    const cookieRequest = getCookieRequest();
 
-    if (!stored) {
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (error) {
+            return cookieRequest;
+        }
+    }
+
+    return cookieRequest;
+
+}
+
+function saveStoredRequest(request) {
+
+    const value = JSON.stringify(request);
+    sessionStorage.setItem("hotelSearchRequest", value);
+    document.cookie = HOTEL_SEARCH_COOKIE + "=" + encodeURIComponent(value) + "; path=/; max-age=604800";
+
+}
+
+function getCookieRequest() {
+
+    const row = document.cookie
+        .split("; ")
+        .find(function (item) {
+            return item.indexOf(HOTEL_SEARCH_COOKIE + "=") === 0;
+        });
+
+    if (!row) {
         return null;
     }
 
-    return JSON.parse(stored);
+    try {
+        return JSON.parse(decodeURIComponent(row.split("=")[1]));
+    } catch (error) {
+        return null;
+    }
 
 }
 

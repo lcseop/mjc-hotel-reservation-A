@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/mypage.css">
+    <title>예약내역</title>
+</head>
+<body>
+    <navbar><div id="header"></div></navbar>
+    <div id="searchHeader"></div>
+
+    <main class="mypage-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="totalReservationCount">0</strong><span>총 예약</span></div>
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html" class="active"><i class="fa-regular fa-calendar-check"></i> 예약내역 <b id="navReservationCount">0</b></a>
+                <a href="#"><i class="fa-regular fa-heart"></i> 위시리스트</a>
+                <a href="#"><i class="fa-regular fa-star"></i> 나의 리뷰</a>
+                <a href="#"><i class="fa-solid fa-coins"></i> 포인트</a>
+                <a href="#"><i class="fa-solid fa-ticket"></i> 쿠폰함</a>
+                <p>계정 설정</p>
+                <a href="account-settings.html"><i class="fa-regular fa-user"></i> 프로필 수정</a>
+                <a href="account-settings.html"><i class="fa-solid fa-lock"></i> 보안 설정</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>예약내역</b></p>
+                    <h1>예약내역</h1>
+                </div>
+                <select id="sortSelect" aria-label="예약 정렬">
+                    <option value="latest">최신순</option>
+                    <option value="checkInAsc">체크인 빠른순</option>
+                    <option value="amountDesc">결제금액 높은순</option>
+                </select>
+            </div>
+
+            <div class="status-tabs">
+                <button type="button" class="active" data-filter="ALL">전체 <span id="countAll">0</span></button>
+                <button type="button" data-filter="UPCOMING"><i></i> 예정된 여행 <span id="countUpcoming">0</span></button>
+                <button type="button" data-filter="COMPLETED"><i></i> 완료된 여행 <span id="countCompleted">0</span></button>
+                <button type="button" data-filter="CANCELLED"><i></i> 취소된 여행 <span id="countCancelled">0</span></button>
+            </div>
+
+            <div id="reservationList" class="reservation-list">
+                <div class="empty-state">예약 내역을 불러오는 중입니다.</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="reviewModal" class="modal-backdrop" aria-hidden="true">
+        <form class="review-modal">
+            <button type="button" class="modal-close" id="reviewCloseBtn" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+            <h2>리뷰 작성</h2>
+            <p id="reviewHotelName">호텔 이용은 어떠셨나요?</p>
+            <div class="rating-picker" id="ratingPicker">
+                <button type="button" data-rating="1">★</button>
+                <button type="button" data-rating="2">★</button>
+                <button type="button" data-rating="3">★</button>
+                <button type="button" data-rating="4">★</button>
+                <button type="button" data-rating="5">★</button>
+            </div>
+            <textarea id="reviewContent" maxlength="500" placeholder="숙박 경험을 간단히 남겨주세요."></textarea>
+            <button type="submit" class="primary-submit">리뷰 등록</button>
+        </form>
+    </div>
+
+    <footer><div id="footer"></div></footer>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/my-reservations.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

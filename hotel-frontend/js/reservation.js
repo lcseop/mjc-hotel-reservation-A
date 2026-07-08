@@ -66,8 +66,8 @@ function renderReservationPage() {
     $("#roomName, #summaryRoom").text(room.roomName || "객실명 없음");
     $("#roomSpecs").text(makeRoomSpec(room));
     $("#parkingText").text(formatPolicy(room.parking));
-    $("#smokeText").text(formatPolicy(room.smoke));
-    $("#idCardText").text(formatPolicy(room.idCard) || "체크인 시 확인");
+    $("#smokeText").text(formatSmokePolicy(room.smoke));
+    $("#idCardText").text(formatIdCardPolicy(room.idCard));
 
     $("#checkInText, #summaryCheckIn").text(formatDateTime(stay.checkIn));
     $("#checkOutText, #summaryCheckOut").text(formatDateTime(stay.checkOut));
@@ -295,6 +295,38 @@ function formatPolicy(value) {
     }
 
     return value || "확인 필요";
+}
+
+function formatSmokePolicy(value) {
+    const code = String(value || "").toUpperCase();
+
+    if (code === "LIMITED") {
+        return "지정된 곳";
+    }
+
+    if (code === "BAN") {
+        return "금연";
+    }
+    
+    if (code === "POSSIBLE") {
+        return "가능";
+    }
+
+    return formatPolicy(value);
+}
+
+function formatIdCardPolicy(value) {
+    const code = String(value || "").toUpperCase();
+
+    if (code === "ESSENTIAL") {
+        return "필수";
+    }
+
+    if (code === "OPTICAL") {
+        return "필수 아님";
+    }
+
+    return value || "체크인 시 확인";
 }
 
 function formatDateTime(value) {

@@ -186,6 +186,7 @@
 }
 
 .login-link,
+.auth-menu-link,
 .logout-btn {
     width: 100%;
     min-height: 38px;
@@ -197,6 +198,24 @@
     font-weight: 800;
     text-decoration: none;
     cursor: pointer;
+}
+
+.auth-menu-link {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding: 0 12px;
+    background: #f8fafc;
+    color: #334155;
+}
+
+.admin-only {
+    display: none;
+}
+
+.auth-menu-link:hover {
+    background: #eff6ff;
+    color: #2563eb;
 }
 
 .login-link {
@@ -211,8 +230,13 @@
 }
 
 .user-dropdown.is-logged-in .login-link,
-.user-dropdown:not(.is-logged-in) .logout-btn {
+.user-dropdown:not(.is-logged-in) .logout-btn,
+.user-dropdown:not(.is-logged-in) .auth-only {
     display: none;
+}
+
+.user-dropdown.is-admin .admin-only {
+    display: flex;
 }
 
 .hamburger {

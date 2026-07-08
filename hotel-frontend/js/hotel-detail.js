@@ -1,9 +1,14 @@
 const API_BASE = "http://localhost:33000/api";
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
+const KAKAO_MAP_APP_KEY = "4b9798cdfdfbd7e08b433eacafb45cfc";
 
 let hotelImages = [];
 let currentHotel = null;
 let currentRooms = [];
+let kakaoMapPromise = null;
+let detailMap = null;
+let detailMapOverlay = null;
+let stationMarker = null;
 
 $(function () {
     const hotelId = new URLSearchParams(location.search).get("id");
@@ -61,6 +66,10 @@ function bindEvent() {
         sessionStorage.setItem("selectedReservationRoom", JSON.stringify(selected));
         location.href = "reservation.html";
     });
+
+    $(document).on("click", ".station-card", function () {
+        focusStation($(this).data("lat"), $(this).data("lng"), $(this).data("name"));
+    });
 }
 
 function readJson(key) {
@@ -99,10 +108,200 @@ function drawHotel(hotel) {
     $("#hotelLocation, #mapAddress").text(hotel.location || "위치 정보 없음");
     $("#hotelDescription").text(description);
     $("#hotelStars").text(drawStars(hotel.starRating) + " " + (hotel.starRating || 0) + "성급");
+    drawLocationAndTransport(hotel);
 
     if (maxDiscountRate > 0) {
         $("#detailSaleBadge").addClass("show").text("SALE " + maxDiscountRate + "%");
     }
+}
+
+function drawLocationAndTransport(hotel) {
+    $("#mapAddress").text(hotel.location || "위치 정보 없음");
+
+    if (!KAKAO_MAP_APP_KEY) {
+        drawStationFallback("카카오맵 JavaScript 앱 키를 설정하면 지도와 주변 역 정보가 표시됩니다.");
+        return;
+    }
+
+    loadKakaoMapSdk()
+        .then(function () {
+            resolveHotelLatLng(hotel, function (latLng) {
+                if (!latLng) {
+                    drawStationFallback("호텔 좌표를 확인하지 못했습니다.");
+                    return;
+                }
+
+                drawKakaoMap(latLng, hotel);
+                searchNearbyStations(latLng);
+            });
+        })
+        .catch(function (error) {
+            console.error("Kakao Map load failed:", error);
+            drawStationFallback("카카오맵을 불러오지 못했습니다.");
+        });
+}
+
+function loadKakaoMapSdk() {
+    if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+        return Promise.resolve();
+    }
+
+    if (kakaoMapPromise) {
+        return kakaoMapPromise;
+    }
+
+    kakaoMapPromise = new Promise(function (resolve, reject) {
+        const script = document.createElement("script");
+        script.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" +
+            encodeURIComponent(KAKAO_MAP_APP_KEY) +
+            "&libraries=services&autoload=false";
+        script.onload = function () {
+            if (!window.kakao || !kakao.maps) {
+                reject(new Error("Kakao Maps SDK was not initialized."));
+                return;
+            }
+
+            kakao.maps.load(resolve);
+        };
+        script.onerror = function () {
+            reject(new Error("Kakao Maps SDK script failed: " + script.src));
+        };
+        document.head.appendChild(script);
+    });
+
+    return kakaoMapPromise;
+}
+
+function resolveHotelLatLng(hotel, callback) {
+    const latitude = Number(hotel.latitude);
+    const longitude = Number(hotel.longitude);
+
+    if (!Number.isNaN(latitude) && !Number.isNaN(longitude) && latitude !== 0 && longitude !== 0) {
+        callback(new kakao.maps.LatLng(latitude, longitude));
+        return;
+    }
+
+    if (!hotel.location) {
+        callback(null);
+        return;
+    }
+
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.addressSearch(hotel.location, function (result, status) {
+        if (status !== kakao.maps.services.Status.OK || result.length === 0) {
+            callback(null);
+            return;
+        }
+
+        callback(new kakao.maps.LatLng(Number(result[0].y), Number(result[0].x)));
+    });
+}
+
+function drawKakaoMap(latLng, hotel) {
+    const mapContainer = document.getElementById("kakaoMap");
+    mapContainer.innerHTML = "";
+
+    const map = new kakao.maps.Map(mapContainer, {
+        center: latLng,
+        level: 4
+    });
+    detailMap = map;
+
+    const marker = new kakao.maps.Marker({
+        map: map,
+        position: latLng
+    });
+
+    detailMapOverlay = createMapOverlay(hotel.hotelName || "호텔 위치", latLng);
+    detailMapOverlay.setMap(map);
+
+    setTimeout(function () {
+        kakao.maps.event.trigger(map, "resize");
+        map.setCenter(latLng);
+    }, 100);
+}
+
+function searchNearbyStations(latLng) {
+    const places = new kakao.maps.services.Places();
+
+    places.categorySearch("SW8", function (result, status) {
+        if (status !== kakao.maps.services.Status.OK || result.length === 0) {
+            drawStationFallback("반경 2km 안의 지하철역 정보를 찾지 못했습니다.");
+            return;
+        }
+
+        drawStations(result.slice(0, 4));
+    }, {
+        location: latLng,
+        radius: 2000,
+        sort: kakao.maps.services.SortBy.DISTANCE
+    });
+}
+
+function drawStations(stations) {
+    const stationList = $("#stationList");
+
+    stationList.empty();
+
+    stations.forEach(function (station) {
+        const distance = Number(station.distance || 0);
+        const walkMinutes = distance > 0 ? Math.max(1, Math.ceil(distance / 67)) : "-";
+        const distanceText = distance > 0 ? formatDistance(distance) : "거리 확인 필요";
+
+        stationList.append(`
+            <button type="button" class="station-card" data-lat="${station.y}" data-lng="${station.x}" data-name="${escapeHtml(station.place_name || "지하철역")}">
+                <i class="fa-solid fa-train-subway"></i>
+                <div>
+                    <strong>${escapeHtml(station.place_name || "지하철역")}</strong>
+                    <span>${distanceText}</span>
+                </div>
+                <small>도보 ${walkMinutes}분</small>
+            </button>
+        `);
+    });
+}
+
+function focusStation(lat, lng, name) {
+    if (!detailMap || !window.kakao || lat == null || lng == null) {
+        return;
+    }
+
+    const stationLatLng = new kakao.maps.LatLng(Number(lat), Number(lng));
+
+    if (stationMarker) {
+        stationMarker.setMap(null);
+    }
+
+    stationMarker = new kakao.maps.Marker({
+        map: detailMap,
+        position: stationLatLng
+    });
+
+    if (detailMapOverlay) {
+        detailMapOverlay.setMap(null);
+    }
+
+    detailMapOverlay = createMapOverlay(name || "지하철역", stationLatLng);
+    detailMapOverlay.setMap(detailMap);
+    detailMap.panTo(stationLatLng);
+    detailMap.setLevel(4);
+
+    $(".station-card").removeClass("active");
+    $(".station-card").filter(function () {
+        return String($(this).data("lat")) === String(lat) && String($(this).data("lng")) === String(lng);
+    }).addClass("active");
+}
+
+function createMapOverlay(title, position) {
+    return new kakao.maps.CustomOverlay({
+        position: position,
+        yAnchor: 1.95,
+        content: '<div class="map-custom-overlay">' + escapeHtml(title) + "</div>"
+    });
+}
+
+function drawStationFallback(message) {
+    $("#stationList").html('<div class="station-empty">' + escapeHtml(message) + "</div>");
 }
 
 function loadHotelImages(hotelId) {
@@ -295,6 +494,7 @@ function drawReviews(reviews, totalElements) {
     $("#reviewCount").text(totalElements.toLocaleString());
     $("#reviewTotalText").text(totalElements.toLocaleString() + "개 리뷰");
     $("#reviewScore").text(average.toFixed(1));
+    updateScoreMetrics(average, totalElements);
 
     if (reviews.length === 0) {
         list.append('<div class="empty">아직 등록된 리뷰가 없습니다.</div>');
@@ -324,6 +524,19 @@ function getAverageRating(reviews) {
     }, 0);
 
     return sum / reviews.length;
+}
+
+function updateScoreMetrics(score, totalElements) {
+    const safeScore = totalElements > 0 ? Math.max(0, Math.min(5, Number(score) || 0)) : 0;
+    const percent = (safeScore / 5) * 100;
+
+    $(".score-metrics b").each(function (index) {
+        const colors = ["#10b981", "#0ea5e9", "#8b5cf6", "#f59e0b"];
+        $(this).css({
+            "--score-percent": percent + "%",
+            "--score-color": colors[index] || "#10b981"
+        });
+    });
 }
 
 function drawStars(count) {
@@ -363,6 +576,14 @@ function formatValue(value) {
 
 function formatDate(dateTime) {
     return dateTime ? dateTime.substring(0, 10).replaceAll("-", ".") : "";
+}
+
+function formatDistance(meters) {
+    if (meters >= 1000) {
+        return (meters / 1000).toFixed(1) + "km";
+    }
+
+    return meters.toLocaleString() + "m";
 }
 
 function escapeHtml(value) {
