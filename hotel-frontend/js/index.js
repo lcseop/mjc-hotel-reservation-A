@@ -1,3 +1,5 @@
+const INDEX_SEARCH_COOKIE = "staynowSearchRequest";
+
 $(function () {
 
     init();
@@ -252,7 +254,7 @@ function searchHotels(request) {
 
         success: function (result) {
 
-            sessionStorage.setItem("hotelSearchRequest", JSON.stringify(request));
+            saveHotelSearchRequest(request);
             sessionStorage.setItem("hotelSearchResult", JSON.stringify(result));
             location.href = "hotel-search.html";
 
@@ -305,7 +307,7 @@ function goHotelSearch(request) {
         data: JSON.stringify(request),
 
         success: function (result) {
-            sessionStorage.setItem("hotelSearchRequest", JSON.stringify(request));
+            saveHotelSearchRequest(request);
             sessionStorage.setItem("hotelSearchResult", JSON.stringify(result));
             location.href = "hotel-search.html";
         },
@@ -314,6 +316,14 @@ function goHotelSearch(request) {
             alert("호텔 검색 중 오류가 발생했습니다.");
         }
     });
+
+}
+
+function saveHotelSearchRequest(request) {
+
+    const value = JSON.stringify(request);
+    sessionStorage.setItem("hotelSearchRequest", value);
+    document.cookie = INDEX_SEARCH_COOKIE + "=" + encodeURIComponent(value) + "; path=/; max-age=604800";
 
 }
 

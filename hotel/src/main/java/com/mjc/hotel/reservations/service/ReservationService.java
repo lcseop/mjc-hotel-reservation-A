@@ -212,7 +212,7 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponseDto checkIn(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
         if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED) {
@@ -221,6 +221,32 @@ public class ReservationService {
 
         reservation.setReservationStatus(ReservationStatus.CHECKED_IN);
         return convertToResponseDto(reservation);
+    }
+
+    @Transactional
+    public ReservationResponseDto checkInByQr(String qrValue) {
+        if (qrValue == null || qrValue.isBlank()) {
+            throw new IllegalArgumentException("QR 값은 필수입니다.");
+        }
+
+        String value = qrValue.trim();
+        Reservation reservation = reservationRepository.findByCheckInQr(value)
+                .or(() -> reservationRepository.findByReservationNumber(extractReservationNumber(value)))
+                .orElseThrow(() -> new IllegalArgumentException("QR에 해당하는 예약을 찾을 수 없습니다."));
+
+        return checkIn(reservation.getSid());
+    }
+
+    private String extractReservationNumber(String qrValue) {
+        if (qrValue != null && qrValue.startsWith("QR-")) {
+            int lastDash = qrValue.lastIndexOf("-");
+
+            if (lastDash > 3) {
+                return qrValue.substring(3, lastDash);
+            }
+        }
+
+        return qrValue;
     }
 
     @Transactional
@@ -316,13 +342,24 @@ public class ReservationService {
     }
 
     private ReservationResponseDto convertToResponseDto(Reservation reservation) {
+        Room room = reservation.getRoom();
+        var hotel = room.getHotelId();
+
         return ReservationResponseDto.builder()
                 .sid(reservation.getSid())
                 .reservationNumber(reservation.getReservationNumber())
                 .memberId(reservation.getMember().getSid())
                 .memberName(reservation.getMember().getName())
-                .roomId(reservation.getRoom().getSid())
-                .roomNumber(reservation.getRoom().getRoomNumber())
+                .roomId(room.getSid())
+                .roomNumber(room.getRoomNumber())
+                .roomName(room.getRoomName())
+                .roomPrice(room.getRoomPrice())
+                .roomTypeTitle(room.getRoomTypeId() != null ? room.getRoomTypeId().getTitle() : null)
+                .roomParking(room.getParking())
+                .hotelId(hotel.getSid())
+                .hotelName(hotel.getHotelName())
+                .hotelLocation(hotel.getLocation())
+                .hotelStarRating(hotel.getStarRating())
                 .guestName(reservation.getGuestName())
                 .checkInDate(reservation.getCheckInDate())
                 .checkOutDate(reservation.getCheckOutDate())
