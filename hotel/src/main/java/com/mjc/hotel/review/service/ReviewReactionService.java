@@ -35,6 +35,16 @@ public class ReviewReactionService {
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Member Not Found"));
 
+        ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
+        ReviewReaction existing = reviewReactionRepository.findById(reviewReactionId).orElse(null);
+
+        if (existing != null) {
+            if (existing.getReactionType() == request.getReactionType()) {
+                return this.toReviewReactionResponse(existing);
+            }
+            return this.updateReviewReaction(request);
+        }
+
         if(request.getReactionType() == ReactionType.GOOD){
             review.increaseLike();
             reviewRepository.save(review);

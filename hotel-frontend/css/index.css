@@ -446,6 +446,11 @@ main{
     font-size:13px;
 }
 
+.popular-stars{
+    color:#f59e0b;
+    font-weight:900;
+}
+
 /* ===== Flash Deal ===== */
 .flash{
     display:none;

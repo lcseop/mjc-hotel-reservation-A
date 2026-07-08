@@ -131,6 +131,7 @@ function saveLoginData(loginData) {
         email: loginData.email,
         name: loginData.name,
         role: loginData.role,
+        point: Number(loginData.point || 0),
         loggedInAt: new Date().toISOString()
     }));
 

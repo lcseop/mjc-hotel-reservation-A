@@ -4,6 +4,9 @@ let reservations = [];
 let activeFilter = "ALL";
 let currentReviewTarget = null;
 let currentRating = 5;
+let reviewedReservationIds = new Set();
+let reviewTagMasters = [];
+let selectedReviewFiles = [];
 
 $(function () {
     myAuth = getMyAuth();
@@ -17,6 +20,7 @@ $(function () {
 
     renderProfile();
     bindMyPageEvents();
+    loadLatestMyProfile();
     loadReservations();
 });
 
@@ -31,16 +35,35 @@ function bindMyPageEvents() {
     $("#sortSelect").on("change", renderReservations);
     $("#sideLogoutBtn").on("click", logoutMyPage);
     $("#reviewCloseBtn").on("click", closeReviewModal);
+    $("#cancelReviewBtn").on("click", closeReviewModal);
     $("#reviewModal").on("click", function (event) {
         if (event.target === this) closeReviewModal();
     });
 
-    $("#ratingPicker button").on("click", function () {
+    $("#writeTravelType button").on("click", function () {
+        $("#writeTravelType button").removeClass("active");
+        $(this).addClass("active");
+    });
+    $(document).on("click", ".write-tag-chip", function () {
+        $(this).toggleClass("active");
+    });
+    $(document).on("click", ".write-star-btn", function () {
         currentRating = Number($(this).data("rating"));
         paintRating();
     });
-
-    $(".review-modal").on("submit", submitReview);
+    $(document).on("click", ".mini-star-btn", function () {
+        const wrap = $(this).closest(".mini-stars");
+        wrap.attr("data-rating", $(this).data("rating"));
+        paintMiniStars(wrap);
+    });
+    $("#writeReviewPhotos").on("change", drawPhotoPreview);
+    $(document).on("click", ".write-photo-preview-item", function () {
+        selectedReviewFiles.splice(Number($(this).data("index")), 1);
+        redrawSelectedReviewFiles();
+    });
+    $("#reviewContent").on("input", updateReviewContentCount);
+    $("#myReviewForm").on("submit", submitReview);
+    loadReviewTagMasters();
 }
 
 function loadReservations() {
@@ -51,7 +74,7 @@ function loadReservations() {
             reservations = (page.content || []).map(mergeLocalReservation);
             renderProfile();
             renderCounts();
-            renderReservations();
+            syncWrittenReviews(renderReservations);
         },
         error: function () {
             const cached = readJson("completedReservation");
@@ -59,6 +82,23 @@ function loadReservations() {
             renderProfile();
             renderCounts();
             renderReservations();
+        }
+    });
+}
+
+function loadLatestMyProfile() {
+    $.ajax({
+        url: MY_API_BASE + "/member/" + myAuth.memberSid,
+        type: "GET",
+        success: function (result) {
+            const member = result.data || {};
+            myAuth = Object.assign({}, myAuth, {
+                name: member.name || myAuth.name,
+                email: member.email || myAuth.email,
+                point: Number(member.point || 0)
+            });
+            saveMyAuth(myAuth);
+            renderProfile();
         }
     });
 }
@@ -90,7 +130,7 @@ function makeReservationCard(reservation) {
 
     card.html(
         '<div class="reservation-top">' +
-            '<div class="hotel-title">' +
+            '<div class="hotel-title hotel-link" role="link" tabindex="0" title="호텔 상세 보기">' +
                 '<div class="hotel-icon"><i class="fa-solid fa-hotel"></i></div>' +
                 '<div><small>' + drawStars(reservation.hotelStarRating) + ' ' + (reservation.hotelStarRating || 0) + '성급</small>' +
                 '<h2>' + escapeHtml(reservation.hotelName || "호텔명 없음") + '</h2>' +
@@ -118,8 +158,24 @@ function makeReservationCard(reservation) {
     card.find(".checkin-btn").on("click", function () { checkInReservation(reservation.sid); });
     card.find(".review-btn").on("click", function () { openReviewModal(reservation); });
     card.find(".cancel-btn").on("click", function () { cancelReservation(reservation.sid); });
+    card.find(".hotel-link").on("click", function () { goHotelDetail(reservation.hotelId); });
+    card.find(".hotel-link").on("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            goHotelDetail(reservation.hotelId);
+        }
+    });
 
     return card;
+}
+
+function goHotelDetail(hotelId) {
+    if (!hotelId) {
+        alert("호텔 상세 정보를 찾을 수 없습니다.");
+        return;
+    }
+
+    location.href = "hotel-detail.html?id=" + encodeURIComponent(hotelId);
 }
 
 function makeLeftAction(reservation, state, reviewed) {
@@ -161,11 +217,26 @@ function cancelReservation(id) {
 }
 
 function openReviewModal(reservation) {
+    if (hasWrittenReview(reservation.sid)) {
+        alert("이미 리뷰를 작성한 예약입니다.");
+        renderReservations();
+        return;
+    }
+
     currentReviewTarget = reservation;
     currentRating = 5;
-    $("#reviewHotelName").text((reservation.hotelName || "호텔") + " 이용은 어떠셨나요?");
+    selectedReviewFiles = [];
+    $("#reviewHotelName").text(reservation.hotelName || "호텔명 없음");
+    $("#reviewHotelSub").text((reservation.hotelName || "호텔") + " 이용은 어떠셨나요?");
+    $("#reviewHotelMeta").text((reservation.roomName || "이용 객실") + " · " + formatDate(reservation.checkInDate) + " ~ " + formatDate(reservation.checkOutDate));
     $("#reviewContent").val("");
+    $("#writeReviewPhotos").val("");
+    $("#writePhotoPreview").empty();
+    $("#writeTravelType button").removeClass("active").first().addClass("active");
+    $(".write-tag-chip").removeClass("active");
+    $(".mini-stars").attr("data-rating", "5").each(function () { paintMiniStars($(this)); });
     paintRating();
+    updateReviewContentCount();
     $("#reviewModal").addClass("show").attr("aria-hidden", "false");
 }
 
@@ -184,27 +255,37 @@ function submitReview(event) {
         memberId: Number(myAuth.memberSid),
         reservationId: currentReviewTarget.sid,
         rating: currentRating,
-        travelType: "FAMILY",
-        content: $("#reviewContent").val().trim() || "좋은 숙박이었습니다.",
-        categories: [],
-        tags: []
+        travelType: $("#writeTravelType button.active").data("value") || "FAMILY",
+        content: $("#reviewContent").val().trim(),
+        categories: collectReviewCategories(),
+        tags: collectReviewTags()
     };
+
+    if (!payload.content) {
+        alert("리뷰 내용을 입력해주세요.");
+        return;
+    }
+
+    $("#submitReviewBtn").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 등록 중');
 
     $.ajax({
         url: MY_API_BASE + "/review",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-        success: function () {
+        success: function (result) {
             markReviewWritten(currentReviewTarget.sid);
-            closeReviewModal();
-            renderReservations();
+            uploadReviewPhotos(result?.data?.sid, function () {
+                closeReviewModal();
+                loadLatestMyProfile();
+                syncWrittenReviews(renderReservations);
+            });
         },
         error: function () {
-            markReviewWritten(currentReviewTarget.sid);
-            closeReviewModal();
-            renderReservations();
-            alert("리뷰 API 연결은 실패했지만 화면에는 작성 완료로 표시했습니다.");
+            alert("리뷰 등록에 실패했습니다. 이미 작성한 예약인지 확인해주세요.");
+        },
+        complete: function () {
+            $("#submitReviewBtn").prop("disabled", false).html('<i class="fa-regular fa-paper-plane"></i> 리뷰 등록');
         }
     });
 }
@@ -216,6 +297,50 @@ function renderProfile() {
     $("#profileEmail").text(myAuth.email || "");
     $("#profilePoint").text(formatNumber(myAuth.point || 0));
     $("#totalReservationCount, #navReservationCount").text(reservations.length);
+}
+
+function syncWrittenReviews(done) {
+    reviewedReservationIds = new Set();
+    const hotelIds = Array.from(new Set(reservations.map(function (reservation) {
+        return reservation.hotelId;
+    }).filter(Boolean)));
+
+    if (hotelIds.length === 0) {
+        done();
+        return;
+    }
+
+    const requests = hotelIds.map(function (hotelId) {
+        return $.ajax({
+            url: MY_API_BASE + "/review/search?hotelId=" + hotelId + "&page=0&size=200&sort=createdAt,desc",
+            type: "GET"
+        }).then(function (result) {
+            const reviews = result?.data?.content || [];
+            reviews.forEach(function (review) {
+                if (String(review.memberId) === String(myAuth.memberSid) && review.reservationId) {
+                    reviewedReservationIds.add(String(review.reservationId));
+                    localStorage.setItem("staynowReviewWritten:" + review.reservationId, "true");
+                }
+            });
+        }, function () {});
+    });
+
+    $.when.apply($, requests).always(done);
+}
+
+function loadReviewTagMasters() {
+    $.ajax({
+        url: MY_API_BASE + "/review-tag-master",
+        type: "GET",
+        success: function (result) {
+            reviewTagMasters = result.data || [];
+            drawWriteTagButtons();
+        },
+        error: function () {
+            reviewTagMasters = [];
+            drawWriteTagButtons();
+        }
+    });
 }
 
 function renderCounts() {
@@ -271,8 +396,124 @@ function mergeLocalReservation(reservation) {
 }
 
 function paintRating() {
-    $("#ratingPicker button").each(function () {
-        $(this).toggleClass("active", Number($(this).data("rating")) <= currentRating);
+    const wrap = $("#writeMainRating");
+    wrap.empty();
+
+    for (let i = 1; i <= 5; i++) {
+        wrap.append('<button type="button" class="write-star-btn ' + (i <= currentRating ? "active" : "") + '" data-rating="' + i + '"><i class="fa-regular fa-star"></i></button>');
+    }
+
+    $("#writeScoreText").text((currentRating * 2).toFixed(1));
+    $("#writeScoreLabel").text(currentRating >= 5 ? "5점 최고" : currentRating >= 4 ? "좋음" : currentRating >= 3 ? "보통" : "아쉬움");
+}
+
+function paintMiniStars(wrap) {
+    const rating = Number(wrap.attr("data-rating") || 5);
+    wrap.empty();
+
+    for (let i = 1; i <= 5; i++) {
+        wrap.append('<button type="button" class="mini-star-btn ' + (i <= rating ? "active" : "") + '" data-rating="' + i + '"><i class="fa-regular fa-star"></i></button>');
+    }
+}
+
+function updateReviewContentCount() {
+    const length = $("#reviewContent").val().length;
+    $("#writeContentCount").text(length.toLocaleString() + " / 1,000자");
+}
+
+function collectReviewCategories() {
+    return $(".mini-stars").map(function () {
+        return {
+            categoryId: Number($(this).data("category-id")),
+            rating: Number($(this).attr("data-rating") || 5)
+        };
+    }).get();
+}
+
+function collectReviewTags() {
+    return $(".write-tag-chip.active").map(function () {
+        return { tagId: Number($(this).data("tag-id")) };
+    }).get();
+}
+
+function drawWriteTagButtons() {
+    const pros = reviewTagMasters.filter(function (tag) { return getReviewTagCategory(tag) === "PROS"; });
+    const cons = reviewTagMasters.filter(function (tag) { return getReviewTagCategory(tag) === "CONS"; });
+
+    $(".write-tag-area").html(
+        makeWriteTagGroup("pros", "fa-regular fa-thumbs-up", "좋았던 점", pros) +
+        makeWriteTagGroup("cons", "fa-regular fa-thumbs-down", "아쉬운 점", cons)
+    );
+}
+
+function makeWriteTagGroup(type, icon, title, tags) {
+    const buttons = tags.map(function (tag) {
+        return '<button type="button" class="write-tag-chip" data-tag-id="' + tag.sid + '">' + escapeHtml(tag.reviewTagName || "태그") + '</button>';
+    }).join("");
+
+    return '<div>' +
+        '<b class="tag-title ' + type + '"><i class="' + icon + '"></i> ' + title + '</b>' +
+        (buttons || '<span class="empty-write-tag">등록된 태그 없음</span>') +
+        '</div>';
+}
+
+function getReviewTagCategory(tag) {
+    if (!tag || !tag.reviewTagCategory) return "";
+    if (typeof tag.reviewTagCategory === "string") return tag.reviewTagCategory;
+    return tag.reviewTagCategory.name || tag.reviewTagCategory.value || "";
+}
+
+function drawPhotoPreview() {
+    const incomingFiles = Array.from(this.files || []);
+    incomingFiles.forEach(function (file) {
+        const duplicated = selectedReviewFiles.some(function (selected) {
+            return selected.name === file.name && selected.size === file.size && selected.lastModified === file.lastModified;
+        });
+
+        if (!duplicated && selectedReviewFiles.length < 10) {
+            selectedReviewFiles.push(file);
+        }
+    });
+
+    redrawSelectedReviewFiles();
+    $("#writeReviewPhotos").val("");
+}
+
+function redrawSelectedReviewFiles() {
+    const preview = $("#writePhotoPreview");
+    preview.empty();
+
+    selectedReviewFiles.forEach(function (file, index) {
+        const url = URL.createObjectURL(file);
+        preview.append(
+            '<button type="button" class="write-photo-preview-item" data-index="' + index + '">' +
+                '<img src="' + url + '" alt="첨부 사진 미리보기">' +
+                '<span><i class="fa-solid fa-xmark"></i></span>' +
+            '</button>'
+        );
+    });
+}
+
+function uploadReviewPhotos(reviewId, done) {
+    const files = selectedReviewFiles.slice(0, 10);
+    if (!reviewId || files.length === 0) {
+        done();
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("reviewId", reviewId);
+    files.forEach(function (file) {
+        formData.append("photos", file);
+    });
+
+    $.ajax({
+        url: MY_API_BASE + "/review-photo",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        complete: done
     });
 }
 
@@ -281,10 +522,11 @@ function metaItem(icon, label, value, sub) {
 }
 
 function hasWrittenReview(id) {
-    return localStorage.getItem("staynowReviewWritten:" + id) === "true";
+    return reviewedReservationIds.has(String(id)) || localStorage.getItem("staynowReviewWritten:" + id) === "true";
 }
 
 function markReviewWritten(id) {
+    reviewedReservationIds.add(String(id));
     localStorage.setItem("staynowReviewWritten:" + id, "true");
 }
 
@@ -305,6 +547,11 @@ function readJson(key) {
     } catch (e) {
         return null;
     }
+}
+
+function saveMyAuth(auth) {
+    const storage = localStorage.getItem("staynowAuth") ? localStorage : sessionStorage;
+    storage.setItem("staynowAuth", JSON.stringify(auth));
 }
 
 function formatDate(value) {

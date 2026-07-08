@@ -8,6 +8,7 @@ import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
+import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.reservations.service.ReservationService;
@@ -66,8 +67,22 @@ public class ReviewService {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Reservation Not Found"));
 
-        //첫 리뷰 등록 여부 판단용
-        Boolean duplicate = reviewRepository.existsByReservationSid(reservation.getSid());
+        if (reservation.getReservationStatus() != ReservationStatus.CHECKED_OUT) {
+            throw new IllegalStateException("CHECKED_OUT 예약만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (!reservation.getMember().getSid().equals(member.getSid())) {
+            throw new IllegalStateException("본인의 예약에만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (!reservation.getRoom().getHotelId().getSid().equals(hotel.getSid())) {
+            throw new IllegalStateException("예약한 호텔에만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (reviewRepository.existsByReservationSid(reservation.getSid())) {
+            throw new IllegalStateException("이미 리뷰를 작성한 예약입니다.");
+        }
+
         //request로 빌더 패턴 사용
         Review review = Review.builder()
                 .hotel(hotel)
@@ -86,21 +101,18 @@ public class ReviewService {
         List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), save);
         List<ReviewTag> tags = this.insertReviewTags(request.getTags(), save);
 
-        //첫 리뷰 등록일 때
-        if(!duplicate) {
-            int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
-            member.setPoint(member.getPoint() + accumulationPoint);
-            Member updatedMember = memberRepository.save(member);
+        int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
+        member.setPoint(member.getPoint() + accumulationPoint);
+        Member updatedMember = memberRepository.save(member);
 
-            PointHistory pointHistory = PointHistory.builder()
-                    .reservation(reservation)
-                    .member(updatedMember)
-                    .amount(accumulationPoint)
-                    .pointStatus(PointStatus.ACCUMULATION)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            pointHistoryRepository.save(pointHistory);
-        }
+        PointHistory pointHistory = PointHistory.builder()
+                .reservation(reservation)
+                .member(updatedMember)
+                .amount(accumulationPoint)
+                .pointStatus(PointStatus.ACCUMULATION)
+                .createdAt(LocalDateTime.now())
+                .build();
+        pointHistoryRepository.save(pointHistory);
 
         ReviewResponse result = this.toReviewResponse(save,categories, tags);
 

@@ -126,14 +126,170 @@
             </div>
         </section>
 
-        <section id="reviews" class="card">
-            <div class="section-title">
-                <h2>투숙객 리뷰</h2>
-                <span id="reviewTotalText">0개 리뷰</span>
+        <section id="reviews" class="review-section card">
+            <div class="review-topline">
+                <div>
+                    <span>REAL REVIEWS</span>
+                    <h2>투숙객 리뷰</h2>
+                </div>
+                <div class="review-top-actions">
+                    <strong id="reviewTotalText">0개 리뷰</strong>
+                    <button type="button" id="openReviewWriteBtn" class="review-write-btn">
+                        <i class="fa-solid fa-pen"></i>
+                        리뷰 작성
+                    </button>
+                </div>
             </div>
+
+            <div class="review-dashboard">
+                <div class="review-score-panel">
+                    <strong id="reviewDashboardScore">0.0</strong>
+                    <span>매우 좋음</span>
+                    <small id="reviewDashboardCount">리뷰 0개</small>
+                </div>
+
+                <div class="review-bars">
+                    <div><span>5점</span><b><i id="ratingBar5"></i></b><em id="ratingCount5">0%</em></div>
+                    <div><span>4점</span><b><i id="ratingBar4"></i></b><em id="ratingCount4">0%</em></div>
+                    <div><span>3점</span><b><i id="ratingBar3"></i></b><em id="ratingCount3">0%</em></div>
+                    <div><span>2점</span><b><i id="ratingBar2"></i></b><em id="ratingCount2">0%</em></div>
+                    <div><span>1점</span><b><i id="ratingBar1"></i></b><em id="ratingCount1">0%</em></div>
+                </div>
+
+                <div class="review-summary-grid">
+                    <div><strong id="reviewPhotoCount">0</strong><span>사진 리뷰</span></div>
+                    <div><strong id="reviewPositiveCount">0</strong><span>긍정 리뷰</span></div>
+                    <div><strong id="reviewLatestDate">-</strong><span>최근 리뷰</span></div>
+                </div>
+            </div>
+
+            <div class="review-toolbar">
+                <div class="review-filter-buttons" aria-label="리뷰 필터">
+                    <button type="button" class="active" data-review-mode="all">전체</button>
+                    <button type="button" data-review-mode="photo">사진포함 리뷰</button>
+                    <button type="button" data-review-mode="positive">긍정 리뷰</button>
+                </div>
+
+                <label class="review-sort">
+                    정렬
+                    <select id="reviewSortSelect">
+                        <option value="createdAt,desc">최신순</option>
+                        <option value="rating,desc">평점 높은순</option>
+                        <option value="rating,asc">평점 낮은순</option>
+                    </select>
+                </label>
+            </div>
+
             <div id="reviewList" class="review-list"></div>
+            <div id="reviewPagination" class="review-pagination"></div>
         </section>
     </main>
+
+    <div id="reviewPhotoViewer" class="review-photo-viewer" aria-hidden="true">
+        <button type="button" id="reviewPhotoClose" aria-label="사진 닫기">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="reviewPhotoLarge" src="" alt="리뷰 사진 크게 보기">
+    </div>
+
+    <div id="reviewWriteModal" class="review-write-overlay" aria-hidden="true">
+        <form id="reviewWriteForm" class="review-write-modal">
+            <header>
+                <div class="write-title-icon"><i class="fa-solid fa-pen"></i></div>
+                <div>
+                    <h2>리뷰 작성</h2>
+                    <p id="writeHotelSub">호텔 이용 후기를 남겨주세요</p>
+                </div>
+                <button type="button" id="closeReviewWriteBtn" aria-label="리뷰 작성 닫기">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </header>
+
+            <div class="write-hotel-row">
+                <div class="write-hotel-icon"><i class="fa-regular fa-building"></i></div>
+                <div>
+                    <strong id="writeHotelName">호텔명</strong>
+                    <span id="writeHotelMeta">숙박 정보</span>
+                </div>
+                <b>리뷰 작성</b>
+            </div>
+
+            <section class="write-section">
+                <h3><i></i> 전체 평점 <em>필수</em></h3>
+                <div class="write-stars" id="writeMainRating"></div>
+                <div class="write-score-line"><strong id="writeScoreText">10.0</strong><span id="writeScoreLabel">5점 최고</span></div>
+                <small>1점 매우 나쁨 · 3점 좋음 · 5점 최고</small>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 항목별 평점 <span>(선택사항)</span></h3>
+                <div class="write-category-grid">
+                    <label><span>청결도</span><div class="mini-stars" data-category-id="1" data-rating="5"></div></label>
+                    <label><span>서비스</span><div class="mini-stars" data-category-id="2" data-rating="5"></div></label>
+                </div>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 여행 유형 <span>(선택사항)</span></h3>
+                <div class="write-chip-row" id="writeTravelType">
+                    <button type="button" class="active" data-value="COUPLE"><i class="fa-solid fa-user-group"></i> 커플 여행</button>
+                    <button type="button" data-value="BUSINESS"><i class="fa-solid fa-briefcase"></i> 비즈니스</button>
+                    <button type="button" data-value="FAMILY"><i class="fa-regular fa-heart"></i> 가족 여행</button>
+                    <button type="button" data-value="SOLO"><i class="fa-regular fa-user"></i> 혼자 여행</button>
+                    <button type="button" data-value="FRIEND"><i class="fa-solid fa-graduation-cap"></i> 친구들과</button>
+                </div>
+            </section>
+
+            <section class="write-section">
+                <div class="write-content-head">
+                    <h3><i></i> 리뷰 내용 <em>필수</em></h3>
+                    <span id="writeContentCount">0 / 1,000자</span>
+                </div>
+                <textarea id="writeReviewContent" maxlength="1000" required placeholder="이번 숙박은 어떠셨나요? 객실, 직원, 위치, 조식 등을 자유롭게 적어주세요."></textarea>
+                <small>50자 이상 작성 시 포인트가 추가 적립됩니다.</small>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 장단점 태그 <span>(선택사항)</span></h3>
+                <div class="write-tag-area">
+                    <div>
+                        <b class="tag-title pros"><i class="fa-regular fa-thumbs-up"></i> 좋았던 점</b>
+                        <button type="button" class="write-tag-chip" data-tag-id="1">청결함</button>
+                    </div>
+                    <div>
+                        <b class="tag-title cons"><i class="fa-regular fa-thumbs-down"></i> 아쉬운 점</b>
+                        <button type="button" class="write-tag-chip" data-tag-id="2">주차 불편</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="write-section">
+                <h3><i></i> 사진 첨부 <span>(선택사항 · 최대 10장)</span></h3>
+                <label class="write-photo-input">
+                    <i class="fa-regular fa-image"></i>
+                    <span>사진 선택</span>
+                    <input id="writeReviewPhotos" type="file" accept="image/*" multiple>
+                </label>
+                <div id="writePhotoPreview" class="write-photo-preview"></div>
+            </section>
+
+            <div class="write-point-box">
+                <i class="fa-solid fa-coins"></i>
+                <div>
+                    <strong>이 리뷰 작성 시 적립 예정 포인트</strong>
+                    <span>기본 리뷰 +200P · 사진 첨부 +500P</span>
+                </div>
+            </div>
+
+            <footer>
+                <p><i class="fa-solid fa-shield-halved"></i> 작성한 리뷰는 검토 후 게시되며, 욕설이나 광고성 내용은 삭제될 수 있습니다.</p>
+                <div>
+                    <button type="button" id="cancelReviewWriteBtn">취소</button>
+                    <button type="submit" id="submitReviewWriteBtn"><i class="fa-regular fa-paper-plane"></i> 리뷰 등록</button>
+                </div>
+            </footer>
+        </form>
+    </div>
 
     <footer>
         <div id="footer"></div>
