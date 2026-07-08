@@ -28,8 +28,6 @@ function bindReservationEvents() {
         location.href = "hotel-detail.html?id=" + reservationState.hotelId + "#rooms";
     });
 
-    $("#sameAsMember").on("change", fillMemberInfo);
-
     $("#specialRequests").on("input", function () {
         $("#requestCount").text($(this).val().length);
     });
@@ -51,6 +49,7 @@ function loadReservationState() {
         roomId: selected.roomId,
         hotel: selected.hotel || {},
         room: selected.room || {},
+        amenities: selected.amenities || [],
         searchRequest: selected.searchRequest || readJson("hotelSearchRequest") || {}
     };
 }
@@ -62,9 +61,9 @@ function renderReservationPage() {
     const price = getPriceInfo();
 
     $("#roomImage").attr("src", normalizeImagePath(room.roomPhotoPath) || FALLBACK_IMAGE);
-    $("#roomType").text(room.roomTypeTitle || "객실");
     $("#roomName, #summaryRoom").text(room.roomName || "객실명 없음");
     $("#roomSpecs").text(makeRoomSpec(room));
+    drawRoomPills(room);
     $("#parkingText").text(formatPolicy(room.parking));
     $("#smokeText").text(formatSmokePolicy(room.smoke));
     $("#idCardText").text(formatIdCardPolicy(room.idCard));
@@ -84,13 +83,44 @@ function renderReservationPage() {
 }
 
 function fillMemberInfo() {
-    if (!$("#sameAsMember").is(":checked")) {
-        return;
-    }
-
     const auth = reservationState.auth || {};
     $("#guestName").val(auth.name || "");
     $("#guestEmail").val(auth.email || "");
+}
+
+function drawRoomPills(room) {
+    const pills = [];
+    const amenities = reservationState.amenities || [];
+
+    pills.push(room.roomTypeTitle || "객실");
+
+    if (hasAmenity(amenities, ["무료취소", "무료 취소", "free cancel", "free cancellation"])) {
+        pills.push("무료취소");
+    }
+
+    if (hasAmenity(amenities, ["조식", "아침", "breakfast"])) {
+        pills.push("조식포함");
+    }
+
+    $("#roomPills").empty();
+
+    pills.forEach(function (pill) {
+        $("#roomPills").append($("<span>").text(pill));
+    });
+
+    $("#summaryRoomTags").text(pills.slice(1).length > 0 ? pills.slice(1).join(" · ") : "추가 혜택 없음");
+}
+
+function hasAmenity(amenities, keywords) {
+    return amenities.some(function (amenity) {
+        const title = String(amenity.title || "").toLowerCase().replaceAll(" ", "");
+        const description = String(amenity.description || "").toLowerCase().replaceAll(" ", "");
+
+        return keywords.some(function (keyword) {
+            const normalized = keyword.toLowerCase().replaceAll(" ", "");
+            return title.includes(normalized) || description.includes(normalized);
+        });
+    });
 }
 
 function submitReservation() {

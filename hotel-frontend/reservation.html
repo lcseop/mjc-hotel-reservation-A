@@ -23,17 +23,6 @@
                 <span>객실 예약</span>
             </nav>
 
-            <div class="stepper" aria-label="예약 단계">
-                <span class="done"><i class="fa-solid fa-check"></i> 호텔 선택</span>
-                <b></b>
-                <span class="done"><i class="fa-solid fa-check"></i> 객실 선택</span>
-                <b></b>
-                <span class="active">3 예약 정보 입력</span>
-                <b></b>
-                <span>4 결제</span>
-                <b></b>
-                <span>5 예약 완료</span>
-            </div>
         </section>
 
         <div class="reserve-layout">
@@ -47,11 +36,7 @@
                     <div class="room-box">
                         <img id="roomImage" src="https://gunsancci.korcham.net/images/no-image01.gif" alt="선택 객실 이미지">
                         <div>
-                            <div class="pill-row">
-                                <span id="roomType">객실</span>
-                                <span>무료취소</span>
-                                <span>조식포함</span>
-                            </div>
+                            <div class="pill-row" id="roomPills"></div>
                             <h1 id="roomName">객실 정보를 불러오는 중입니다</h1>
                             <p id="roomSpecs">객실 상세 정보 확인 중</p>
                             <div class="stay-dates">
@@ -75,11 +60,6 @@
                     <div class="section-heading">
                         <h2>투숙객 정보</h2>
                     </div>
-
-                    <label class="same-user">
-                        <input type="checkbox" id="sameAsMember" checked>
-                        <span>예약자 정보와 동일하게 입력</span>
-                    </label>
 
                     <form id="reservationForm" class="guest-form">
                         <div class="form-grid two">
@@ -160,7 +140,7 @@
 
                     <div class="room-summary">
                         <strong id="summaryRoom">객실명</strong>
-                        <span>조식 포함 · 무료취소</span>
+                        <span id="summaryRoomTags">객실 혜택 확인 중</span>
                     </div>
 
                     <div class="price-list">

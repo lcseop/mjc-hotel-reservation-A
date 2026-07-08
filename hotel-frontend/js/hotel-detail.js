@@ -5,13 +5,19 @@ const KAKAO_MAP_APP_KEY = "4b9798cdfdfbd7e08b433eacafb45cfc";
 let hotelImages = [];
 let currentHotel = null;
 let currentRooms = [];
+let currentAmenities = [];
 let kakaoMapPromise = null;
 let detailMap = null;
 let detailMapOverlay = null;
 let stationMarker = null;
+let currentHotelId = null;
+let reviewMode = "all";
+let reviewPage = 0;
+const REVIEW_SIZE = 4;
 
 $(function () {
     const hotelId = new URLSearchParams(location.search).get("id");
+    currentHotelId = hotelId;
 
     if (!hotelId) {
         alert("호텔 정보가 없습니다.");
@@ -59,6 +65,7 @@ function bindEvent() {
             roomId: roomId,
             hotel: currentHotel || {},
             room: room || {},
+            amenities: currentAmenities,
             searchRequest: searchRequest,
             selectedAt: new Date().toISOString()
         };
@@ -69,6 +76,34 @@ function bindEvent() {
 
     $(document).on("click", ".station-card", function () {
         focusStation($(this).data("lat"), $(this).data("lng"), $(this).data("name"));
+    });
+
+    $(document).on("click", ".review-filter-buttons button", function () {
+        reviewMode = $(this).data("review-mode");
+        reviewPage = 0;
+        $(".review-filter-buttons button").removeClass("active");
+        $(this).addClass("active");
+        loadReviews(currentHotelId);
+    });
+
+    $("#reviewSortSelect").on("change", function () {
+        reviewPage = 0;
+        loadReviews(currentHotelId);
+    });
+
+    $(document).on("click", ".review-page-btn", function () {
+        reviewPage = Number($(this).data("page"));
+        loadReviews(currentHotelId);
+    });
+
+    $(document).on("click", ".review-photo-btn", function () {
+        openReviewPhoto($(this).data("src"));
+    });
+
+    $("#reviewPhotoClose, #reviewPhotoViewer").on("click", function (event) {
+        if (event.target === this || event.currentTarget.id === "reviewPhotoClose") {
+            closeReviewPhoto();
+        }
     });
 }
 
@@ -359,9 +394,11 @@ function loadAmenities(hotelId) {
         url: API_BASE + "/hotel/iname/" + hotelId,
         type: "GET",
         success: function (result) {
-            drawAmenities(result.data || []);
+            currentAmenities = result.data || [];
+            drawAmenities(currentAmenities);
         },
         error: function () {
+            currentAmenities = [];
             drawAmenities([]);
         }
     });
@@ -473,44 +510,150 @@ function loadRoomImage(roomId) {
 }
 
 function loadReviews(hotelId) {
+    if (!hotelId) {
+        return;
+    }
+
+    loadReviewStats(hotelId);
+
+    const endpoint = getReviewEndpoint();
+    const sort = $("#reviewSortSelect").val() || "createdAt,desc";
+
     $.ajax({
-        url: API_BASE + "/hotel/inreview/" + hotelId + "?page=0&size=5",
+        url: API_BASE + endpoint + "?hotelId=" + hotelId + "&page=" + reviewPage + "&size=" + REVIEW_SIZE + "&sort=" + encodeURIComponent(sort),
         type: "GET",
         success: function (result) {
             const page = result.data || {};
-            drawReviews(page.content || [], page.totalElements || 0);
+            drawReviews(page);
         },
         error: function () {
-            drawReviews([], 0);
+            drawReviews({ content: [], totalElements: 0, number: 0, totalPages: 0 });
         }
     });
 }
 
-function drawReviews(reviews, totalElements) {
+function getReviewEndpoint() {
+    if (reviewMode === "photo") {
+        return "/review/exists-photo-search";
+    }
+
+    if (reviewMode === "positive") {
+        return "/review/positive-search";
+    }
+
+    return "/review/search";
+}
+
+function loadReviewStats(hotelId) {
+    $.ajax({
+        url: API_BASE + "/review/search?hotelId=" + hotelId + "&page=0&size=100&sort=createdAt,desc",
+        type: "GET",
+        success: function (result) {
+            const page = result.data || {};
+            drawReviewStats(page.content || [], page.totalElements || 0);
+        },
+        error: function () {
+            drawReviewStats([], 0);
+        }
+    });
+}
+
+function drawReviews(page) {
     const list = $("#reviewList");
-    const average = getAverageRating(reviews);
+    const reviews = page.content || [];
+    const totalElements = page.totalElements || 0;
 
     list.empty();
     $("#reviewCount").text(totalElements.toLocaleString());
     $("#reviewTotalText").text(totalElements.toLocaleString() + "개 리뷰");
-    $("#reviewScore").text(average.toFixed(1));
-    updateScoreMetrics(average, totalElements);
 
     if (reviews.length === 0) {
         list.append('<div class="empty">아직 등록된 리뷰가 없습니다.</div>');
+        drawReviewPagination(page);
         return;
     }
 
     $.each(reviews, function (index, review) {
-        list.append(`
+        const reviewNumber = (page.number || 0) * REVIEW_SIZE + index + 1;
+        const tagsHtml = makeReviewTags(review.tags || []);
+        const article = $(`
             <article class="review-card">
                 <div class="review-head">
-                    <strong>${review.rating || 0}.0</strong>
-                    <span>${formatDate(review.createdAt)}</span>
+                    <div class="reviewer">
+                        <div class="reviewer-avatar">${reviewNumber}</div>
+                        <div>
+                            <strong>${reviewNumber}번째 리뷰</strong>
+                            <span>${formatDate(review.createdAt)} · ${escapeHtml(review.roomName || "이용 객실")}</span>
+                        </div>
+                    </div>
+
+                    <div class="review-rating">
+                        <strong>${Number(review.rating || 0).toFixed(1)}</strong>
+                        <span>${drawStars(review.rating)}</span>
+                    </div>
                 </div>
+
+                <div class="review-meta">
+                    <span>${formatTravelType(review.travelType)}</span>
+                    <span>${review.totalNights || 1}박</span>
+                </div>
+
                 <p>${escapeHtml(review.content || "리뷰 내용이 없습니다.")}</p>
+                ${tagsHtml}
+                <div class="review-photos" data-review-photos="${review.sid}"></div>
+                <div class="review-answer-wrap" data-review-answer="${review.sid}"></div>
             </article>
         `);
+
+        list.append(article);
+        loadReviewPhotos(review.sid);
+        loadReviewAnswer(review.sid);
+    });
+
+    drawReviewPagination(page);
+}
+
+function drawReviewStats(reviews, totalElements) {
+    const average = getAverageRating(reviews);
+    const distribution = [0, 0, 0, 0, 0];
+    const positiveCount = reviews.filter(function (review) {
+        return Number(review.rating || 0) >= 4;
+    }).length;
+    const latestDate = reviews.length > 0 ? formatDate(reviews[0].createdAt) : "-";
+
+    reviews.forEach(function (review) {
+        const rating = Math.max(1, Math.min(5, Number(review.rating || 0)));
+        distribution[rating - 1] += 1;
+    });
+
+    $("#reviewScore, #reviewDashboardScore").text(average.toFixed(1));
+    $("#reviewCount").text(totalElements.toLocaleString());
+    $("#reviewDashboardCount").text("리뷰 " + totalElements.toLocaleString() + "개");
+    $("#reviewPositiveCount").text(positiveCount.toLocaleString());
+    $("#reviewLatestDate").text(latestDate);
+    updateScoreMetrics(average, totalElements);
+
+    for (let rating = 1; rating <= 5; rating++) {
+        const count = distribution[rating - 1];
+        const percent = totalElements > 0 ? Math.round((count / totalElements) * 100) : 0;
+        $("#ratingBar" + rating).css("width", percent + "%");
+        $("#ratingCount" + rating).text(percent + "%");
+    }
+
+    loadPhotoReviewCount(currentHotelId);
+}
+
+function loadPhotoReviewCount(hotelId) {
+    $.ajax({
+        url: API_BASE + "/review/exists-photo-search?hotelId=" + hotelId + "&page=0&size=1",
+        type: "GET",
+        success: function (result) {
+            const page = result.data || {};
+            $("#reviewPhotoCount").text((page.totalElements || 0).toLocaleString());
+        },
+        error: function () {
+            $("#reviewPhotoCount").text("0");
+        }
     });
 }
 
@@ -524,6 +667,145 @@ function getAverageRating(reviews) {
     }, 0);
 
     return sum / reviews.length;
+}
+
+function drawReviewPagination(page) {
+    const box = $("#reviewPagination");
+    const totalPages = page.totalPages || 0;
+    const current = page.number || 0;
+
+    box.empty();
+
+    if (totalPages <= 1) {
+        return;
+    }
+
+    box.append(makeReviewPageButton("이전", Math.max(0, current - 1), current === 0));
+
+    for (let i = 0; i < totalPages; i++) {
+        const button = makeReviewPageButton(i + 1, i, false);
+        button.toggleClass("active", i === current);
+        box.append(button);
+    }
+
+    box.append(makeReviewPageButton("다음", Math.min(totalPages - 1, current + 1), current >= totalPages - 1));
+}
+
+function makeReviewPageButton(text, page, disabled) {
+    return $("<button>")
+        .addClass("review-page-btn")
+        .text(text)
+        .data("page", page)
+        .prop("disabled", disabled);
+}
+
+function loadReviewPhotos(reviewId) {
+    $.ajax({
+        url: API_BASE + "/review-photo/search?reviewId=" + reviewId + "&page=0&size=4",
+        type: "GET",
+        success: function (result) {
+            const page = result.data || {};
+            const photos = page.content || [];
+            const target = $(".review-photos[data-review-photos='" + reviewId + "']");
+
+            target.empty();
+
+            photos.forEach(function (photo) {
+                if (!photo.imagePath) {
+                    return;
+                }
+
+                const imagePath = normalizeImagePath(photo.imagePath);
+                target.append(`
+                    <button type="button" class="review-photo-btn" data-src="${escapeHtml(imagePath)}">
+                        <img src="${escapeHtml(imagePath)}" alt="리뷰 사진">
+                    </button>
+                `);
+            });
+        }
+    });
+}
+
+function loadReviewAnswer(reviewId) {
+    $.ajax({
+        url: API_BASE + "/review-answer/review-search?reviewId=" + reviewId,
+        type: "GET",
+        success: function (result) {
+            const answer = result.data || {};
+
+            if (!answer.reviewAnswer) {
+                return;
+            }
+
+            $(".review-answer-wrap[data-review-answer='" + reviewId + "']").html(`
+                <div class="review-answer">
+                    <strong>호텔 답변</strong>
+                    <p>${escapeHtml(answer.reviewAnswer)}</p>
+                </div>
+            `);
+        }
+    });
+}
+
+function makeReviewTags(tags) {
+    if (!tags || tags.length === 0) {
+        return "";
+    }
+
+    const pros = tags.filter(function (tag) {
+        return tag.reviewTagCategory === "PROS";
+    });
+    const cons = tags.filter(function (tag) {
+        return tag.reviewTagCategory === "CONS";
+    });
+    let html = "";
+
+    if (pros.length === 0 && cons.length === 0) {
+        return "";
+    }
+
+    html += '<div class="review-tags">';
+
+    if (pros.length > 0) {
+        html += '<div class="review-tag-line pros"><b>좋았던 점</b>' +
+            pros.map(function (tag) { return '<span>' + escapeHtml(tag.reviewTagName || "태그") + '</span>'; }).join("") +
+            '</div>';
+    }
+
+    if (cons.length > 0) {
+        html += '<div class="review-tag-line cons"><b>아쉬운 점</b>' +
+            cons.map(function (tag) { return '<span>' + escapeHtml(tag.reviewTagName || "태그") + '</span>'; }).join("") +
+            '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function formatTravelType(type) {
+    const labels = {
+        COUPLE: "커플 여행",
+        BUSINESS: "출장",
+        FAMILY: "가족 여행",
+        SOLO: "나홀로 여행",
+        FRIEND: "친구 여행"
+    };
+
+    return labels[type] || "일반 여행";
+}
+
+function openReviewPhoto(src) {
+    if (!src) {
+        return;
+    }
+
+    $("#reviewPhotoLarge").attr("src", src);
+    $("#reviewPhotoViewer").addClass("show").attr("aria-hidden", "false");
+}
+
+function closeReviewPhoto() {
+    $("#reviewPhotoViewer").removeClass("show").attr("aria-hidden", "true");
+    $("#reviewPhotoLarge").attr("src", "");
 }
 
 function updateScoreMetrics(score, totalElements) {
