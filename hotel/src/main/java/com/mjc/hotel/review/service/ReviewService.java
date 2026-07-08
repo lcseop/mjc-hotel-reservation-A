@@ -4,11 +4,13 @@ import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
+import com.mjc.hotel.reservations.service.ReservationService;
 import com.mjc.hotel.review.entity.*;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.*;
@@ -16,8 +18,10 @@ import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
+import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.entity.Room;
 import com.mjc.hotel.room.repository.RoomRepository;
+import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +53,11 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final PointHistoryRepository pointHistoryRepository;
-    private final RoomRepository roomRepository;
 
+    private final RoomService roomService;
+    private final ReservationService reservationService;
+
+    @Transactional
     public ReviewResponse insertReview(ReviewCreateRequest request) {
         Hotel hotel = hotelRepository.findById(request.getHotelId())
                 .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
@@ -99,7 +106,7 @@ public class ReviewService {
 
         return result;
     }
-
+    @Transactional
     public ReviewResponse updateReview(ReviewUpdateRequest request) {
         Review find = reviewRepository.findBySidAndDeletedFalse(request.getSid());
         if(find == null){
@@ -136,7 +143,7 @@ public class ReviewService {
 
         return result;
     }
-
+    @Transactional
     public ReviewResponse findByReviewId(Long reviewId) {
         Review review = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(review == null){
@@ -149,7 +156,7 @@ public class ReviewService {
 
         return result;
     }
-
+    @Transactional
     public ReviewResponse deleteReviewId(Long sid) {
         Review find = reviewRepository.findBySidAndDeletedFalse(sid);
         if(find == null){
@@ -180,23 +187,18 @@ public class ReviewService {
     }
 
     private ReviewResponse toReviewResponse(Review review, List<ReviewCategory> categories, List<ReviewTag> tags) {
-        Room room = roomRepository.findById(review.getReservation().getRoom().getSid())
-                .orElseThrow(()-> new  DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Found"));
-        Reservation reservation = reservationRepository.findById(review.getReservation().getSid())
-                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Reservation Not Found"));
-
         return  ReviewResponse.builder()
                 .sid(review.getSid())
                 .hotelId(review.getHotel().getSid())
                 .memberId(review.getMember().getSid())
-                .reservationId(reservation.getSid())
+                .reservationId(review.getReservation().getSid())
                 .rating(review.getRating())
                 .travelType(review.getTravelType())
                 .content(review.getContent())
                 .likeCount(review.getLikeCount())
                 .dislikeCount(review.getDislikeCount())
-                .roomName(room.getRoomName())
-                .totalNights(reservation.getTotalNights())
+                .roomName(review.getReservation().getRoom().getRoomName())
+                .totalNights(review.getReservation().getTotalNights())
                 .categories(
                         categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()

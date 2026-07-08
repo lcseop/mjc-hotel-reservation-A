@@ -88,7 +88,7 @@ public class ReviewPhotoService {
         }
         return result;
     }
-
+    @Transactional
     public ReviewPhotoResponse updateReviewPhoto(ReviewPhotoUpdateRequest request){
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
         if(review == null) {
@@ -99,7 +99,7 @@ public class ReviewPhotoService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }
         MultipartFile photo = request.getPhoto();
-        if(photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
+        if(photo == null || photo.isEmpty() || this.falseValidatePhotoFile(photo)) {
             throw new IllegalArgumentException("Files Cannot Be Empty");
         }
         oldPhoto.markDeleted();
@@ -111,7 +111,7 @@ public class ReviewPhotoService {
         ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
         return response;
     }
-
+    @Transactional
     public List<ReviewPhotoResponse> findAllByReviewId(Long reviewId){
         List<ReviewPhoto> photos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId);
         if(photos.isEmpty()){
@@ -123,6 +123,7 @@ public class ReviewPhotoService {
 
         return result;
     }
+    @Transactional
     public Page<ReviewPhotoResponse> search(Long reviewId, Pageable pageable) {
         Page<ReviewPhoto> reviewPhotos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId,pageable);
         if(reviewPhotos.isEmpty()){
@@ -135,9 +136,9 @@ public class ReviewPhotoService {
         Page<ReviewPhotoResponse> responses = new PageImpl<>(list, pageable, reviewPhotos.getTotalElements());
         return responses;
     }
-
-    public ReviewPhotoResponse deleteReviewImage(Long reviewPhotoId) {
-        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(reviewPhotoId);
+    @Transactional
+    public ReviewPhotoResponse deleteReviewImage(Long sid) {
+        ReviewPhoto reviewPhoto = reviewPhotoRepository.findBySidAndDeletedFalse(sid);
         if(reviewPhoto == null){
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photo Not Found");
         }

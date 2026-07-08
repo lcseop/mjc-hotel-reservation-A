@@ -14,6 +14,7 @@ import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class ReviewReactionService {
 
     private final ReviewReactionRepository reviewReactionRepository;
 
+    @Transactional
     public ReviewReactionResponse addReviewReaction(ReviewReactionRequest request) {
         Review review = reviewRepository.findBySidAndDeletedFalse(request.getReviewId());
         if(review == null){
@@ -53,7 +55,7 @@ public class ReviewReactionService {
         ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
-
+    @Transactional
     public ReviewReactionResponse updateReviewReaction(ReviewReactionRequest request) {
         ReviewReactionId reviewReactionId = new ReviewReactionId(request.getReviewId(), request.getMemberId());
 
@@ -108,7 +110,7 @@ public class ReviewReactionService {
         ReviewReactionResponse result = this.toReviewReactionResponse(save);
         return result;
     }
-
+    @Transactional
     public ReviewReactionResponse findReviewReaction(Long reviewId, Long memberId) {
         ReviewReactionId reviewReactionId = new ReviewReactionId(reviewId, memberId);
 
@@ -129,7 +131,7 @@ public class ReviewReactionService {
                 .build();
         return result;
     }
-
+    @Transactional
     public Long findAllByReviewIdAndReactionType(Long reviewId, String reactionTypeName) {
         Review find = reviewRepository.findBySidAndDeletedFalse(reviewId);
         if(find == null) {
