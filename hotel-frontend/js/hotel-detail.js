@@ -11,8 +11,12 @@ let detailMap = null;
 let detailMapOverlay = null;
 let stationMarker = null;
 let currentHotelId = null;
+let currentReviewReservation = null;
+let reviewTagMasters = [];
+let selectedReviewFiles = [];
 let reviewMode = "all";
 let reviewPage = 0;
+let writeRating = 5;
 const REVIEW_SIZE = 4;
 
 $(function () {
@@ -31,6 +35,8 @@ $(function () {
     loadAmenities(hotelId);
     loadRooms(hotelId);
     loadReviews(hotelId);
+    loadReviewWriteEligibility(hotelId);
+    loadReviewTagMasters();
 });
 
 function bindEvent() {
@@ -103,6 +109,54 @@ function bindEvent() {
     $("#reviewPhotoClose, #reviewPhotoViewer").on("click", function (event) {
         if (event.target === this || event.currentTarget.id === "reviewPhotoClose") {
             closeReviewPhoto();
+        }
+    });
+
+    $("#openReviewWriteBtn").on("click", openReviewWriteModal);
+    $("#closeReviewWriteBtn, #cancelReviewWriteBtn").on("click", closeReviewWriteModal);
+    $("#reviewWriteModal").on("click", function (event) {
+        if (event.target === this) {
+            closeReviewWriteModal();
+        }
+    });
+    $("#reviewWriteForm").on("submit", submitReviewWrite);
+    $("#writeReviewContent").on("input", updateWriteContentCount);
+    $("#writeTravelType button").on("click", function () {
+        $("#writeTravelType button").removeClass("active");
+        $(this).addClass("active");
+    });
+    $(document).on("click", ".write-tag-chip", function () {
+        $(this).toggleClass("active");
+    });
+    $("#writeReviewPhotos").on("change", drawWritePhotoPreview);
+    $(document).on("click", ".write-photo-preview-item", function () {
+        selectedReviewFiles.splice(Number($(this).data("index")), 1);
+        redrawSelectedReviewFiles();
+    });
+    $(document).on("click", ".write-star-btn", function () {
+        writeRating = Number($(this).data("rating"));
+        paintWriteStars();
+    });
+    $(document).on("click", ".mini-star-btn", function () {
+        const wrap = $(this).closest(".mini-stars");
+        wrap.attr("data-rating", $(this).data("rating"));
+        paintMiniStars(wrap);
+    });
+    $(document).on("click", ".review-reaction-btn", function () {
+        sendReviewReaction($(this).data("review-id"), $(this).data("reaction"));
+    });
+}
+
+function loadReviewTagMasters() {
+    $.ajax({
+        url: API_BASE + "/review-tag-master",
+        type: "GET",
+        success: function (result) {
+            reviewTagMasters = result.data || [];
+            drawWriteTagButtons();
+        },
+        error: function () {
+            reviewTagMasters = [];
         }
     });
 }
@@ -576,14 +630,16 @@ function drawReviews(page) {
     $.each(reviews, function (index, review) {
         const reviewNumber = (page.number || 0) * REVIEW_SIZE + index + 1;
         const tagsHtml = makeReviewTags(review.tags || []);
+        const reviewerName = makeReviewerName(review.memberId, reviewNumber);
+        const initial = reviewerName.slice(0, 1);
         const article = $(`
             <article class="review-card">
                 <div class="review-head">
                     <div class="reviewer">
-                        <div class="reviewer-avatar">${reviewNumber}</div>
+                        <div class="reviewer-avatar">${escapeHtml(initial)}</div>
                         <div>
-                            <strong>${reviewNumber}번째 리뷰</strong>
-                            <span>${formatDate(review.createdAt)} · ${escapeHtml(review.roomName || "이용 객실")}</span>
+                            <strong>${escapeHtml(reviewerName)}</strong>
+                            <span>${reviewNumber}번째 리뷰 · ${formatDate(review.createdAt)} · ${escapeHtml(review.roomName || "이용 객실")}</span>
                         </div>
                     </div>
 
@@ -593,15 +649,21 @@ function drawReviews(page) {
                     </div>
                 </div>
 
-                <div class="review-meta">
-                    <span>${formatTravelType(review.travelType)}</span>
-                    <span>${review.totalNights || 1}박</span>
-                </div>
-
                 <p>${escapeHtml(review.content || "리뷰 내용이 없습니다.")}</p>
                 ${tagsHtml}
                 <div class="review-photos" data-review-photos="${review.sid}"></div>
                 <div class="review-answer-wrap" data-review-answer="${review.sid}"></div>
+                <div class="review-help">
+                    <span>이 리뷰가 도움이 되었나요?</span>
+                    <button type="button" class="review-reaction-btn" data-review-id="${review.sid}" data-reaction="GOOD">
+                        <i class="fa-regular fa-thumbs-up"></i>
+                        도움됨 ${Number(review.likeCount || 0).toLocaleString()}
+                    </button>
+                    <button type="button" class="review-reaction-btn" data-review-id="${review.sid}" data-reaction="BAD">
+                        <i class="fa-regular fa-thumbs-down"></i>
+                        아쉬워요 ${Number(review.dislikeCount || 0).toLocaleString()}
+                    </button>
+                </div>
             </article>
         `);
 
@@ -611,6 +673,16 @@ function drawReviews(page) {
     });
 
     drawReviewPagination(page);
+}
+
+function makeReviewerName(memberId, reviewNumber) {
+    const auth = readJson("staynowAuth");
+
+    if (auth && String(auth.memberSid) === String(memberId) && auth.name) {
+        return auth.name;
+    }
+
+    return "StayNow 회원 " + reviewNumber;
 }
 
 function drawReviewStats(reviews, totalElements) {
@@ -753,10 +825,10 @@ function makeReviewTags(tags) {
     }
 
     const pros = tags.filter(function (tag) {
-        return tag.reviewTagCategory === "PROS";
+        return normalizeReviewTagCategory(tag) === "PROS";
     });
     const cons = tags.filter(function (tag) {
-        return tag.reviewTagCategory === "CONS";
+        return normalizeReviewTagCategory(tag) === "CONS";
     });
     let html = "";
 
@@ -780,6 +852,377 @@ function makeReviewTags(tags) {
 
     html += '</div>';
     return html;
+}
+
+function openReviewWriteModal() {
+    const auth = readJson("staynowAuth");
+
+    if (!auth || !auth.memberSid) {
+        sessionStorage.setItem("afterLoginRedirect", location.pathname.split("/").pop() + location.search);
+        alert("리뷰 작성은 로그인이 필요합니다.");
+        location.href = "login.html";
+        return;
+    }
+
+    if (!currentReviewReservation) {
+        alert("최근 체크아웃한 미작성 예약이 있을 때만 리뷰를 작성할 수 있습니다.");
+        return;
+    }
+
+    writeRating = 5;
+    $("#writeHotelName").text(currentHotel?.hotelName || "호텔");
+    $("#writeHotelSub").text(currentHotel?.hotelName || "호텔 이용 후기");
+    $("#writeHotelMeta").text(
+        (currentReviewReservation.roomName || "이용 객실") +
+        " · " +
+        formatDate(currentReviewReservation.checkInDate) +
+        " ~ " +
+        formatDate(currentReviewReservation.checkOutDate)
+    );
+    $("#writeReviewContent").val("");
+    $("#writeReviewPhotos").val("");
+    selectedReviewFiles = [];
+    $("#writePhotoPreview").empty();
+    $("#writeTravelType button").removeClass("active").first().addClass("active");
+    $(".write-tag-chip").removeClass("active");
+    $(".mini-stars").attr("data-rating", "5");
+    paintWriteStars();
+    $(".mini-stars").each(function () { paintMiniStars($(this)); });
+    updateWriteContentCount();
+    $("#reviewWriteModal").addClass("show").attr("aria-hidden", "false");
+}
+
+function closeReviewWriteModal() {
+    $("#reviewWriteModal").removeClass("show").attr("aria-hidden", "true");
+}
+
+function paintWriteStars() {
+    const wrap = $("#writeMainRating");
+    wrap.empty();
+
+    for (let i = 1; i <= 5; i++) {
+        wrap.append('<button type="button" class="write-star-btn ' + (i <= writeRating ? "active" : "") + '" data-rating="' + i + '"><i class="fa-regular fa-star"></i></button>');
+    }
+
+    $("#writeScoreText").text((writeRating * 2).toFixed(1));
+    $("#writeScoreLabel").text(writeRating >= 5 ? "5점 최고" : writeRating >= 4 ? "좋음" : writeRating >= 3 ? "보통" : "아쉬움");
+}
+
+function paintMiniStars(wrap) {
+    const rating = Number(wrap.attr("data-rating") || 5);
+    wrap.empty();
+
+    for (let i = 1; i <= 5; i++) {
+        wrap.append('<button type="button" class="mini-star-btn ' + (i <= rating ? "active" : "") + '" data-rating="' + i + '"><i class="fa-regular fa-star"></i></button>');
+    }
+}
+
+function updateWriteContentCount() {
+    const length = $("#writeReviewContent").val().length;
+    $("#writeContentCount").text(length.toLocaleString() + " / 1,000자");
+}
+
+function drawWritePhotoPreview() {
+    const incomingFiles = Array.from(this.files || []);
+    incomingFiles.forEach(function (file) {
+        const duplicated = selectedReviewFiles.some(function (selected) {
+            return selected.name === file.name && selected.size === file.size && selected.lastModified === file.lastModified;
+        });
+
+        if (!duplicated && selectedReviewFiles.length < 10) {
+            selectedReviewFiles.push(file);
+        }
+    });
+
+    redrawSelectedReviewFiles();
+    $("#writeReviewPhotos").val("");
+}
+
+function redrawSelectedReviewFiles() {
+    const preview = $("#writePhotoPreview");
+    preview.empty();
+
+    selectedReviewFiles.forEach(function (file, index) {
+        const url = URL.createObjectURL(file);
+        preview.append(
+            '<button type="button" class="write-photo-preview-item" data-index="' + index + '">' +
+                '<img src="' + url + '" alt="첨부 사진 미리보기">' +
+                '<span><i class="fa-solid fa-xmark"></i></span>' +
+            '</button>'
+        );
+    });
+}
+
+function submitReviewWrite(event) {
+    event.preventDefault();
+
+    const auth = readJson("staynowAuth");
+    const content = $("#writeReviewContent").val().trim();
+
+    if (!auth || !auth.memberSid) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+
+    if (content.length === 0) {
+        alert("리뷰 내용을 입력해주세요.");
+        return;
+    }
+
+    if (!currentReviewReservation) {
+        alert("리뷰를 작성할 수 있는 체크아웃 예약이 없습니다.");
+        return;
+    }
+
+    const payload = {
+        hotelId: Number(currentHotelId),
+        memberId: Number(auth.memberSid),
+        reservationId: Number(currentReviewReservation.sid),
+        rating: writeRating,
+        travelType: $("#writeTravelType button.active").data("value") || "COUPLE",
+        content: content,
+        categories: collectWriteCategories(),
+        tags: collectWriteTags()
+    };
+
+    $("#submitReviewWriteBtn").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 등록 중');
+
+    $.ajax({
+        url: API_BASE + "/review",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (result) {
+            const reviewId = result?.data?.sid;
+            uploadReviewPhotos(reviewId, function () {
+                closeReviewWriteModal();
+                currentReviewReservation = null;
+                loadReviews(currentHotelId);
+                loadReviewWriteEligibility(currentHotelId);
+                alert("리뷰가 등록되었습니다.");
+            });
+        },
+        error: function () {
+            alert("리뷰 등록에 실패했습니다. 예약 완료 후 다시 시도해주세요.");
+        },
+        complete: function () {
+            $("#submitReviewWriteBtn").prop("disabled", false).html('<i class="fa-regular fa-paper-plane"></i> 리뷰 등록');
+        }
+    });
+}
+
+function loadReviewWriteEligibility(hotelId) {
+    const auth = readJson("staynowAuth");
+
+    currentReviewReservation = null;
+    setReviewWriteButtonState(false, "리뷰 작성");
+
+    if (!auth || !auth.memberSid || !hotelId) {
+        setReviewWriteButtonState(true, "리뷰 작성");
+        return;
+    }
+
+    $.ajax({
+        url: API_BASE + "/reservation/search",
+        type: "GET",
+        data: {
+            memberId: auth.memberSid,
+            status: "CHECKED_OUT",
+            page: 0,
+            size: 50,
+            sort: "checkOutDate,desc"
+        },
+        success: function (page) {
+            const reservations = (page.content || [])
+                .filter(function (reservation) {
+                    return String(reservation.hotelId) === String(hotelId);
+                })
+                .sort(function (a, b) {
+                    return new Date(b.checkOutDate || 0) - new Date(a.checkOutDate || 0);
+                });
+
+            if (reservations.length === 0) {
+                setReviewWriteButtonState(false, "작성 가능한 예약 없음");
+                return;
+            }
+
+            findReviewableReservation(hotelId, reservations);
+        },
+        error: function () {
+            setReviewWriteButtonState(false, "작성 가능 여부 확인 실패");
+        }
+    });
+}
+
+function findReviewableReservation(hotelId, reservations) {
+    $.ajax({
+        url: API_BASE + "/review/search?hotelId=" + hotelId + "&page=0&size=200&sort=createdAt,desc",
+        type: "GET",
+        success: function (result) {
+            const reviews = result?.data?.content || [];
+            const reviewedReservationIds = new Set(reviews.map(function (review) {
+                return String(review.reservationId);
+            }));
+
+            currentReviewReservation = reservations.find(function (reservation) {
+                return !reviewedReservationIds.has(String(reservation.sid));
+            }) || null;
+
+            if (currentReviewReservation) {
+                setReviewWriteButtonState(true, "리뷰 작성");
+            } else {
+                setReviewWriteButtonState(false, "작성 가능한 예약 없음");
+            }
+        },
+        error: function () {
+            setReviewWriteButtonState(false, "작성 가능 여부 확인 실패");
+        }
+    });
+}
+
+function setReviewWriteButtonState(enabled, text) {
+    $("#openReviewWriteBtn")
+        .prop("disabled", !enabled)
+        .toggleClass("disabled", !enabled)
+        .html('<i class="fa-solid fa-pen"></i> ' + escapeHtml(text));
+}
+
+function collectWriteCategories() {
+    const categories = [];
+
+    $(".mini-stars").each(function () {
+        categories.push({
+            categoryId: Number($(this).data("category-id")),
+            rating: Number($(this).attr("data-rating") || 5)
+        });
+    });
+
+    return categories;
+}
+
+function collectWriteTags() {
+    return $(".write-tag-chip.active").map(function () {
+        return { tagId: Number($(this).data("tag-id")) };
+    }).get();
+}
+
+function drawWriteTagButtons() {
+    if (reviewTagMasters.length === 0) {
+        return;
+    }
+
+    const pros = reviewTagMasters.filter(function (tag) {
+        return getReviewTagCategory(tag) === "PROS";
+    });
+    const cons = reviewTagMasters.filter(function (tag) {
+        return getReviewTagCategory(tag) === "CONS";
+    });
+
+    $(".write-tag-area").html(
+        makeWriteTagGroup("pros", "fa-regular fa-thumbs-up", "좋았던 점", pros) +
+        makeWriteTagGroup("cons", "fa-regular fa-thumbs-down", "아쉬운 점", cons)
+    );
+}
+
+function makeWriteTagGroup(type, icon, title, tags) {
+    const buttons = tags.map(function (tag) {
+        return '<button type="button" class="write-tag-chip" data-tag-id="' + tag.sid + '">' +
+            escapeHtml(tag.reviewTagName || "태그") +
+            '</button>';
+    }).join("");
+
+    return '<div>' +
+        '<b class="tag-title ' + type + '"><i class="' + icon + '"></i> ' + title + '</b>' +
+        (buttons || '<span class="empty-write-tag">등록된 태그 없음</span>') +
+        '</div>';
+}
+
+function getReviewTagCategory(tag) {
+    if (!tag || !tag.reviewTagCategory) {
+        return "";
+    }
+
+    if (typeof tag.reviewTagCategory === "string") {
+        return tag.reviewTagCategory;
+    }
+
+    return tag.reviewTagCategory.name || tag.reviewTagCategory.value || "";
+}
+
+function normalizeReviewTagCategory(tag) {
+    const name = tag.reviewTagName || "";
+
+    if (["청결함", "친절함", "친절한 직원", "조식 맛있음", "위치 좋음", "전망 좋음", "수영장", "넓은 객실"].includes(name)) {
+        return "PROS";
+    }
+
+    if (["주차 불편", "체크인 대기", "소음", "가격 비쌈", "조식 대기"].includes(name)) {
+        return "CONS";
+    }
+
+    return getReviewTagCategory(tag);
+}
+
+function uploadReviewPhotos(reviewId, done) {
+    const files = selectedReviewFiles.slice(0, 10);
+
+    if (!reviewId || files.length === 0) {
+        done();
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("reviewId", reviewId);
+    files.forEach(function (file) {
+        formData.append("photos", file);
+    });
+
+    $.ajax({
+        url: API_BASE + "/review-photo",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        complete: done
+    });
+}
+
+function sendReviewReaction(reviewId, reactionType) {
+    const auth = readJson("staynowAuth");
+
+    if (!auth || !auth.memberSid) {
+        alert("로그인 후 이용해주세요.");
+        return;
+    }
+
+    $.ajax({
+        url: API_BASE + "/review-reaction",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            reviewId: Number(reviewId),
+            memberId: Number(auth.memberSid),
+            reactionType: reactionType
+        }),
+        success: function () {
+            loadReviews(currentHotelId);
+        },
+        error: function () {
+            $.ajax({
+                url: API_BASE + "/review-reaction",
+                type: "PATCH",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    reviewId: Number(reviewId),
+                    memberId: Number(auth.memberSid),
+                    reactionType: reactionType
+                }),
+                success: function () {
+                    loadReviews(currentHotelId);
+                }
+            });
+        }
+    });
 }
 
 function formatTravelType(type) {
@@ -832,13 +1275,12 @@ function normalizeImagePath(imagePath) {
         return FALLBACK_IMAGE;
     }
 
-    if (
-        imagePath.startsWith("http://") ||
-        imagePath.startsWith("https://") ||
-        imagePath.startsWith("/") ||
-        imagePath.startsWith("data:")
-    ) {
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://") || imagePath.startsWith("data:")) {
         return imagePath;
+    }
+
+    if (imagePath.startsWith("/")) {
+        return API_BASE.replace(/\/api$/, "") + imagePath;
     }
 
     return imagePath;
