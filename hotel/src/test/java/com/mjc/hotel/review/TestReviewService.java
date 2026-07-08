@@ -1,9 +1,12 @@
 package com.mjc.hotel.review;
 
+import com.mjc.hotel.member.entity.Member;
+import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.review.entity.enums.ReactionType;
 import com.mjc.hotel.review.entity.enums.TravelType;
 import com.mjc.hotel.review.request.*;
 import com.mjc.hotel.review.response.ReviewAnswerResponse;
+import com.mjc.hotel.review.response.ReviewPhotoResponse;
 import com.mjc.hotel.review.response.ReviewReactionResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.service.ReviewAnswerService;
@@ -17,9 +20,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.Commit;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +44,15 @@ public class TestReviewService {
     private ReviewPhotoService reviewPhotoService;
     @Autowired
     private ReviewAnswerService reviewAnswerService;
+    @Autowired
+    private MemberService memberService;
 
     private static ReviewResponse TEST_REVIEW;
     private static ReviewReactionResponse TEST_REVIEW_REACTION;
     private static ReviewAnswerResponse TEST_REVIEW_ANSWER;
+    private static final List<ReviewPhotoResponse> TEST_REVIEW_PHOTOS = new ArrayList<>();
+
+    private static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 10);
 
     @DisplayName("리뷰 테이블 저장 테스트")
     @Test
@@ -49,6 +60,12 @@ public class TestReviewService {
     @Commit
     public void testInsertReview() {
         LocalDateTime now = LocalDateTime.now();
+
+        //저장 전 포인트
+        Member member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+        Integer point = member.getPoint();
 
         List<ReviewCategoryRequest> categories = new ArrayList<>();
         setCategories(categories,1L,5);
@@ -108,6 +125,15 @@ public class TestReviewService {
         assertThat(inserted.getDeleted())
                 .isEqualTo(false);
 
+        //저장 후 포인트,
+        //같은 예약으로 리뷰가 저장된 기록이 있을 때 포인트 중복 지급 방지용, 예약으로 이미 리뷰가 존재할 때 실패함.
+        member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+
+        assertThat(member.getPoint())
+                .isGreaterThan(point);
+
         TEST_REVIEW = inserted;
     }
 
@@ -143,11 +169,11 @@ public class TestReviewService {
         assertThat(found.getTags().getFirst().getReviewTagId())
                 .isEqualTo(TEST_REVIEW.getTags().getFirst().getReviewTagId());
         assertThat(found.getCreatedAt())
-                .isEqualTo(TEST_REVIEW.getCreatedAt());
+                .isCloseTo(TEST_REVIEW.getCreatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getUpdatedAt())
-                .isEqualTo(TEST_REVIEW.getUpdatedAt());
+                .isCloseTo(TEST_REVIEW.getUpdatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getDeletedAt())
-                .isEqualTo(TEST_REVIEW.getDeletedAt());
+                .isNull();
         assertThat(found.getDeleted())
                 .isEqualTo(TEST_REVIEW.getDeleted());
     }
@@ -280,7 +306,7 @@ public class TestReviewService {
     public void testFindReviewReaction(){
         assertThrows(DataNotFoundException.class, () -> reviewReactionService.findReviewReaction(0L,0L));
 
-        ReviewReactionResponse found = reviewReactionService.findReviewReaction(TEST_REVIEW_REACTION.getReviewId(),TEST_REVIEW_REACTION.getReviewId());
+        ReviewReactionResponse found = reviewReactionService.findReviewReaction(TEST_REVIEW_REACTION.getReviewId(),TEST_REVIEW_REACTION.getMemberId());
 
         assertThat(found)
                 .isNotNull();
@@ -291,9 +317,9 @@ public class TestReviewService {
         assertThat(found.getReactionType())
                 .isEqualTo(TEST_REVIEW_REACTION.getReactionType());
         assertThat(found.getCreatedAt())
-                .isEqualTo(TEST_REVIEW_REACTION.getCreatedAt());
+                .isCloseTo(TEST_REVIEW_REACTION.getCreatedAt(),within(1,ChronoUnit.MILLIS));
         assertThat(found.getUpdatedAt())
-                .isEqualTo(TEST_REVIEW_REACTION.getUpdatedAt());
+                .isCloseTo(TEST_REVIEW_REACTION.getUpdatedAt(),within(1,ChronoUnit.MILLIS));
     }
 
     @DisplayName("리뷰 좋아요 싫어요 테이블 수정 테스트")
@@ -460,11 +486,11 @@ public class TestReviewService {
         assertThat(found.getReviewAnswer())
                 .isEqualTo(TEST_REVIEW_ANSWER.getReviewAnswer());
         assertThat(found.getCreatedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getCreatedAt());
+                .isCloseTo(TEST_REVIEW_ANSWER.getCreatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getUpdatedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getUpdatedAt());
+                .isCloseTo(TEST_REVIEW_ANSWER.getUpdatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getDeletedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getDeletedAt());
+                .isNull();
         assertThat(found.getDeleted())
                 .isEqualTo(TEST_REVIEW_ANSWER.getDeleted());
     }
@@ -487,11 +513,11 @@ public class TestReviewService {
         assertThat(found.getReviewAnswer())
                 .isEqualTo(TEST_REVIEW_ANSWER.getReviewAnswer());
         assertThat(found.getCreatedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getCreatedAt());
+                .isCloseTo(TEST_REVIEW_ANSWER.getCreatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getUpdatedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getUpdatedAt());
+                .isCloseTo(TEST_REVIEW_ANSWER.getUpdatedAt(), within(1, ChronoUnit.MILLIS));
         assertThat(found.getDeletedAt())
-                .isEqualTo(TEST_REVIEW_ANSWER.getDeletedAt());
+                .isNull();
         assertThat(found.getDeleted())
                 .isEqualTo(TEST_REVIEW_ANSWER.getDeleted());
     }
@@ -555,22 +581,202 @@ public class TestReviewService {
         assertThrows(DataNotFoundException.class, () -> reviewAnswerService.findBySidReviewAnswer(TEST_REVIEW_ANSWER.getSid()));
     }
 
-    @DisplayName("리뷰 테이블 호텔 Id 리뷰 조회 테스트")
+    @DisplayName("리뷰 사진 테이블 저장 테스트")
+    @Test
+    @Order(14)
+    @Commit
+    public void testInsertReviewPhotos(){
+        LocalDateTime now = LocalDateTime.now();
+
+        //저장 전 포인트
+        Member member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+        Integer point = member.getPoint();
+
+        List<MultipartFile> photos = new ArrayList<>();
+
+        MockMultipartFile photo = new MockMultipartFile(
+                "file",
+                "insert.jpg",
+                "image/jpeg",
+                new byte[10]
+        );
+        photos.add(photo);
+
+        ReviewPhotoCreateRequest request = new ReviewPhotoCreateRequest(
+                TEST_REVIEW.getSid(),
+                photos
+        );
+
+        List<ReviewPhotoResponse> inserted = reviewPhotoService.insertReviewPhotos(request);
+
+        assertThat(inserted)
+                .isNotNull();
+        assertThat(inserted.size())
+                .isEqualTo(1);
+        assertThat(inserted.getFirst().getOriginalFileName())
+                .isEqualTo("insert.jpg");
+        assertThat(inserted.getFirst().getImagePath().substring(0,16))
+                .isEqualTo("/images/reviews/");
+        assertThat(inserted.getFirst().getCreatedAt())
+                .isNotNull();
+        assertThat(inserted.getFirst().getCreatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(inserted.getFirst().getUpdatedAt())
+                .isNotNull();
+        assertThat(inserted.getFirst().getUpdatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(inserted.getFirst().getDeletedAt())
+                .isNull();
+        assertThat(inserted.getFirst().getDeleted())
+                .isEqualTo(false);
+
+        //저장 후 포인트,
+        //리뷰에 이미 사진을 저장한 기록이 있는데 새로 저장 할 때 중복 지급 방지용, 리뷰에 사진이 존재할 때 실패함.
+        member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+
+        assertThat(member.getPoint())
+                .isGreaterThan(point);
+
+        TEST_REVIEW_PHOTOS.clear();
+        TEST_REVIEW_PHOTOS.addAll(inserted);
+    }
+
+    @DisplayName("리뷰 사진 테이블 리뷰 Id 검색 테스트")
+    @Test
+    @Order(15)
+    @Commit
+    public void testSearchPhoto(){
+        assertThrows(DataNotFoundException.class, () -> reviewPhotoService.search(0L,null));
+
+        Page<ReviewPhotoResponse> responses = reviewPhotoService.search(TEST_REVIEW.getSid(), DEFAULT_PAGEABLE);
+
+        assertThat(responses)
+                .isNotNull();
+        assertThat(responses)
+                .allMatch(response -> response.getImagePath().startsWith("/images/reviews/"));
+
+        for(int i = 0; i < TEST_REVIEW_PHOTOS.size(); i++){
+            assertThat(responses.getContent().get(i).getSid())
+                    .isEqualTo(TEST_REVIEW_PHOTOS.get(i).getSid());
+            assertThat(responses.getContent().get(i).getOriginalFileName())
+                    .isEqualTo(TEST_REVIEW_PHOTOS.get(i).getOriginalFileName());
+            assertThat(responses.getContent().get(i).getCreatedAt())
+                    .isCloseTo(TEST_REVIEW_PHOTOS.get(i).getCreatedAt(),within(1, ChronoUnit.MILLIS));
+            assertThat(responses.getContent().get(i).getUpdatedAt())
+                    .isCloseTo(TEST_REVIEW_PHOTOS.get(i).getUpdatedAt(),within(1, ChronoUnit.MILLIS));
+            assertThat(responses.getContent().get(i).getDeletedAt())
+                    .isNull();
+            assertThat(responses.getContent().get(i).getDeleted())
+                    .isEqualTo(false);
+        }
+    }
+
+    @DisplayName("리뷰 사진 테이블 수정 테스트")
+    @Test
+    @Order(16)
+    @Commit
+    public void testUpdateReviewPhoto(){
+        MockMultipartFile photo = new MockMultipartFile(
+                "file",
+                "update.jpg",
+                "image/jpeg",
+                new byte[10]
+        );
+
+        ReviewPhotoUpdateRequest fail1 = new ReviewPhotoUpdateRequest(
+                0L,
+                TEST_REVIEW.getSid(),
+                photo
+        );
+        assertThrows(DataNotFoundException.class, ()-> reviewPhotoService.updateReviewPhoto(fail1));
+
+        ReviewPhotoUpdateRequest fail2 = new ReviewPhotoUpdateRequest(
+                TEST_REVIEW_PHOTOS.getFirst().getSid(),
+                0L,
+                photo
+        );
+        assertThrows(DataNotFoundException.class, ()-> reviewPhotoService.updateReviewPhoto(fail2));
+
+        ReviewPhotoUpdateRequest fail3 = new ReviewPhotoUpdateRequest(
+                TEST_REVIEW_PHOTOS.getFirst().getSid(),
+                TEST_REVIEW.getSid(),
+                null
+        );
+        assertThrows(IllegalArgumentException.class, ()-> reviewPhotoService.updateReviewPhoto(fail3));
+
+        ReviewPhotoUpdateRequest request = new ReviewPhotoUpdateRequest(
+                TEST_REVIEW_PHOTOS.getFirst().getSid(),
+                TEST_REVIEW.getSid(),
+                photo
+        );
+
+        ReviewPhotoResponse updated = reviewPhotoService.updateReviewPhoto(request);
+
+        assertThat(updated)
+                .isNotNull();
+
+        assertThat(updated.getOriginalFileName())
+                .isNotEqualTo(TEST_REVIEW_PHOTOS.getFirst().getOriginalFileName());
+        assertThat(updated.getOriginalFileName())
+                .isEqualTo("update.jpg");
+
+        assertThat(updated.getImagePath().substring(0,16))
+                .isEqualTo("/images/reviews/");
+
+        TEST_REVIEW_PHOTOS.clear();
+        TEST_REVIEW_PHOTOS.add(updated);
+    }
+
+    @DisplayName("리뷰 사진 테이블 삭제 테스트")
+    @Test
+    @Order(17)
+    @Commit
+    public void testDeleteReviewPhoto(){
+        assertThrows(DataNotFoundException.class,()-> reviewPhotoService.deleteReviewImage(0L));
+
+        ReviewPhotoResponse delete = reviewPhotoService.deleteReviewImage(TEST_REVIEW_PHOTOS.getFirst().getSid());
+
+        assertThat(delete)
+                .isNotNull();
+        assertThat(delete.getDeletedAt())
+                .isNotNull();
+        assertThat(delete.getDeleted())
+                .isEqualTo(true);
+
+        TEST_REVIEW_PHOTOS.clear();
+        TEST_REVIEW_PHOTOS.add(delete);
+    }
+
+    @DisplayName("리뷰 사진 테이블 삭제 컬럼 검색 테스트")
     @Test
     @Order(18)
+    @Commit
+    public void testFindDeletedPhoto(){
+        for(ReviewPhotoResponse reviewPhoto : TEST_REVIEW_PHOTOS){
+            assertThrows(DataNotFoundException.class,()-> reviewPhotoService.search(reviewPhoto.getSid(),DEFAULT_PAGEABLE));
+        }
+    }
+
+    @DisplayName("리뷰 테이블 호텔 Id 리뷰 조회 테스트")
+    @Test
+    @Order(19)
+    @Commit
     public void testReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.reviewsInHotel(1L, pageable);
+        Page<ReviewResponse> responses = reviewService.reviewsInHotel(1L, DEFAULT_PAGEABLE);
         assertThat(responses.getContent())
                 .allMatch(response -> response.getHotelId() == 1L);
     }
 
     @DisplayName("리뷰 테이블 호텔 Id 긍정 리뷰 조회 테스트")
     @Test
-    @Order(19)
+    @Order(20)
+    @Commit
     public void testPositiveReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.positiveReviewsInHotel(1L, pageable);
+        Page<ReviewResponse> responses = reviewService.positiveReviewsInHotel(1L, DEFAULT_PAGEABLE);
         assertThat(responses.getContent())
                 .allMatch(response -> response.getHotelId() == 1L);
         assertThat(responses.getContent())
@@ -579,20 +785,112 @@ public class TestReviewService {
 
     @DisplayName("리뷰 테이블 호텔 Id 사진 포함 리뷰 조회 테스트")
     @Test
-    @Order(20)
+    @Order(21)
+    @Commit
     public void testExistsPhotoReviewsInHotel(){
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<ReviewResponse> responses = reviewService.existsPhotoReviewsInHotel(1L, pageable);
+        Page<ReviewResponse> responses = reviewService.existsPhotoReviewsInHotel(1L, DEFAULT_PAGEABLE);
         assertThat(responses.getContent())
                 .allMatch(response -> response.getHotelId() == 1L);
         assertThat(responses.getTotalElements())
                 .isEqualTo(1);
     }
 
+    @DisplayName("리뷰 테이블 삭제 전 리뷰 답변, 리뷰 사진 저장 테스트")
+    @Test
+    @Order(22)
+    @Commit
+    public void testBeforeDeleteReviewInsertAnswerAndPhoto(){
+        LocalDateTime now = LocalDateTime.now();
+        ReviewAnswerCreateRequest requestAnswer = new ReviewAnswerCreateRequest(
+                TEST_REVIEW.getSid(),
+                "리뷰 테이블 삭제 전 리뷰 답변 저장 테스트"
+        );
+        ReviewAnswerResponse insertedAnswer = reviewAnswerService.insertReviewAnswer(requestAnswer);
+
+        assertThat(insertedAnswer)
+                .isNotNull();
+        assertThat(insertedAnswer.getSid())
+                .isNotNull();
+        assertThat(insertedAnswer.getReviewId())
+                .isEqualTo(TEST_REVIEW.getSid());
+        assertThat(insertedAnswer.getReviewAnswer())
+                .isEqualTo("리뷰 답변 저장 테스트");
+        assertThat(insertedAnswer.getCreatedAt())
+                .isNotNull();
+        assertThat(insertedAnswer.getCreatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(insertedAnswer.getUpdatedAt())
+                .isNotNull();
+        assertThat(insertedAnswer.getUpdatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(insertedAnswer.getDeletedAt())
+                .isNull();
+        assertThat(insertedAnswer.getDeleted())
+                .isEqualTo(false);
+
+        TEST_REVIEW_ANSWER = insertedAnswer;
+
+        //저장 전 포인트
+        Member member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+        Integer point = member.getPoint();
+
+        List<MultipartFile> photos = new ArrayList<>();
+
+        MockMultipartFile photo = new MockMultipartFile(
+                "file",
+                "before_delete_review_insert.jpg",
+                "image/jpeg",
+                new byte[10]
+        );
+        photos.add(photo);
+
+        ReviewPhotoCreateRequest requestPhoto = new ReviewPhotoCreateRequest(
+                TEST_REVIEW.getSid(),
+                photos
+        );
+
+        List<ReviewPhotoResponse> insertedPhotos = reviewPhotoService.insertReviewPhotos(requestPhoto);
+
+        assertThat(insertedPhotos)
+                .isNotNull();
+        assertThat(insertedPhotos.size())
+                .isEqualTo(1);
+        assertThat(insertedPhotos.getFirst().getOriginalFileName())
+                .isEqualTo("before_delete_review_insert.jpg");
+        assertThat(insertedPhotos.getFirst().getImagePath().substring(0,16))
+                .isEqualTo("/images/reviews/");
+        assertThat(insertedPhotos.getFirst().getCreatedAt())
+                .isNotNull();
+        assertThat(insertedPhotos.getFirst().getCreatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(insertedPhotos.getFirst().getUpdatedAt())
+                .isNotNull();
+        assertThat(insertedPhotos.getFirst().getUpdatedAt())
+                .isAfterOrEqualTo(now);
+        assertThat(insertedPhotos.getFirst().getDeletedAt())
+                .isNull();
+        assertThat(insertedPhotos.getFirst().getDeleted())
+                .isEqualTo(false);
+
+        //저장 후 포인트
+        member = memberService.getMember(1L);
+        assertThat(member)
+                .isNotNull();
+
+        //여기선 이미 리뷰 사진을 추가, 삭제한 상태에서 새로 사진을 저장하기 때문에 포인트를 지급하면 안됨.
+        assertThat(member.getPoint())
+                .isEqualTo(point);
+
+        TEST_REVIEW_PHOTOS.clear();
+        TEST_REVIEW_PHOTOS.addAll(insertedPhotos);
+    }
 
     @DisplayName("리뷰 테이블 삭제 테스트")
     @Test
-    @Order(21)
+    @Order(23)
+    @Commit
     public void testDeleteReview() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -618,22 +916,30 @@ public class TestReviewService {
         TEST_REVIEW = delete;
     }
 
+    @DisplayName("리뷰 테이블 삭제 후 리뷰 답변, 리뷰 사진 검색 테스트")
+    @Test
+    @Order(24)
+    @Commit
+    public void testAfterDeleteReviewFindAnswerAndPhoto() {
+        assertThrows(DataNotFoundException.class, () -> reviewAnswerService.findByReviewSid(TEST_REVIEW.getSid()));
+        assertThrows(DataNotFoundException.class, () -> reviewPhotoService.search(TEST_REVIEW.getSid(), DEFAULT_PAGEABLE));
+    }
+
     @DisplayName("리뷰 테이블 삭제 컬럼 검색 테스트")
     @Test
-    @Order(22)
+    @Order(25)
+    @Commit
     public void testFindDeletedReview(){
         assertThrows(DataNotFoundException.class, () -> reviewService.findByReviewId(TEST_REVIEW.getSid()));
     }
 
-    private List<ReviewCategoryRequest> setCategories(List<ReviewCategoryRequest> categories, Long categoryId, Integer rating) {
+    private void setCategories(List<ReviewCategoryRequest> categories, Long categoryId, Integer rating) {
         ReviewCategoryRequest category = new ReviewCategoryRequest(categoryId,rating);
         categories.add(category);
-        return categories;
     }
 
-    private List<ReviewTagRequest> setTags(List<ReviewTagRequest> tags , Long tagId) {
+    private void setTags(List<ReviewTagRequest> tags , Long tagId) {
         ReviewTagRequest tag = new ReviewTagRequest(tagId);
         tags.add(tag);
-        return tags;
     }
 }

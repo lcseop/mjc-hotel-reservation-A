@@ -5,7 +5,6 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
-import com.mjc.hotel.reservations.repository.ReservationRepository;
 import com.mjc.hotel.review.entity.Review;
 import com.mjc.hotel.review.entity.ReviewPhoto;
 import com.mjc.hotel.review.repository.ReviewPhotoRepository;
@@ -111,8 +110,9 @@ public class ReviewPhotoService {
         ReviewPhotoResponse response = this.toReviewPhotoResponse(save);
         return response;
     }
+
     @Transactional
-    public List<ReviewPhotoResponse> findAllByReviewId(Long reviewId){
+    public List<ReviewPhotoResponse> findAllByReviewSid(Long reviewId){
         List<ReviewPhoto> photos = reviewPhotoRepository.findAllByReviewSidAndDeletedFalse(reviewId);
         if(photos.isEmpty()){
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Photos Not Found");
