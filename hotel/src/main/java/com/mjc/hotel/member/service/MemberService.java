@@ -5,6 +5,8 @@ import com.mjc.hotel.member.dto.MemberAuthAccountRequestDto;
 import com.mjc.hotel.member.dto.MemberTermAgreementRequestDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
+import com.mjc.hotel.member.entity.MemberRole;
+import com.mjc.hotel.member.entity.MemberStatus;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
 import com.mjc.hotel.member.repository.MemberAuthAccountRepository;
 import com.mjc.hotel.member.repository.MemberRepository;
@@ -59,6 +61,7 @@ public class MemberService {
 
     @Transactional
     public Member saveMember(Member member) {
+        prepareRequiredMemberValues(member);
         return memberRepository.save(member);
     }
 
@@ -67,11 +70,24 @@ public class MemberService {
         Member member = getMember(sid);
         member.setName(requestMember.getName());
         member.setPhone(requestMember.getPhone());
-        member.setEmail(requestMember.getEmail());
-        member.setStatus(requestMember.getStatus());
-        member.setRole(requestMember.getRole());
-        member.setEmailVerified(requestMember.getEmailVerified());
-        member.setPhoneVerified(requestMember.getPhoneVerified());
+        if (requestMember.getEmail() != null) {
+            member.setEmail(requestMember.getEmail());
+        }
+        if (requestMember.getStatus() != null) {
+            member.setStatus(requestMember.getStatus());
+        }
+        if (requestMember.getRole() != null) {
+            member.setRole(requestMember.getRole());
+        }
+        if (requestMember.getEmailVerified() != null) {
+            member.setEmailVerified(requestMember.getEmailVerified());
+        }
+        if (requestMember.getPhoneVerified() != null) {
+            member.setPhoneVerified(requestMember.getPhoneVerified());
+        }
+        if (requestMember.getPoint() != null) {
+            member.setPoint(requestMember.getPoint());
+        }
 
         return member;
     }
@@ -82,6 +98,7 @@ public class MemberService {
             MemberAuthAccount authAccount,
             List<MemberTermAgreement> termAgreements
     ) {
+        prepareRequiredMemberValues(member);
         Member savedMember = memberRepository.save(member);
 
         if (authAccount != null) {
@@ -176,5 +193,26 @@ public class MemberService {
             return passwordEncoder.encode(password);
         }
         return passwordHash;
+    }
+
+    private void prepareRequiredMemberValues(Member member) {
+        if (member.getEmail() == null) {
+            throw new IllegalArgumentException("회원 이메일은 필수입니다.");
+        }
+        if (member.getStatus() == null) {
+            member.setStatus(MemberStatus.ACTIVE);
+        }
+        if (member.getRole() == null) {
+            member.setRole(MemberRole.USER);
+        }
+        if (member.getEmailVerified() == null) {
+            member.setEmailVerified(false);
+        }
+        if (member.getPhoneVerified() == null) {
+            member.setPhoneVerified(false);
+        }
+        if (member.getPoint() == null) {
+            member.setPoint(0);
+        }
     }
 }

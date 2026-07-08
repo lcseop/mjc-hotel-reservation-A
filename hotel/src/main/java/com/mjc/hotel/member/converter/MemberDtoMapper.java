@@ -38,10 +38,10 @@ public class MemberDtoMapper {
                 .name(dto.getName())
                 .phone(dto.getPhone())
                 .email(dto.getEmail())
-                .status(dto.getStatus() != null ? dto.getStatus() : MemberStatus.ACTIVE)
-                .role(dto.getRole() != null ? dto.getRole() : MemberRole.USER)
-                .emailVerified(dto.getEmailVerified() != null ? dto.getEmailVerified() : false)
-                .phoneVerified(dto.getPhoneVerified() != null ? dto.getPhoneVerified() : false)
+                .status(resolveStatus(dto.getStatus()))
+                .role(resolveRole(dto.getRole()))
+                .emailVerified(resolveBoolean(dto.getEmailVerified()))
+                .phoneVerified(resolveBoolean(dto.getPhoneVerified()))
                 .point(5000)
                 .build();
     }
@@ -124,5 +124,17 @@ public class MemberDtoMapper {
                 .deleted(Boolean.TRUE.equals(termAgreement.getDeleted()))
                 .deletedAt(termAgreement.getDeletedAt())
                 .build();
+    }
+
+    private MemberStatus resolveStatus(MemberStatus status) {
+        return status != null ? status : MemberStatus.ACTIVE;
+    }
+
+    private MemberRole resolveRole(MemberRole role) {
+        return role != null ? role : MemberRole.USER;
+    }
+
+    private Boolean resolveBoolean(Boolean value) {
+        return value != null ? value : false;
     }
 }
