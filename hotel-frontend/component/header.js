@@ -94,9 +94,10 @@ function renderAuthHeader() {
         $(".auth-user-name").text((auth.name || auth.email || "회원") + "님");
         $(".auth-user-email").text(auth.email || "");
         $(".user-dropdown").addClass("is-logged-in");
+        $(".user-dropdown").toggleClass("is-admin", auth.role === "ADMIN");
     } else {
         $(".auth-user-name").text("로그인");
         $(".auth-user-email").text("로그인이 필요합니다");
-        $(".user-dropdown").removeClass("is-logged-in");
+        $(".user-dropdown").removeClass("is-logged-in is-admin");
     }
 }
