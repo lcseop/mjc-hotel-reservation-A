@@ -28,7 +28,6 @@ public class MemberDtoMapper {
                 .status(dto.getStatus())
                 .role(dto.getRole())
                 .emailVerified(dto.getEmailVerified())
-                .phoneVerified(dto.getPhoneVerified())
                 .point(dto.getPoint())
                 .build();
     }
@@ -41,7 +40,6 @@ public class MemberDtoMapper {
                 .status(resolveStatus(dto.getStatus()))
                 .role(resolveRole(dto.getRole()))
                 .emailVerified(resolveBoolean(dto.getEmailVerified()))
-                .phoneVerified(resolveBoolean(dto.getPhoneVerified()))
                 .point(5000)
                 .build();
     }
@@ -95,7 +93,6 @@ public class MemberDtoMapper {
                 .role(member.getRole())
                 .point(member.getPoint())
                 .emailVerified(member.getEmailVerified())
-                .phoneVerified(member.getPhoneVerified())
                 .deleted(Boolean.TRUE.equals(member.getDeleted()))
                 .deletedAt(member.getDeletedAt())
                 .build();

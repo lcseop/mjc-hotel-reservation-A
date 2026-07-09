@@ -50,8 +50,6 @@ public class Member extends BaseEntity {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified;
 
-    @Column(name = "phone_verified", nullable = false)
-    private Boolean phoneVerified;
 
     @Column(name = "member_point", nullable = false)
     private Integer point;

@@ -28,7 +28,6 @@ public class AuthLoginTestData {
                 .password(LOGIN_TEST_PASSWORD)
                 .passwordConfirm(LOGIN_TEST_PASSWORD)
                 .emailVerified(true)
-                .phoneVerified(false)
                 .build();
 
         authService.signup(request);

@@ -82,9 +82,6 @@ public class MemberService {
         if (requestMember.getEmailVerified() != null) {
             member.setEmailVerified(requestMember.getEmailVerified());
         }
-        if (requestMember.getPhoneVerified() != null) {
-            member.setPhoneVerified(requestMember.getPhoneVerified());
-        }
         if (requestMember.getPoint() != null) {
             member.setPoint(requestMember.getPoint());
         }
@@ -207,9 +204,6 @@ public class MemberService {
         }
         if (member.getEmailVerified() == null) {
             member.setEmailVerified(false);
-        }
-        if (member.getPhoneVerified() == null) {
-            member.setPhoneVerified(false);
         }
         if (member.getPoint() == null) {
             member.setPoint(0);
