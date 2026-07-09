@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional(readOnly = true)
 public class RoomTypeService {
@@ -68,6 +70,13 @@ public class RoomTypeService {
         RoomType type = roomTypeRepository.findById(id).orElseThrow();
         if (type.getDeleted() != null && type.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         return toDto(type, true);
+    }
+
+    public List<RoomTypeDto> findAll() {
+        return roomTypeRepository.findAll().stream()
+                .filter(type -> type.getDeleted() == null || !type.getDeleted())
+                .map(type -> toDto(type, true))
+                .toList();
     }
 
     private RoomTypeDto toDto(RoomType type, boolean sid) {
