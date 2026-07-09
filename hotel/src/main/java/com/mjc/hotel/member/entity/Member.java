@@ -36,24 +36,22 @@ public class Member extends BaseEntity {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @Column(name = "email", length = 255)
+    @Column(name = "email", length = 255, nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private MemberStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     private MemberRole role;
 
-    @Column(name = "email_verified")
+    @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified;
 
-    @Column(name = "phone_verified")
-    private Boolean phoneVerified;
 
-    @Column(name = "member_point")
+    @Column(name = "member_point", nullable = false)
     private Integer point;
 
 }

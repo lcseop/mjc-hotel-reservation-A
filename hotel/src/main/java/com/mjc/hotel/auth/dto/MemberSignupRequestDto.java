@@ -1,4 +1,4 @@
-package com.mjc.hotel.member.dto;
+package com.mjc.hotel.auth.dto;
 
 import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.member.entity.MemberRole;
@@ -22,6 +22,10 @@ public class MemberSignupRequestDto {
     private String name;
     private String phone;
     private String email;
+    private String password;
+    private String passwordConfirm;
+    private MemberAuthProvider provider;
+    private String providerUserId;
     private MemberStatus status;
     private MemberRole role;
     private Boolean emailVerified;

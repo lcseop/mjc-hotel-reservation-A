@@ -1,15 +1,17 @@
 package com.mjc.hotel.member.converter;
 
+import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
 import com.mjc.hotel.member.dto.MemberRequestDto;
 import com.mjc.hotel.member.dto.MemberAuthAccountRequestDto;
 import com.mjc.hotel.member.dto.MemberAuthAccountResponseDto;
 import com.mjc.hotel.member.dto.MemberResponseDto;
-import com.mjc.hotel.member.dto.MemberSignupRequestDto;
 import com.mjc.hotel.member.dto.MemberTermAgreementRequestDto;
 import com.mjc.hotel.member.dto.MemberTermAgreementResponseDto;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
+import com.mjc.hotel.member.entity.MemberRole;
+import com.mjc.hotel.member.entity.MemberStatus;
 import com.mjc.hotel.term.entity.Term;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +28,6 @@ public class MemberDtoMapper {
                 .status(dto.getStatus())
                 .role(dto.getRole())
                 .emailVerified(dto.getEmailVerified())
-                .phoneVerified(dto.getPhoneVerified())
                 .point(dto.getPoint())
                 .build();
     }
@@ -36,10 +37,10 @@ public class MemberDtoMapper {
                 .name(dto.getName())
                 .phone(dto.getPhone())
                 .email(dto.getEmail())
-                .status(dto.getStatus())
-                .role(dto.getRole())
-                .emailVerified(dto.getEmailVerified())
-                .phoneVerified(dto.getPhoneVerified())
+                .status(resolveStatus(dto.getStatus()))
+                .role(resolveRole(dto.getRole()))
+                .emailVerified(resolveBoolean(dto.getEmailVerified()))
+                .point(5000)
                 .build();
     }
 
@@ -92,7 +93,6 @@ public class MemberDtoMapper {
                 .role(member.getRole())
                 .point(member.getPoint())
                 .emailVerified(member.getEmailVerified())
-                .phoneVerified(member.getPhoneVerified())
                 .deleted(Boolean.TRUE.equals(member.getDeleted()))
                 .deletedAt(member.getDeletedAt())
                 .build();
@@ -122,5 +122,17 @@ public class MemberDtoMapper {
                 .deleted(Boolean.TRUE.equals(termAgreement.getDeleted()))
                 .deletedAt(termAgreement.getDeletedAt())
                 .build();
+    }
+
+    private MemberStatus resolveStatus(MemberStatus status) {
+        return status != null ? status : MemberStatus.ACTIVE;
+    }
+
+    private MemberRole resolveRole(MemberRole role) {
+        return role != null ? role : MemberRole.USER;
+    }
+
+    private Boolean resolveBoolean(Boolean value) {
+        return value != null ? value : false;
     }
 }
