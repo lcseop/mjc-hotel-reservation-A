@@ -1,5 +1,3 @@
-const ADMIN_TODAY_LABEL = "2025년 7월 14일 (월) · 오전 10:42";
-
 const ADMIN_PAGES = [
     { id: "dashboard", label: "대시보드", file: "admin-dashboard.html", icon: "fa-table-cells-large", group: "메인" },
     { id: "reservations", label: "예약 관리", file: "admin-reservations.html", icon: "fa-calendar-check", group: "메인", badge: "12" },
@@ -15,6 +13,9 @@ const ADMIN_PAGES = [
 ];
 
 const ADMIN_TOP_NAV = ["dashboard", "reservations", "guests", "rooms", "sales", "reviews", "settings"];
+const ADMIN_SELECTED_HOTEL_KEY = "staynowAdminSelectedHotelId";
+const ADMIN_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+let ADMIN_DASHBOARD_STATE = null;
 
 const reservations = [
     ["SN-0714-8842", "김민준", "디럭스 더블 101호", "07.14", "07.16", "₩240,000", "예약확정", "green"],
@@ -60,18 +61,81 @@ function renderAdminShell(pageId, auth) {
             </div>
         </header>
         <aside class="admin-sidebar">
-            <div class="hotel-switcher"><span class="mini-icon"><i class="fa-solid fa-hotel"></i></span><span>그랜드 서울</span><i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#94a3b8"></i></div>
+            <div class="hotel-switcher" id="adminHotelSwitcher">
+                <span class="mini-icon"><i class="fa-solid fa-hotel"></i></span>
+                <button class="admin-hotel-toggle" id="adminHotelToggle" type="button" disabled>
+                    <span id="adminHotelName">호텔 불러오는 중</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="admin-hotel-menu" id="adminHotelMenu" hidden></div>
+            </div>
             ${renderSideGroups(pageId)}
         </aside>
         <main class="admin-main">
             <section class="page-head">
-                <div><h1>${page.label}${page.id === "dashboard" ? '<span class="trend">● 실시간 업데이트 중</span>' : ""}</h1><p>${pageSubtitle(page.id)}</p></div>
+                <div><h1>${page.label}${page.id === "dashboard" ? '<span class="trend">● 실시간 업데이트 중</span>' : ""}</h1><p id="adminPageSubtitle">${pageSubtitle(page.id)}</p></div>
                 <div class="head-actions">${headActions(page.id)}</div>
             </section>
             <section id="adminContent">${renderPage(page.id)}</section>
-            <div class="admin-note">현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다.</div>
+            <div class="admin-note">${page.id === "dashboard" ? "대시보드는 왼쪽에서 선택한 호텔 기준으로 예약, 객실, 결제, 리뷰 데이터를 조합해 표시합니다." : "현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다."}</div>
         </main>
     `);
+
+    if (page.id === "dashboard") {
+        loadAdminDashboardData();
+    }
+
+    clearInterval(window.adminClockTimer);
+    window.adminClockTimer = setInterval(function () {
+        $("#adminPageSubtitle").text(pageSubtitle(page.id));
+    }, 60000);
+
+    $(document).off("click.adminRefresh").on("click.adminRefresh", "[data-admin-action='refresh-dashboard']", function () {
+        loadAdminDashboardData();
+    });
+    $(document).off("click.adminMonth").on("click.adminMonth", "[data-admin-action='dashboard-month']", function () {
+        $("#adminPageSubtitle").text(pageSubtitle(page.id));
+        loadAdminDashboardData();
+    });
+    $(document).off("click.adminReport").on("click.adminReport", "[data-admin-action='download-dashboard-report']", function () {
+        downloadDashboardReport();
+    });
+}
+
+function getAdminNowLabel() {
+    const now = new Date();
+    const hour = now.getHours();
+    const displayHour = hour % 12 || 12;
+    const meridiem = hour < 12 ? "오전" : "오후";
+    return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${ADMIN_WEEKDAYS[now.getDay()]}) · ${meridiem} ${String(displayHour).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function getAdminDateLabel() {
+    const now = new Date();
+    return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+}
+
+function getAdminMonthLabel() {
+    return `이번 달 (${new Date().getMonth() + 1}월)`;
+}
+
+function getAdminMonthSettlementLabel() {
+    const now = new Date();
+    return `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+}
+
+function getAdminMonthRangeLabel() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    return `이번 달 (${String(month).padStart(2, "0")}.01 ~ ${String(month).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")})`;
+}
+
+function clampAdminPercent(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return 0;
+    }
+    return Math.min(100, Math.max(0, Math.round(numeric * 10) / 10));
 }
 
 function navTop(id, activeId) {
@@ -96,33 +160,35 @@ function renderSideGroups(activeId) {
 }
 
 function pageSubtitle(id) {
+    const nowLabel = getAdminNowLabel();
     const copy = {
-        dashboard: `${ADMIN_TODAY_LABEL}`,
-        reservations: `${ADMIN_TODAY_LABEL} · 전체 예약 현황 및 승인 관리`,
-        checkin: `${ADMIN_TODAY_LABEL} · 체크인 / 체크아웃 운영`,
+        dashboard: `${nowLabel}`,
+        reservations: `${nowLabel} · 전체 예약 현황 및 승인 관리`,
+        checkin: `${nowLabel} · 체크인 / 체크아웃 운영`,
         guests: "회원, 투숙 이력, 등급, 문의 상태 관리",
-        rooms: "실시간 객실 상태, 청소, 점검, 재고 관리",
-        rates: `${ADMIN_TODAY_LABEL} · 객실 유형별 요금 및 시즌 정책 관리`,
-        promotions: `${ADMIN_TODAY_LABEL} · 특가 및 할인 프로모션 관리`,
-        sales: "그랜드 서울 · 2025년 7월 14일 기준",
+        rooms: "실시간 객실 상태, 예약, 공실 관리",
+        rates: `${nowLabel} · 객실 유형별 요금 및 시즌 정책 관리`,
+        promotions: `${nowLabel} · 특가 및 할인 프로모션 관리`,
+        sales: `${getAdminDateLabel()} 기준`,
         reviews: "리뷰 답변, 신고, 평점 추이 관리",
-        settlement: `${ADMIN_TODAY_LABEL} · 객실 유형별 매출 및 수수료 정산 현황`,
+        settlement: `${nowLabel} · 객실 유형별 매출 및 수수료 정산 현황`,
         settings: "권한, 호텔 정보, 외부 연동, 운영 정책 설정"
     };
-    return copy[id] || ADMIN_TODAY_LABEL;
+    return copy[id] || nowLabel;
 }
 
 function headActions(id) {
     const byPage = {
-        reservations: [["엑셀 다운로드", "fa-download"], ["인쇄", "fa-print"], ["예약 등록", "fa-plus", "primary"]],
+        dashboard: [[getAdminMonthLabel(), "fa-calendar", "", "dashboard-month"], ["리포트 다운로드", "fa-download", "", "download-dashboard-report"], ["새로고침", "fa-rotate-right", "", "refresh-dashboard"]],
+        reservations: [["엑셀 다운로드", "fa-download"], ["인쇄", "fa-print"]],
         rates: [["변경 이력", "fa-clock"], ["내보내기", "fa-download"], ["요금 추가", "fa-plus", "primary"]],
         promotions: [["필터", "fa-sliders"], ["내보내기", "fa-download"], ["프로모션 생성", "fa-plus", "primary"]],
-        sales: [["이번 달 (07.01 ~ 07.14)", "fa-calendar"], ["리포트 다운로드", "fa-download"], ["공유", "fa-share-nodes", "primary"]],
-        settlement: [["2025년 7월", "fa-calendar"], ["엑셀 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
-        checkin: [["캘린더 보기", "fa-calendar"], ["내보내기", "fa-download"], ["신규 예약", "fa-plus", "primary"]]
+        sales: [[getAdminMonthRangeLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"], ["공유", "fa-share-nodes", "primary"]],
+        settlement: [[getAdminMonthSettlementLabel(), "fa-calendar"], ["엑셀 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
+        checkin: [["캘린더 보기", "fa-calendar"], ["내보내기", "fa-download"]]
     };
-    const buttons = byPage[id] || [["이번 달 (7월)", "fa-calendar"], ["리포트 다운로드", "fa-download"], ["예약 등록", "fa-plus", "primary"]];
-    return buttons.map(([text, icon, type]) => `<button class="admin-btn ${type || ""}" type="button"><i class="fa-solid ${icon}"></i> ${text}</button>`).join("");
+    const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
+    return buttons.map(([text, icon, type, action]) => `<button class="admin-btn ${type || ""}" type="button"${action ? ` data-admin-action="${action}"` : ""}><i class="fa-solid ${icon}"></i> ${text}</button>`).join("");
 }
 
 function renderPage(id) {
@@ -188,11 +254,11 @@ function renderGuests() {
 
 function renderRooms() {
     return `
-        ${metrics([["전체 객실", "120실", "fa-bed", "기준"], ["사용중", "73실", "fa-door-closed", "61%"], ["청소중", "8실", "fa-broom", "4실 증가", "warn"], ["점검 필요", "3실", "fa-screwdriver-wrench", "처리필요", "danger"]])}
+        ${metrics([["전체 객실", "120실", "fa-bed", "기준"], ["사용중", "73실", "fa-door-closed", "61%"], ["예약완료", "28실", "fa-calendar-check", "23%"], ["공실", "19실", "fa-door-open", "16%"]])}
         <div class="panel">${panelHead("객실 현황 맵", "층별 실시간 상태")}${roomMap()}</div>
         <div class="grid split" style="margin-top:22px">
-            <div class="panel">${panelHead("하우스키핑 작업", "청소 및 점검")} ${simpleTable(["객실", "상태", "담당", "예정 시간", "메모"], [["506", "청소중", "홍길순", "11:20", "어메니티 보충"], ["204", "청소중", "김청소", "12:00", "침구 교체"], ["305", "점검", "이정비", "14:30", "에어컨 확인"]])}</div>
-            <div class="panel">${panelHead("구현 의견", "객실 관리")}<div class="task-list">${task("Room 상태 필드가 없다면 백엔드 확장이 필요합니다.", "warn")}${task("청소 담당자 배정은 별도 Staff/Task 도메인이 있어야 자연스럽습니다.", "")}</div></div>
+            <div class="panel">${panelHead("객실 목록", "예약 상태 기준")} ${simpleTable(["객실", "상태", "층", "객실 타입", "메모"], [["501", "사용중", "5F", "디럭스", "투숙 중"], ["502", "예약완료", "5F", "스위트", "체크인 예정"], ["503", "공실", "5F", "스탠다드", "예약 가능"]])}</div>
+            <div class="panel">${panelHead("구현 의견", "객실 관리")}<div class="task-list">${task("Room 자체에는 운영 상태가 없으므로 예약 기간 기준으로 상태를 계산합니다.", "warn")}${task("공실/사용중/예약완료만 우선 노출합니다.", "")}</div></div>
         </div>
     `;
 }
@@ -262,10 +328,10 @@ function renderSettings() {
 
 function metrics(items, count) {
     const cols = count || items.length;
-    return `<div class="grid stats-grid cols-${Math.min(cols, 5)}">${items.map(([label, value, icon, trend, tone]) => `
+    return `<div class="grid stats-grid cols-${Math.min(cols, 5)}">${items.map(([label, value, icon, trend, tone, progressPercent]) => `
         <article class="metric-card">
             <div class="metric-top"><span class="metric-icon"><i class="fa-solid ${icon}"></i></span><span class="trend ${tone || ""}">${trend}</span></div>
-            <div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="progress"><i style="width:${label.length * 7 + 32}%"></i></div>
+            <div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="progress"><i style="width:${clampAdminPercent(progressPercent)}%"></i></div>
         </article>
     `).join("")}</div>`;
 }
@@ -337,10 +403,10 @@ function urgentPanel() {
 }
 
 function roomMap() {
-    const floors = [["5F", ["501 use", "502 done", "503", "504", "505 wait", "506 clean"]], ["4F", ["401 use", "402 use", "403 done", "404 wait", "405", "406 clean", "407 done", "408 use"]], ["3F", ["301", "302 wait", "303 use", "304 use", "305 clean", "306 done", "307", "308 done"]], ["2F", ["201 use", "202 wait", "203 done", "204 clean", "205 use", "206", "207 done"]]];
+    const floors = [["5F", ["501 use", "502 done", "503", "504", "505 done", "506"]], ["4F", ["401 use", "402 use", "403 done", "404 done", "405", "406", "407 done", "408 use"]], ["3F", ["301", "302 done", "303 use", "304 use", "305", "306 done", "307", "308 done"]], ["2F", ["201 use", "202 done", "203 done", "204", "205 use", "206", "207 done"]]];
     return `<div class="room-map">${floors.map(([floor, rooms]) => `<div class="floor-row"><div class="floor-label">${floor}</div>${rooms.map(room => {
         const [num, cls = ""] = room.split(" ");
-        const label = cls === "use" ? "사용중" : cls === "done" ? "예약완료" : cls === "wait" ? "체크아웃대기" : cls === "clean" ? "청소중" : "공실";
+        const label = cls === "use" ? "사용중" : cls === "done" ? "예약완료" : "공실";
         return `<div class="room-cell ${cls}">${num}<span>${label}</span></div>`;
     }).join("")}</div>`).join("")}</div>`;
 }
@@ -377,4 +443,735 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function renderDashboard() {
+    return `
+        <div id="dashboardError" class="admin-error" hidden></div>
+        <div id="dashboardMetrics" class="grid stats-grid cols-5">
+            ${dashboardMetricSkeleton("오늘 예약", "fa-calendar-check")}
+            ${dashboardMetricSkeleton("체크인 예정", "fa-right-to-bracket")}
+            ${dashboardMetricSkeleton("객실 점유율", "fa-bed")}
+            ${dashboardMetricSkeleton("이번 달 매출", "fa-wallet")}
+            ${dashboardMetricSkeleton("평균 평점", "fa-star")}
+        </div>
+        <div class="grid two-col" style="margin-top:22px">
+            <div id="dashboardSalesPanel" class="panel">${panelHead("월별 매출 현황", "결제 데이터 기준")}<div class="admin-loading">매출 데이터를 불러오는 중입니다.</div></div>
+            <div id="dashboardRoomPanel" class="panel">${panelHead("객실 현황", "예약/객실 데이터 기준")}<div class="admin-loading">객실 데이터를 불러오는 중입니다.</div></div>
+        </div>
+        <div class="grid two-col" style="margin-top:22px">
+            <div id="dashboardReservationPanel" class="panel">${panelHead("최근 예약 현황", "최신 예약 기준")}<div class="admin-loading">예약 데이터를 불러오는 중입니다.</div></div>
+            <div class="grid">
+                <div id="dashboardSchedulePanel" class="panel">${panelHead("오늘 일정", "체크인 · 체크아웃")}<div class="admin-loading">오늘 일정을 불러오는 중입니다.</div></div>
+                <div id="dashboardTaskPanel" class="panel">${panelHead("처리 필요 항목", "운영 확인 항목")}<div class="admin-loading">확인 항목을 불러오는 중입니다.</div></div>
+            </div>
+        </div>
+        <div id="dashboardRoomMapPanel" class="panel" style="margin-top:22px">${panelHead("객실 현황 맵", "실시간 예약 기준")}<div class="admin-loading">객실 맵을 불러오는 중입니다.</div></div>
+    `;
+}
+
+function dashboardMetricSkeleton(label, icon) {
+    return `
+        <article class="metric-card loading">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid ${icon}"></i></span><span class="trend">-</span></div>
+            <div class="metric-label">${label}</div>
+            <div class="metric-value">...</div>
+            <div class="progress"><i style="width:42%"></i></div>
+        </article>
+    `;
+}
+
+function loadAdminDashboardData() {
+    const requests = {
+        stats: adminGetSafe("/reservation/status", {}),
+        reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
+        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        popularHotels: adminGetSafe("/hotel/pop4", [])
+    };
+
+    $.when(requests.stats, requests.reservations, requests.hotels, requests.popularHotels)
+        .done(function (statsResult, reservationsResult, hotelsResult, popularHotelsResult) {
+            const stats = normalizeAjaxResult(statsResult);
+            const reservationPage = normalizeAjaxResult(reservationsResult);
+            const hotelPage = normalizeAjaxResult(hotelsResult);
+            const popularHotels = asArray(normalizeAjaxResult(popularHotelsResult));
+            const hotels = mergeAdminHotels(asPageContent(hotelPage), popularHotels);
+            const selectedHotel = getSelectedAdminHotel(hotels);
+            const reservations = filterReservationsByHotel(asPageContent(reservationPage), selectedHotel);
+
+            renderAdminHotelSelector(hotels, selectedHotel);
+
+            loadDashboardRoomsAndReviews({
+                stats,
+                reservations,
+                hotels: selectedHotel ? [selectedHotel] : [],
+                selectedHotel
+            });
+        })
+        .fail(function () {
+            renderDashboardFailure("대시보드 데이터를 불러오지 못했습니다. 백엔드 서버와 관리자 로그인 상태를 확인해주세요.");
+        });
+}
+
+function loadDashboardRoomsAndReviews(baseData) {
+    const hotels = baseData.hotels.slice(0, 1);
+    const roomRequests = hotels.map(function (hotel) {
+        return adminGet("/hotel/inroom/" + hotel.sid).then(function (rooms) {
+            return {
+                hotel,
+                rooms: asArray(rooms)
+            };
+        }, function () {
+            return {
+                hotel,
+                rooms: []
+            };
+        });
+    });
+    const reviewRequests = hotels.slice(0, 8).map(function (hotel) {
+        return adminGet("/review/search?hotelId=" + hotel.sid + "&page=0&size=50&sort=createdAt,desc")
+            .then(function (page) {
+                return asPageContent(page);
+            }, function () {
+                return [];
+            });
+    });
+
+    $.when.apply($, roomRequests.concat(reviewRequests)).always(function () {
+        const values = Array.prototype.slice.call(arguments);
+        const roomBundles = values.slice(0, roomRequests.length).map(normalizeDeferredValue);
+        const reviewGroups = values.slice(roomRequests.length).map(normalizeDeferredValue);
+        const rooms = roomBundles.flatMap(function (bundle) {
+            return (bundle.rooms || []).map(function (room) {
+                return Object.assign({}, room, {
+                    hotelId: bundle.hotel.sid,
+                    hotelName: bundle.hotel.hotelName
+                });
+            });
+        });
+        const reviews = reviewGroups.flat();
+
+        renderDashboardData(Object.assign({}, baseData, { rooms, reviews }));
+    });
+}
+
+function renderDashboardData(data) {
+    const reservations = data.reservations || [];
+    const rooms = data.rooms || [];
+    const reviews = data.reviews || [];
+    const roomSummary = buildRoomSummary(rooms, reservations);
+    const revenueSummary = buildRevenueSummary(reservations);
+    const reviewSummary = buildReviewSummary(reviews);
+    const statSummary = buildReservationStats(data.stats, reservations);
+    ADMIN_DASHBOARD_STATE = {
+        selectedHotel: data.selectedHotel || null,
+        reservations,
+        rooms,
+        reviews,
+        roomSummary,
+        revenueSummary,
+        reviewSummary,
+        statSummary
+    };
+
+    renderDashboardMetrics(statSummary, roomSummary, revenueSummary, reviewSummary);
+    renderDashboardSales(revenueSummary);
+    renderDashboardRoomPanel(roomSummary);
+    renderDashboardReservationPanel(reservations);
+    renderDashboardSchedule(reservations);
+    renderDashboardTasks(statSummary, reviews, reservations);
+    renderDashboardRoomMap(roomSummary.rooms);
+}
+
+function renderDashboardMetrics(stats, rooms, revenue, reviews) {
+    const occupancy = rooms.total > 0 ? Math.round((rooms.occupied / rooms.total) * 1000) / 10 : 0;
+    const todayReservationPercent = stats.monthlyReservations > 0 ? (stats.todayNewReservations / stats.monthlyReservations) * 100 : 0;
+    const checkInPercent = rooms.total > 0 ? (stats.todayCheckIns / rooms.total) * 100 : 0;
+    const revenuePercent = revenue.monthMaxTotal > 0 ? (revenue.monthTotal / revenue.monthMaxTotal) * 100 : 0;
+    const reviewPercent = reviews.average ? (reviews.average / 5) * 100 : 0;
+    const cards = [
+        ["오늘 예약", formatAdminNumber(stats.todayNewReservations) + "건", "fa-calendar-check", "이번 달 " + formatAdminNumber(stats.monthlyReservations) + "건 중", "", todayReservationPercent],
+        ["체크인 예정", formatAdminNumber(stats.todayCheckIns) + "팀", "fa-right-to-bracket", "객실 " + rooms.total + "실 기준", "warn", checkInPercent],
+        ["객실 점유율", occupancy.toFixed(1) + "%", "fa-bed", rooms.total + "실 중 " + rooms.occupied + "실", "", occupancy],
+        ["이번 달 매출", formatAdminCompactWon(revenue.monthTotal), "fa-wallet", "유효 예약 " + revenue.monthCount + "건", "", revenuePercent],
+        ["평균 평점", reviews.average ? reviews.average.toFixed(1) + "점" : "0.0점", "fa-star", "리뷰 " + reviews.count + "개", "", reviewPercent]
+    ];
+
+    $("#dashboardMetrics").html(cards.map(function ([label, value, icon, trend, tone, progressPercent]) {
+        return `
+            <article class="metric-card">
+                <div class="metric-top"><span class="metric-icon"><i class="fa-solid ${icon}"></i></span><span class="trend ${tone || ""}">${escapeHtml(trend)}</span></div>
+                <div class="metric-label">${escapeHtml(label)}</div>
+                <div class="metric-value">${escapeHtml(value)}</div>
+                <div class="progress"><i style="width:${clampAdminPercent(progressPercent)}%"></i></div>
+            </article>
+        `;
+    }).join(""));
+}
+
+function renderDashboardSales(summary) {
+    const months = summary.months;
+    const max = Math.max.apply(null, months.map(function (item) { return item.total; }).concat([1]));
+    const bars = months.map(function (item) {
+        const height = item.total > 0 ? Math.max(8, Math.round((item.total / max) * 100)) : 0;
+        return `
+            <div class="admin-sales-month">
+                <div class="admin-sales-bar" style="height:${height}%"></div>
+                <strong>${item.label}</strong>
+                <span>${formatAdminCompactWon(item.total)}</span>
+            </div>
+        `;
+    }).join("");
+
+    $("#dashboardSalesPanel").html(
+        panelHead("월별 매출 현황", "취소/노쇼 제외 예약 금액 기준") +
+        `<div class="admin-sales-chart">${bars}</div>`
+    );
+}
+
+function renderDashboardRoomPanel(summary) {
+    const occupancy = summary.total > 0 ? Math.round((summary.occupied / summary.total) * 100) : 0;
+    $("#dashboardRoomPanel").html(
+        panelHead("객실 현황", "예약 상태 기준") +
+        `<div class="ring" style="background:conic-gradient(var(--admin-blue) 0 ${occupancy}%, var(--admin-green) ${occupancy}% ${Math.min(100, occupancy + Math.round((summary.reserved / Math.max(1, summary.total)) * 100))}%, #e7eef6 0 100%)"><strong>${occupancy}%</strong></div>` +
+        `<div class="task-list">
+            ${task("사용중 " + summary.inUse + "실", "")}
+            ${task("예약완료 " + summary.reserved + "실", "")}
+            ${task("공실 " + summary.available + "실", "")}
+        </div>`
+    );
+}
+
+function renderDashboardReservationPanel(reservations) {
+    const rows = reservations.slice(0, 8).map(function (reservation) {
+        return [
+            "<strong>" + escapeHtml(reservation.reservationNumber || ("RSV-" + reservation.sid)) + "</strong>",
+            escapeHtml(reservation.memberName || reservation.guestName || "고객"),
+            escapeHtml(makeAdminRoomName(reservation)),
+            formatAdminShortDate(reservation.checkInDate),
+            formatAdminShortDate(reservation.checkOutDate),
+            "<strong>" + formatAdminWon(reservation.totalAmount) + "</strong>",
+            '<span class="status ' + adminStatusTone(reservation.reservationStatus) + '">' + escapeHtml(formatAdminStatus(reservation.reservationStatus)) + "</span>",
+            actionBtns()
+        ];
+    });
+
+    $("#dashboardReservationPanel").html(
+        panelHead("최근 예약 현황", "최신 예약 " + reservations.length + "건 중 상위 8건") +
+        (rows.length ? simpleTable(["예약번호", "고객명", "객실", "체크인", "체크아웃", "금액", "상태", "액션"], rows, true) : emptyAdminState("예약 데이터가 없습니다."))
+    );
+}
+
+function renderDashboardSchedule(reservations) {
+    const todayItems = reservations.filter(function (reservation) {
+        return isToday(reservation.checkInDate) || isToday(reservation.checkOutDate);
+    }).slice(0, 5);
+    const rows = todayItems.map(function (reservation) {
+        const isCheckout = isToday(reservation.checkOutDate);
+        const label = isCheckout ? "체크아웃" : "체크인";
+        const time = isCheckout ? "오전 11:00" : "오후 3:00";
+
+        return `<div class="timeline-item admin-schedule-row">
+            <span class="mini-icon"><i class="fa-solid ${isCheckout ? "fa-right-from-bracket" : "fa-right-to-bracket"}"></i></span>
+            <div class="schedule-copy">
+                <strong>${escapeHtml(reservation.guestName || reservation.memberName || "고객")} · ${escapeHtml(makeAdminRoomName(reservation))}</strong>
+                <span>${time} · ${label}</span>
+            </div>
+            <span class="status ${isCheckout ? "orange" : "blue"}">${label}</span>
+        </div>`;
+    }).join("");
+
+    $("#dashboardSchedulePanel").html(
+        panelHead("오늘 일정", "체크인 · 체크아웃") +
+        `<div class="timeline">${rows || emptyAdminState("오늘 체크인/체크아웃 일정이 없습니다.")}</div>`
+    );
+}
+
+function renderDashboardTasks(stats, reviews, reservations) {
+    const cancelRequests = reservations.filter(function (reservation) {
+        return reservation.reservationStatus === "CANCELLED" || reservation.reservationStatus === "NO_SHOW";
+    }).length;
+    const pending = Number(stats.pendingCount || 0);
+    const lowReviews = reviews.filter(function (review) {
+        return Number(review.rating || 0) <= 2;
+    }).length;
+    const items = [
+        pending > 0 ? task("승인 대기 예약 " + pending + "건", "warn") : task("승인 대기 예약 없음", ""),
+        cancelRequests > 0 ? task("취소/노쇼 예약 " + cancelRequests + "건 확인", "danger") : task("취소 처리 대기 없음", ""),
+        lowReviews > 0 ? task("낮은 평점 리뷰 " + lowReviews + "건 확인", "warn") : task("낮은 평점 리뷰 없음", "")
+    ].join("");
+
+    $("#dashboardTaskPanel").html(panelHead("처리 필요 항목", "예약/리뷰 기준") + `<div class="task-list">${items}</div>`);
+}
+
+function renderDashboardRoomMap(rooms) {
+    $("#dashboardRoomMapPanel").html(
+        panelHead("객실 현황 맵", "사용중/예약완료/공실") +
+        (rooms.length ? buildDynamicRoomMap(rooms) : emptyAdminState("객실 데이터가 없습니다."))
+    );
+}
+
+function buildReservationStats(stats, reservations) {
+    return {
+        todayNewReservations: reservations.filter(function (item) { return isToday(item.createdAt); }).length,
+        todayCheckIns: reservations.filter(function (item) { return isToday(item.checkInDate); }).length,
+        todayCheckOuts: reservations.filter(function (item) { return isToday(item.checkOutDate); }).length,
+        monthlyReservations: reservations.filter(function (item) { return isThisMonth(item.createdAt || item.checkInDate); }).length,
+        pendingCount: reservations.filter(function (item) { return item.reservationStatus === "PENDING"; }).length
+    };
+}
+
+function renderAdminHotelSelector(hotels, selectedHotel) {
+    const switcher = $("#adminHotelSwitcher");
+    const toggle = $("#adminHotelToggle");
+    const label = $("#adminHotelName");
+    const menu = $("#adminHotelMenu");
+
+    if (!switcher.length || !toggle.length || !label.length || !menu.length) {
+        return;
+    }
+
+    if (!hotels.length) {
+        label.text("등록된 호텔 없음");
+        toggle.prop("disabled", true);
+        menu.empty().prop("hidden", true);
+        return;
+    }
+
+    label.text((selectedHotel && selectedHotel.hotelName) || "호텔명 없음");
+    toggle.prop("disabled", false);
+    menu.html(hotels.map(function (hotel) {
+        const isActive = selectedHotel && String(selectedHotel.sid) === String(hotel.sid);
+        return `<button class="admin-hotel-option ${isActive ? "active" : ""}" type="button" data-hotel-id="${escapeHtml(hotel.sid)}">
+            <strong>${escapeHtml(hotel.hotelName || "호텔명 없음")}</strong>
+            <span>${escapeHtml(getHotelLocationText(hotel))}</span>
+        </button>`;
+    }).join(""));
+
+    menu.off("click.adminHotel").on("click.adminHotel", ".admin-hotel-option", function (event) {
+        event.stopPropagation();
+        localStorage.setItem(ADMIN_SELECTED_HOTEL_KEY, String($(this).data("hotelId")));
+        switcher.removeClass("open");
+        menu.prop("hidden", true);
+        loadAdminDashboardData();
+    });
+
+    switcher.off("click.adminHotel").on("click.adminHotel", function (event) {
+        event.stopPropagation();
+        if ($(event.target).closest(".admin-hotel-menu").length || toggle.prop("disabled")) {
+            return;
+        }
+        const willOpen = !switcher.hasClass("open");
+        switcher.toggleClass("open", willOpen);
+        menu.prop("hidden", !willOpen);
+    });
+
+    $(document).off("click.adminHotelMenu").on("click.adminHotelMenu", function () {
+        switcher.removeClass("open");
+        menu.prop("hidden", true);
+    });
+}
+
+function getHotelLocationText(hotel) {
+    return hotel.location || hotel.address || hotel.region || hotel.hotelLocation || "위치 정보 없음";
+}
+
+function mergeAdminHotels(primaryHotels, fallbackHotels) {
+    const map = new Map();
+
+    primaryHotels.concat(fallbackHotels).forEach(function (hotel) {
+        if (!hotel || hotel.sid == null) {
+            return;
+        }
+        const key = String(hotel.sid);
+        const prev = map.get(key) || {};
+        map.set(key, Object.assign({}, prev, hotel));
+    });
+
+    return Array.from(map.values());
+}
+
+function getSelectedAdminHotel(hotels) {
+    if (!hotels.length) {
+        return null;
+    }
+
+    const storedId = localStorage.getItem(ADMIN_SELECTED_HOTEL_KEY);
+    const selected = hotels.find(function (hotel) {
+        return String(hotel.sid) === String(storedId);
+    }) || hotels[0];
+
+    localStorage.setItem(ADMIN_SELECTED_HOTEL_KEY, String(selected.sid));
+    return selected;
+}
+
+function filterReservationsByHotel(reservations, hotel) {
+    if (!hotel) {
+        return [];
+    }
+
+    return reservations.filter(function (reservation) {
+        const hotelIds = [
+            reservation.hotelId,
+            reservation.hotelSid,
+            reservation.hotel && reservation.hotel.sid,
+            reservation.hotel && reservation.hotel.hotelId,
+            reservation.roomHotelId,
+            reservation.room && reservation.room.hotelId,
+            reservation.room && reservation.room.hotel && reservation.room.hotel.sid
+        ].filter(function (value) { return value != null; });
+
+        return hotelIds.some(function (hotelId) {
+            return String(hotelId) === String(hotel.sid);
+        });
+    });
+}
+
+function buildRevenueSummary(reservations) {
+    const validReservations = reservations.filter(function (reservation) {
+        return !reservation.deleted && !["CANCELLED", "NO_SHOW"].includes(reservation.reservationStatus);
+    });
+    const monthReservations = validReservations.filter(function (reservation) {
+        return isThisMonth(getReservationRevenueDate(reservation));
+    });
+    const months = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+            year: date.getFullYear(),
+            month: date.getMonth(),
+            label: String(date.getMonth() + 1) + "월",
+            total: 0
+        });
+    }
+
+    validReservations.forEach(function (reservation) {
+        const revenueDate = parseAdminDate(getReservationRevenueDate(reservation));
+        if (!revenueDate) return;
+        const target = months.find(function (item) {
+            return item.year === revenueDate.getFullYear() && item.month === revenueDate.getMonth();
+        });
+        if (target) target.total += getReservationRevenueAmount(reservation);
+    });
+
+    return {
+        monthTotal: monthReservations.reduce(function (sum, reservation) { return sum + getReservationRevenueAmount(reservation); }, 0),
+        monthCount: monthReservations.length,
+        monthMaxTotal: Math.max.apply(null, months.map(function (item) { return item.total; }).concat([0])),
+        months
+    };
+}
+
+function getReservationRevenueDate(reservation) {
+    return reservation.createdAt || reservation.reservedAt || reservation.checkInDate;
+}
+
+function getReservationRevenueAmount(reservation) {
+    return Number(reservation.totalAmount || reservation.finalAmount || reservation.paymentAmount || reservation.roomPrice || 0);
+}
+
+function buildReviewSummary(reviews) {
+    const valid = reviews.filter(function (review) {
+        return !review.deleted && Number(review.rating || 0) > 0;
+    });
+    const sum = valid.reduce(function (total, review) {
+        return total + Number(review.rating || 0);
+    }, 0);
+
+    return {
+        count: valid.length,
+        average: valid.length ? sum / valid.length : 0
+    };
+}
+
+function buildRoomSummary(rooms, reservations) {
+    const todayReservations = reservations.filter(function (reservation) {
+        return overlapsToday(reservation.checkInDate, reservation.checkOutDate) &&
+            !["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(reservation.reservationStatus);
+    });
+    const roomStates = rooms.map(function (room) {
+        const matched = todayReservations.find(function (reservation) {
+            return String(reservation.roomId) === String(room.sid);
+        });
+        const status = matched && matched.reservationStatus === "CHECKED_IN"
+            ? "use"
+            : matched
+                ? "done"
+                : "";
+
+        return Object.assign({}, room, {
+            adminStatus: status,
+            adminGuestName: matched ? (matched.guestName || matched.memberName || "") : "",
+            adminReservationStatus: matched ? matched.reservationStatus : null
+        });
+    });
+    const inUse = roomStates.filter(function (room) { return room.adminStatus === "use"; }).length;
+    const reserved = roomStates.filter(function (room) { return room.adminStatus === "done"; }).length;
+
+    return {
+        total: roomStates.length,
+        inUse,
+        reserved,
+        occupied: inUse + reserved,
+        available: Math.max(0, roomStates.length - inUse - reserved),
+        rooms: roomStates
+    };
+}
+
+function buildDynamicRoomMap(rooms) {
+    const grouped = {};
+    rooms.forEach(function (room) {
+        const floor = room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || 1;
+        if (!grouped[floor]) grouped[floor] = [];
+        grouped[floor].push(room);
+    });
+
+    return `<div class="room-map">${Object.keys(grouped).sort(function (a, b) { return Number(b) - Number(a); }).map(function (floor) {
+        const cells = grouped[floor].sort(function (a, b) {
+            return Number(a.roomNumber || 0) - Number(b.roomNumber || 0);
+        }).map(function (room) {
+            const cls = room.adminStatus || "";
+            const label = cls === "use" ? "사용중" : cls === "done" ? "예약완료" : "공실";
+            return `<div class="room-cell ${cls}">
+                ${escapeHtml(room.roomNumber || room.roomName || "-")}
+                <span>${label}${room.adminGuestName ? " · " + escapeHtml(room.adminGuestName) : ""}</span>
+            </div>`;
+        }).join("");
+        return `<div class="floor-row"><div class="floor-label">${floor}F</div>${cells}</div>`;
+    }).join("")}</div>`;
+}
+
+function adminGet(path) {
+    return $.ajax({
+        url: window.StayNowConfig.apiUrl(path),
+        type: "GET",
+        headers: adminAuthHeaders()
+    }).then(unwrapApiResponse);
+}
+
+function adminPost(path, payload) {
+    return $.ajax({
+        url: window.StayNowConfig.apiUrl(path),
+        type: "POST",
+        contentType: "application/json",
+        headers: adminAuthHeaders(),
+        data: JSON.stringify(payload || {})
+    }).then(unwrapApiResponse);
+}
+
+function adminGetSafe(path, fallback) {
+    return adminGet(path).then(null, function () {
+        return fallback;
+    });
+}
+
+function adminPostSafe(path, payload, fallback) {
+    return adminPost(path, payload).then(null, function () {
+        return fallback;
+    });
+}
+
+function adminAuthHeaders() {
+    const auth = getAdminAuth();
+    return auth && auth.token ? { Authorization: auth.token } : {};
+}
+
+function unwrapApiResponse(response) {
+    return response && Object.prototype.hasOwnProperty.call(response, "data") ? response.data : response;
+}
+
+function normalizeAjaxResult(result) {
+    if (Array.isArray(result) && result.length === 3 && typeof result[1] === "string" && result[2] && typeof result[2] === "object") {
+        return result[0];
+    }
+    return result;
+}
+
+function normalizeDeferredValue(value) {
+    if (Array.isArray(value) && value.length === 3 && typeof value[1] === "string" && value[2] && typeof value[2] === "object") {
+        return value[0];
+    }
+    return value;
+}
+
+function asArray(value) {
+    return Array.isArray(value) ? value : [];
+}
+
+function asPageContent(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (value.data) return asPageContent(value.data);
+    return Array.isArray(value.content) ? value.content : [];
+}
+
+function makeAdminHotelSearchRequest() {
+    return {
+        location: null,
+        checkIn: null,
+        checkOut: null,
+        adult: null,
+        child: null,
+        minPrice: null,
+        maxPrice: null,
+        star: null,
+        roomTypeIds: []
+    };
+}
+
+function renderDashboardFailure(message) {
+    $("#dashboardError").prop("hidden", false).text(message);
+    $(".admin-loading").text("데이터를 불러오지 못했습니다.");
+}
+
+function downloadDashboardReport() {
+    if (!ADMIN_DASHBOARD_STATE) {
+        alert("아직 다운로드할 대시보드 데이터가 없습니다. 새로고침 후 다시 시도해주세요.");
+        return;
+    }
+
+    const state = ADMIN_DASHBOARD_STATE;
+    const hotelName = state.selectedHotel ? state.selectedHotel.hotelName : "전체 호텔";
+    const rows = [
+        ["항목", "값"],
+        ["호텔", hotelName],
+        ["기준 시각", getAdminNowLabel()],
+        ["오늘 예약", state.statSummary.todayNewReservations + "건"],
+        ["체크인 예정", state.statSummary.todayCheckIns + "팀"],
+        ["체크아웃 예정", state.statSummary.todayCheckOuts + "팀"],
+        ["이번 달 유효 예약", state.revenueSummary.monthCount + "건"],
+        ["이번 달 매출", state.revenueSummary.monthTotal],
+        ["전체 객실", state.roomSummary.total + "실"],
+        ["사용/예약 객실", state.roomSummary.occupied + "실"],
+        ["공실", state.roomSummary.available + "실"],
+        ["리뷰 수", state.reviewSummary.count + "개"],
+        ["평균 평점", (state.reviewSummary.average || 0).toFixed(1)]
+    ];
+    const reservationRows = [
+        [],
+        ["예약번호", "고객명", "객실", "체크인", "체크아웃", "상태", "금액"],
+        ...state.reservations.map(function (reservation) {
+            return [
+                reservation.reservationNumber || ("RSV-" + reservation.sid),
+                reservation.memberName || reservation.guestName || "고객",
+                makeAdminRoomName(reservation),
+                reservation.checkInDate || "",
+                reservation.checkOutDate || "",
+                formatAdminStatus(reservation.reservationStatus),
+                getReservationRevenueAmount(reservation)
+            ];
+        })
+    ];
+    const csv = "\uFEFF" + rows.concat(reservationRows).map(function (row) {
+        return row.map(escapeCsvCell).join(",");
+    }).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const link = document.createElement("a");
+    const date = new Date();
+
+    link.href = URL.createObjectURL(blob);
+    link.download = `staynow-dashboard-${String(date.getFullYear())}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+}
+
+function escapeCsvCell(value) {
+    const text = String(value == null ? "" : value);
+    return /[",\n]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
+}
+
+function emptyAdminState(message) {
+    return `<div class="empty-admin-state">${escapeHtml(message)}</div>`;
+}
+
+function makeAdminRoomName(reservation) {
+    return [
+        reservation.roomName || reservation.roomTypeTitle || "객실",
+        reservation.roomNumber ? reservation.roomNumber + "호" : ""
+    ].filter(Boolean).join(" · ");
+}
+
+function formatAdminStatus(status) {
+    const labels = {
+        PENDING: "승인대기",
+        CONFIRMED: "예약확정",
+        UPCOMING: "예약확정",
+        CHECKED_IN: "체크인",
+        CHECKED_OUT: "체크아웃",
+        COMPLETED: "완료",
+        CANCELLED: "취소됨",
+        NO_SHOW: "노쇼"
+    };
+    return labels[status] || status || "상태 없음";
+}
+
+function adminStatusTone(status) {
+    if (status === "CHECKED_IN" || status === "CONFIRMED" || status === "UPCOMING") return "";
+    if (status === "CHECKED_OUT" || status === "COMPLETED") return "blue";
+    if (status === "PENDING") return "orange";
+    if (status === "CANCELLED" || status === "NO_SHOW") return "red";
+    return "";
+}
+
+function formatAdminWon(value) {
+    return "₩" + formatAdminNumber(value || 0);
+}
+
+function formatAdminCompactWon(value) {
+    const number = Number(value || 0);
+    if (number >= 100000000) {
+        return "₩" + (number / 100000000).toFixed(1).replace(/\.0$/, "") + "억";
+    }
+    if (number >= 10000) {
+        return "₩" + Math.round(number / 10000).toLocaleString() + "만";
+    }
+    return formatAdminWon(number);
+}
+
+function formatAdminNumber(value) {
+    return Number(value || 0).toLocaleString();
+}
+
+function formatAdminShortDate(value) {
+    if (!value) return "-";
+    const text = String(value).slice(5, 10).replace("-", ".");
+    return text || "-";
+}
+
+function parseAdminDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isToday(value) {
+    const date = parseAdminDate(value);
+    const today = new Date();
+    return Boolean(date) &&
+        date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate();
+}
+
+function isThisMonth(value) {
+    const date = parseAdminDate(value);
+    const today = new Date();
+    return Boolean(date) &&
+        date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth();
+}
+
+function overlapsToday(startValue, endValue) {
+    const start = parseAdminDate(startValue);
+    const end = parseAdminDate(endValue);
+    if (!start || !end) return false;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    return start < todayEnd && end > todayStart;
 }

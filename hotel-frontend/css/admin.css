@@ -163,6 +163,7 @@ a {
 }
 
 .hotel-switcher {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -171,6 +172,98 @@ a {
     border: 1px solid var(--admin-line);
     border-radius: 12px;
     font-weight: 900;
+    background: #fff;
+    cursor: pointer;
+}
+
+.admin-hotel-toggle {
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: #111827;
+    font: inherit;
+    font-weight: 950;
+    cursor: pointer;
+}
+
+.admin-hotel-toggle:disabled {
+    color: #94a3b8;
+    cursor: wait;
+}
+
+.admin-hotel-toggle span {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-hotel-toggle i {
+    color: #94a3b8;
+}
+
+.hotel-switcher.open .admin-hotel-toggle i {
+    transform: rotate(180deg);
+}
+
+.admin-hotel-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    max-height: 340px;
+    padding: 8px;
+    overflow-y: auto;
+    border: 1px solid var(--admin-line);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: var(--admin-shadow);
+}
+
+.admin-hotel-option {
+    width: 100%;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: block;
+    background: transparent;
+    color: #111827;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-hotel-option:hover,
+.admin-hotel-option.active {
+    background: #eef6ff;
+    color: var(--admin-blue);
+}
+
+.admin-hotel-option strong,
+.admin-hotel-option span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-hotel-option strong {
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.admin-hotel-option span {
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 800;
 }
 
 .mini-icon {
@@ -542,6 +635,38 @@ a {
     border: 1px solid #edf2f7;
 }
 
+.admin-schedule-row {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.schedule-copy {
+    min-width: 0;
+}
+
+.schedule-copy strong,
+.schedule-copy span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.schedule-copy span {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-schedule-row .status {
+    white-space: nowrap;
+    word-break: keep-all;
+    flex: 0 0 auto;
+}
+
 .task.danger {
     color: var(--admin-red);
     background: #fff0f2;
@@ -604,12 +729,6 @@ a {
     color: #d18000;
     background: #fff5df;
     border-color: #ffd69b;
-}
-
-.room-cell.clean {
-    color: #dc3c50;
-    background: #fff0f3;
-    border-color: #ffc7d0;
 }
 
 .filter-panel {
@@ -687,6 +806,62 @@ a {
     color: #256c99;
     background: #eef9ff;
     font-weight: 800;
+}
+
+.admin-error {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    border: 1px solid #ffc7d0;
+    border-radius: 14px;
+    color: #dc3c50;
+    background: #fff0f3;
+    font-weight: 900;
+}
+
+.admin-loading,
+.empty-admin-state {
+    min-height: 110px;
+    display: grid;
+    place-items: center;
+    color: #94a3b8;
+    font-weight: 900;
+    border: 1px dashed #dbe5ef;
+    border-radius: 14px;
+    background: #f8fbfe;
+}
+
+.admin-sales-chart {
+    height: 280px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(68px, 1fr));
+    gap: 18px;
+    align-items: end;
+    padding: 26px 8px 4px;
+    border-top: 1px solid #edf2f7;
+}
+
+.admin-sales-month {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    gap: 8px;
+    align-items: end;
+    text-align: center;
+    color: #64748b;
+    font-weight: 900;
+}
+
+.admin-sales-bar {
+    width: 42px;
+    min-height: 0;
+    margin: 0 auto;
+    border-radius: 12px 12px 4px 4px;
+    background: linear-gradient(180deg, #6673ff, #19a8f2);
+}
+
+.admin-sales-month span {
+    font-size: 12px;
+    color: #8a9bb1;
 }
 
 @media (max-width: 1180px) {
