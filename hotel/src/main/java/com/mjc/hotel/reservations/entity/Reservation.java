@@ -58,11 +58,6 @@ public class Reservation extends BaseEntity {
     @Column(name = "reservation_status", nullable = false)
     private ReservationStatus reservationStatus;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reservation_channel", nullable = false)
-    @Builder.Default
-    private ReservationChannel reservationChannel = ReservationChannel.DIRECT;
-
     @Column(name = "original_Amount", nullable = false)
     private Integer originalAmount;
 
