@@ -1,6 +1,5 @@
 package com.mjc.hotel.reservations.dto;
 
-import com.mjc.hotel.reservations.entity.ReservationChannel;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +41,6 @@ public class ReservationResponseDto {
     private Integer totalAmount;
     private Integer earnedPoint;
     private ReservationStatus reservationStatus;
-    private ReservationChannel reservationChannel;
     private String specialRequests;
     private String checkInQr;
     private List<CancellationPolicyDto> cancellationPolicyDto;
