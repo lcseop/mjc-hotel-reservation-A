@@ -20,7 +20,6 @@ public class MemberResponseDto {
     private MemberStatus status;
     private MemberRole role;
     private Boolean emailVerified;
-    private Boolean phoneVerified;
     private Boolean deleted;
     private LocalDateTime deletedAt;
     private Integer point;
