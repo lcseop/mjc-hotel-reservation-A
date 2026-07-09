@@ -34,6 +34,7 @@ public class AuthService {
     private final MemberDtoMapper memberDtoMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public Member signup(MemberSignupRequestDto request) {
@@ -75,12 +76,18 @@ public class AuthService {
 
         authAccount.setLastLoginAt(LocalDateTime.now());
 
+        String accessToken = jwtProvider.createAccessToken(member.getEmail());
+        String refreshToken = jwtProvider.createRefreshToken(member.getEmail());
+        long refreshTokenExpiresIn = jwtProvider.getRefreshTokenExpiresInSeconds();
+
+        refreshTokenService.save(member.getSid(), refreshToken, refreshTokenExpiresIn);
+
         return MemberLoginResponseDto.builder()
-                .accessToken(jwtProvider.createAccessToken(member.getEmail()))
-                .refreshToken(jwtProvider.createRefreshToken(member.getEmail()))
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtProvider.getAccessTokenExpiresInSeconds())
-                .refreshTokenExpiresIn(jwtProvider.getRefreshTokenExpiresInSeconds())
+                .refreshTokenExpiresIn(refreshTokenExpiresIn)
                 .memberSid(member.getSid())
                 .email(member.getEmail())
                 .name(member.getName())
