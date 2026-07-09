@@ -11,6 +11,10 @@ spring:
   mail:
     host: localhost
     port: 25
+  data:
+    redis:
+      host: localhost
+      port: 6379
   jpa:
     hibernate:
       ddl-auto: update
