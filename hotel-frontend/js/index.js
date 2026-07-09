@@ -1,4 +1,5 @@
 const INDEX_SEARCH_COOKIE = "staynowSearchRequest";
+const INDEX_API_BASE = window.StayNowConfig.apiBase;
 
 $(function () {
 
@@ -246,7 +247,7 @@ function searchHotels(request) {
         .html('<i class="fa-solid fa-spinner fa-spin"></i> 검색중');
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -301,7 +302,7 @@ function makePresetSearchRequest(preset) {
 function goHotelSearch(request) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -495,7 +496,7 @@ function loadPopularHotels() {
 
     $.ajax({
 
-        url: "http://localhost:33000/api/hotel/pop4",
+        url: INDEX_API_BASE + "/hotel/pop4",
         type: "GET",
 
         success: function (result) {
@@ -504,11 +505,7 @@ function loadPopularHotels() {
 
         },
 
-        error: function () {
-
-            console.log("호텔 정보를 불러오지 못했습니다.");
-
-        }
+        error: function () {}
 
     });
 
@@ -521,21 +518,26 @@ function drawPopularHotels(hotels) {
     $.each(hotels, function(index, hotel){
 
         const rating = Number(hotel.rating || 0);
+        const hotelId = encodeURIComponent(hotel.sid || "");
+        const hotelName = escapeHtml(hotel.hotelName || "호텔명 없음");
+        const hotelLocation = escapeHtml(hotel.location || "위치 정보 없음");
+        const firstImage = normalizeImagePath(hotel.firstImage);
+        const price = Number(hotel.price || hotel.hotelPrice || 0);
         let card = `
-            <a class="hotel-card" href="hotel-detail.html?id=${hotel.sid}">
+            <a class="hotel-card" href="hotel-detail.html?id=${hotelId}">
 
                 <div class="hotel-image">
-                    <img src="${hotel.firstImage}">
+                    <img src="${firstImage}" alt="${hotelName}">
                 </div>
 
                 <div class="hotel-body">
 
                     <div class="title-row">
-                        <h3>${hotel.hotelName}</h3>
-                        <span class="price">₩${hotel.price.toLocaleString()}</span>
+                        <h3>${hotelName}</h3>
+                        <span class="price">₩${price.toLocaleString()}</span>
                     </div>
 
-                    <p>${hotel.location}</p>
+                    <p>${hotelLocation}</p>
 
                     <div class="card-footer">
                         <span>${formatPopularRating(rating)}</span>
@@ -572,7 +574,7 @@ function loadFlashDeals() {
     });
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=20",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=20",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -608,16 +610,18 @@ function drawFlashDeals(hotels) {
         const discountRate = hotel.maxDiscountRate || 0;
         const price = hotel.hotelPrice || 0;
         const discountedPrice = Math.floor(price * (100 - discountRate) / 100);
+        const hotelId = escapeHtml(hotel.sid || "");
+        const hotelName = escapeHtml(hotel.hotelName || "호텔명 없음");
         const card = `
-            <div class="deal-card" data-hotel-id="${hotel.sid}">
+            <div class="deal-card" data-hotel-id="${hotelId}">
                 <div class="discount">-${discountRate}%</div>
-                <img src="https://gunsancci.korcham.net/images/no-image01.gif" alt="${hotel.hotelName}">
+                <img src="https://gunsancci.korcham.net/images/no-image01.gif" alt="${hotelName}">
 
                 <div class="deal-body">
-                    <h3>${hotel.hotelName}</h3>
+                    <h3>${hotelName}</h3>
                     <p class="old-price" data-price-role="old">₩${price.toLocaleString()}</p>
                     <p class="new-price" data-price-role="new">₩${discountedPrice.toLocaleString()}</p>
-                    <button type="button" data-hotel-id="${hotel.sid}">예약하기</button>
+                    <button type="button" data-hotel-id="${hotelId}">예약하기</button>
                 </div>
             </div>
         `;
@@ -632,7 +636,7 @@ function drawFlashDeals(hotels) {
 function loadDealRoomPrice(hotelId, discountRate) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/inroom/" + hotelId,
+        url: INDEX_API_BASE + "/hotel/inroom/" + hotelId,
         type: "GET",
 
         success: function (result) {
@@ -660,7 +664,7 @@ function loadDealRoomPrice(hotelId, discountRate) {
 function loadDealImage(hotelId) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/inimage/" + hotelId,
+        url: INDEX_API_BASE + "/hotel/inimage/" + hotelId,
         type: "GET",
 
         success: function (result) {
@@ -693,6 +697,17 @@ function normalizeImagePath(imagePath) {
     }
 
     return imagePath;
+
+}
+
+function escapeHtml(value) {
+
+    return String(value == null ? "" : value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 

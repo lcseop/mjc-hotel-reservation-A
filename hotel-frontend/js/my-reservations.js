@@ -1,4 +1,4 @@
-const MY_API_BASE = "http://localhost:33000/api";
+const MY_API_BASE = window.StayNowConfig.apiBase;
 let myAuth = null;
 let reservations = [];
 let activeFilter = "ALL";
@@ -69,6 +69,7 @@ function bindMyPageEvents() {
 function loadReservations() {
     $.ajax({
         url: MY_API_BASE + "/reservation/search",
+        headers: myAuthHeaders(),
         data: { memberId: myAuth.memberSid, page: 0, size: 100, sort: "createdAt,desc" },
         success: function (page) {
             reservations = (page.content || []).map(mergeLocalReservation);
@@ -90,6 +91,7 @@ function loadLatestMyProfile() {
     $.ajax({
         url: MY_API_BASE + "/member/" + myAuth.memberSid,
         type: "GET",
+        headers: myAuthHeaders(),
         success: function (result) {
             const member = result.data || {};
             myAuth = Object.assign({}, myAuth, {
@@ -196,6 +198,7 @@ function checkInReservation(id) {
     $.ajax({
         url: MY_API_BASE + "/reservation/" + id + "/check-in",
         type: "PATCH",
+        headers: myAuthHeaders(),
         success: loadReservations,
         error: function () {
             alert("현재 체크인 처리할 수 없습니다. 체크인 가능 시간을 확인해주세요.");
@@ -210,6 +213,7 @@ function cancelReservation(id) {
         url: MY_API_BASE + "/reservation/cancel",
         type: "POST",
         contentType: "application/json",
+        headers: myAuthHeaders(),
         data: JSON.stringify({ sid: id, cancelReason: "고객 직접 취소" }),
         success: loadReservations,
         error: function () { alert("예약 취소에 실패했습니다."); }
@@ -272,6 +276,7 @@ function submitReview(event) {
         url: MY_API_BASE + "/review",
         type: "POST",
         contentType: "application/json",
+        headers: myAuthHeaders(),
         data: JSON.stringify(payload),
         success: function (result) {
             markReviewWritten(currentReviewTarget.sid);
@@ -510,6 +515,7 @@ function uploadReviewPhotos(reviewId, done) {
     $.ajax({
         url: MY_API_BASE + "/review-photo",
         type: "POST",
+        headers: myAuthHeaders(),
         data: formData,
         processData: false,
         contentType: false,
@@ -532,6 +538,10 @@ function markReviewWritten(id) {
 
 function getMyAuth() {
     return readJson("staynowAuth");
+}
+
+function myAuthHeaders() {
+    return myAuth && myAuth.token ? { Authorization: myAuth.token } : {};
 }
 
 function logoutMyPage() {

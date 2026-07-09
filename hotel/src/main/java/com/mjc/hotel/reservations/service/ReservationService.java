@@ -149,18 +149,36 @@ public class ReservationService {
         return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
     }
 
-    public Page<ReservationResponseDto> searchReservations(ReservationStatus status, Long memberId, Pageable pageable){
-        Page<Reservation> page;
-        if(memberId != null && status != null) {
-            page = reservationRepository.findByMember_SidAndReservationStatus(memberId, status, pageable);
-        } else if(memberId != null) {
-            page = reservationRepository.findByMember_Sid(memberId, pageable);
-        } else if(status != null) {
-            page = reservationRepository.findByReservationStatus(status, pageable);
-        } else {
-            page = reservationRepository.findAll(pageable);
-        }
+    public Page<ReservationResponseDto> searchReservations(
+            ReservationStatus status,
+            Long memberId,
+            Long hotelId,
+            String keyword,
+            String roomKeyword,
+            Long roomTypeId,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo,
+            Pageable pageable
+    ){
+        Page<Reservation> page = reservationRepository.searchAdminReservations(
+                status,
+                memberId,
+                hotelId,
+                normalizeKeyword(keyword),
+                normalizeKeyword(roomKeyword),
+                roomTypeId,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         return page.map(this::convertToResponseDto);
+    }
+
+    private String normalizeKeyword(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 
     @Transactional
@@ -214,7 +232,8 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
-        if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED) {
+        if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED
+                && reservation.getReservationStatus() != ReservationStatus.UPCOMING) {
             throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
         }
 

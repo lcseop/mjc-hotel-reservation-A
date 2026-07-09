@@ -5,10 +5,20 @@ async function loadComponent(id, file) {
         return;
     }
 
-    const response = await fetch(file);
-    const html = await response.text();
-    target.innerHTML = html;
-    document.dispatchEvent(new CustomEvent("component:loaded", { detail: { id } }));
+    try {
+        const response = await fetch(file);
+
+        if (!response.ok) {
+            throw new Error(file + " load failed");
+        }
+
+        const html = await response.text();
+        target.innerHTML = html;
+        document.dispatchEvent(new CustomEvent("component:loaded", { detail: { id } }));
+    } catch (error) {
+        target.innerHTML = "";
+        document.dispatchEvent(new CustomEvent("component:error", { detail: { id, file } }));
+    }
 }
 
 loadComponent("header", "component/header.html");
