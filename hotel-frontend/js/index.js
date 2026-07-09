@@ -1,4 +1,5 @@
 const INDEX_SEARCH_COOKIE = "staynowSearchRequest";
+const INDEX_API_BASE = window.StayNowConfig.apiBase;
 
 $(function () {
 
@@ -246,7 +247,7 @@ function searchHotels(request) {
         .html('<i class="fa-solid fa-spinner fa-spin"></i> 검색중');
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -301,7 +302,7 @@ function makePresetSearchRequest(preset) {
 function goHotelSearch(request) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=5",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -495,7 +496,7 @@ function loadPopularHotels() {
 
     $.ajax({
 
-        url: "http://localhost:33000/api/hotel/pop4",
+        url: INDEX_API_BASE + "/hotel/pop4",
         type: "GET",
 
         success: function (result) {
@@ -573,7 +574,7 @@ function loadFlashDeals() {
     });
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/search?page=0&size=20",
+        url: INDEX_API_BASE + "/hotel/search?page=0&size=20",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(request),
@@ -635,7 +636,7 @@ function drawFlashDeals(hotels) {
 function loadDealRoomPrice(hotelId, discountRate) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/inroom/" + hotelId,
+        url: INDEX_API_BASE + "/hotel/inroom/" + hotelId,
         type: "GET",
 
         success: function (result) {
@@ -663,7 +664,7 @@ function loadDealRoomPrice(hotelId, discountRate) {
 function loadDealImage(hotelId) {
 
     $.ajax({
-        url: "http://localhost:33000/api/hotel/inimage/" + hotelId,
+        url: INDEX_API_BASE + "/hotel/inimage/" + hotelId,
         type: "GET",
 
         success: function (result) {

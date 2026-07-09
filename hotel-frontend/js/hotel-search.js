@@ -1,4 +1,5 @@
-const HOTEL_SEARCH_API = "http://localhost:33000/api/hotel/search";
+const HOTEL_API_BASE = window.StayNowConfig.apiBase;
+const HOTEL_SEARCH_API = window.StayNowConfig.apiUrl("/hotel/search");
 const HOTEL_SEARCH_COOKIE = "staynowSearchRequest";
 const PAGE_SIZE = 5;
 let currentHotels = [];
@@ -288,7 +289,7 @@ function loadLowestRoomPrices(hotels) {
         }
 
         $.ajax({
-            url: "http://localhost:33000/api/hotel/inroom/" + hotel.sid,
+            url: HOTEL_API_BASE + "/hotel/inroom/" + hotel.sid,
             type: "GET",
             success: function (result) {
                 const rooms = (result.data || []).filter(function (room) {
@@ -364,7 +365,7 @@ function loadHotelThumbnails(hotels) {
         }
 
         $.ajax({
-            url: "http://localhost:33000/api/hotel/inimage/" + hotel.sid,
+            url: HOTEL_API_BASE + "/hotel/inimage/" + hotel.sid,
             type: "GET",
 
             success: function (result) {

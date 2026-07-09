@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:33000/api";
+const API_BASE = window.StayNowConfig.apiBase;
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
 const KAKAO_MAP_APP_KEY = "4b9798cdfdfbd7e08b433eacafb45cfc";
 

@@ -1,4 +1,4 @@
-const DETAIL_API_BASE = "http://localhost:33000/api";
+const DETAIL_API_BASE = window.StayNowConfig.apiBase;
 let detailAuth = null;
 let detailReservation = null;
 

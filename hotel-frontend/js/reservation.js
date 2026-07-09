@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:33000/api";
+const API_BASE = window.StayNowConfig.apiBase;
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
 
 let reservationState = null;
@@ -385,7 +385,7 @@ function normalizeImagePath(path) {
         return path;
     }
 
-    return API_BASE.replace("/api", "") + "/" + String(path).replace(/^\/+/, "");
+    return window.StayNowConfig.assetUrl(path);
 }
 
 function formatWon(value) {

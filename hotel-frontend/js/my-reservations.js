@@ -1,4 +1,4 @@
-const MY_API_BASE = "http://localhost:33000/api";
+const MY_API_BASE = window.StayNowConfig.apiBase;
 let myAuth = null;
 let reservations = [];
 let activeFilter = "ALL";

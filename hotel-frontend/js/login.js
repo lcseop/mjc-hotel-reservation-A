@@ -4,7 +4,7 @@ $(function () {
 
 });
 
-const LOGIN_API = "http://localhost:33000/api/auth/login";
+const LOGIN_API = window.StayNowConfig.apiUrl("/auth/login");
 
 function init() {
 
