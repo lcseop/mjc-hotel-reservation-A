@@ -28,8 +28,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final long ACCESS_TOKEN_EXPIRES_IN_SECONDS = 1800L;
-
     private final MemberAuthAccountRepository memberAuthAccountRepository;
     private final MemberService memberService;
     private final TermRepository termRepository;
@@ -78,9 +76,11 @@ public class AuthService {
         authAccount.setLastLoginAt(LocalDateTime.now());
 
         return MemberLoginResponseDto.builder()
-                .accessToken(jwtProvider.createToken(member.getEmail()))
+                .accessToken(jwtProvider.createAccessToken(member.getEmail()))
+                .refreshToken(jwtProvider.createRefreshToken(member.getEmail()))
                 .tokenType("Bearer")
-                .expiresIn(ACCESS_TOKEN_EXPIRES_IN_SECONDS)
+                .expiresIn(jwtProvider.getAccessTokenExpiresInSeconds())
+                .refreshTokenExpiresIn(jwtProvider.getRefreshTokenExpiresInSeconds())
                 .memberSid(member.getSid())
                 .email(member.getEmail())
                 .name(member.getName())
