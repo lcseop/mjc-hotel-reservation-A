@@ -331,7 +331,7 @@ public class ReviewService {
     }
 
 //    @Transactional
-//    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request) {
+//    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request, Pageable pageable) {
 //        Room room = roomRepository.findById(request.getRoomId())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Exist"));
 //        Member member = memberRepository.findById(request.getMemberId())
@@ -339,23 +339,43 @@ public class ReviewService {
 //        Hotel hotel = hotelRepository.findById(room.getHotelId().getSid())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
 //
-//        Reservation reservation = reservationRepository.findFirstByMemberSidAndRoomSidAndReservationStatusEqualCHECKED_OUTAndDeletedFalse(member.getSid(),room.getSid());
-//        if(reservation == null) {
-//            return this.toReviewWriteStatusResponse(false,null,false,null);
+//        //리뷰 작성이 가능한지 검증
+//        Page<Reservation> reservations = reservationRepository.findByMemberSidAndRoomSidAndReservationStatusIn(
+//                                                  member.getSid(),
+//                                                  room.getSid(),
+//                                                  List.of(ReservationStatus.CHECKED_OUT,ReservationStatus.UPCOMING,ReservationStatus.COMPLETED),
+//                                                  pageable
+//                                              );
+//        //예약이 하나도 없으므로 리뷰 작성 불가능한 상태
+//        if(reservations.isEmpty) {
+//            return this.toReviewWriteStatusResponse(false,null,null,null);
 //        }
-//        Review review = reviewRepository.findByReservationSidAndDeletedFalse(reservation.getSid());
-//        if(review == null){
-//            return this.toReviewWriteStatusResponse(true,reservation.getSid(),false,null);
+//        //예약이 여러개 있을 수 있으므로 예약Id, 리뷰 존재 상태, 리뷰 Id를 List 형태로 반환.
+//        List<Long> reservationIds = new ArrayList<>();
+//        List<Boolean> existsReviews = new ArrayList<>();
+//        List<Long> reviewIds = new ArrayList<>();
+//
+//        for(Reservation reservation : reservations.getContent()){ //이 예약으로 리뷰가 작성된 상태인지 검증
+//            reservationIds.add(reservation.getSid());
+//            Review review = reviewRepository.findByReservationSidAndDeletedFalse(reservation.getSid());
+//            if(review == null){ //리뷰 작성이 안됐거나 삭제된 상태, 리뷰 작성하기가 뜨게
+//                existsReviews.add(false);
+//                reviewIds.add(null);
+//            }
+//            else{ //리뷰 작성한 상태, 리뷰 수정하기가 뜨게
+//                existsReviews.add(true);
+//                reviewIds.add(review.getSid());
+//            }
 //        }
-//        return this.toReviewWriteStatusResponse(true,reservation.getSid(),true,review.getSid());
+//        return this.toReviewWriteStatusResponse(true,reservation.getSid(),existsReviews,reviewIds);
 //    }
 
-    private ReviewWriteStatusResponse toReviewWriteStatusResponse(Boolean checked, Long reservationId, Boolean existsReview, Long reviewId) {
+    private ReviewWriteStatusResponse toReviewWriteStatusResponse(Boolean checked, List<Long> reservationIds, List<Boolean> existsReview, List<Long> reviewIds) {
         return ReviewWriteStatusResponse.builder()
                 .checked(checked)
-                .reservationId(reservationId)
-                .existsReview(existsReview)
-                .reviewId(reviewId)
+                .reservationIds(reservationIds)
+                .existsReviews(existsReview)
+                .reviewIds(reviewIds)
                 .build();
     }
 }
