@@ -1,7 +1,6 @@
 package com.mjc.hotel.reservations.dto;
 
 
-import com.mjc.hotel.reservations.entity.ReservationChannel;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,8 +49,5 @@ public class ReservationRequestDto {
 
     @Min(value = 0, message = "사용 포인트는 0 이상이어야 합니다")
     private Integer usePoint;
-
-    @Builder.Default
-    private ReservationChannel reservationChannel = ReservationChannel.DIRECT;
 
 }

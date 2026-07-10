@@ -28,7 +28,6 @@ public class MemberServiceTest {
                 .status(MemberStatus.ACTIVE)
                 .role(MemberRole.USER)
                 .emailVerified(true)
-                .phoneVerified(true)
                 .point(1000)
                 .build();
 

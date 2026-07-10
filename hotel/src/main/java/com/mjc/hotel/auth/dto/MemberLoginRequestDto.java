@@ -1,4 +1,4 @@
-package com.mjc.hotel.member.dto;
+package com.mjc.hotel.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

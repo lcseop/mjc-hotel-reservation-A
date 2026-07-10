@@ -317,7 +317,6 @@ public class ReservationServiceTest {
                 .adults(2)
                 .children(0)
                 .reservationStatus(ReservationStatus.CONFIRMED)
-                .reservationChannel(ReservationChannel.DIRECT)
                 .originalAmount(200000)
                 .discountAmount(0)
                 .couponDiscount(0)
