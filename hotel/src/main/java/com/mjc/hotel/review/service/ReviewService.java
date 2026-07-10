@@ -4,7 +4,6 @@ import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
-import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.entity.PointHistory;
 import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
@@ -19,9 +18,6 @@ import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
-import com.mjc.hotel.room.dto.RoomResponseDto;
-import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
@@ -199,6 +195,7 @@ public class ReviewService {
     }
 
     private ReviewResponse toReviewResponse(Review review, List<ReviewCategory> categories, List<ReviewTag> tags) {
+        // 카테고리나 태그를 선택 하지 않았을 수 있으므로 null값을 반롼하게 함.
         return  ReviewResponse.builder()
                 .sid(review.getSid())
                 .hotelId(review.getHotel().getSid())
@@ -211,8 +208,9 @@ public class ReviewService {
                 .dislikeCount(review.getDislikeCount())
                 .roomName(review.getReservation().getRoom().getRoomName())
                 .totalNights(review.getReservation().getTotalNights())
-                .categories(
-                        categories.stream()
+                .categories( categories == null
+                                ? null
+                                : categories.stream()
                                 .map(reviewCategory -> ReviewCategoryResponse.builder()
                                         .sid(reviewCategory.getSid())
                                         .reviewCategoryId(reviewCategory.getReviewCategoryMaster().getSid())
@@ -221,8 +219,9 @@ public class ReviewService {
                                         .build())
                                 .toList()
                 )
-                .tags(
-                        tags.stream()
+                .tags( tags == null
+                        ? null
+                        : tags.stream()
                                 .map(reviewTag -> ReviewTagResponse.builder()
                                         .reviewId(reviewTag.getReview().getSid())
                                         .reviewTagId(reviewTag.getReviewTagMaster().getSid())
@@ -240,9 +239,8 @@ public class ReviewService {
     }
 
     private List<ReviewCategory> insertReviewCategories(List<ReviewCategoryRequest> categories, Review review) {
-        List<ReviewCategory> results = new ArrayList<>();
         if(categories != null && !categories.isEmpty()){
-
+            List<ReviewCategory> results = new ArrayList<>();
             for(ReviewCategoryRequest category : categories){
                 ReviewCategoryMaster reviewCategoryMaster = reviewCategoryMasterRepository.findById(category.getCategoryId())
                         .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Category Not Exist"));
@@ -256,15 +254,16 @@ public class ReviewService {
                 ReviewCategory result = reviewCategoryRepository.save(reviewCategory);
 
                 results.add(result);
+
+                return results;
             }
         }
-
-        return results;
+        return null;
     }
 
     private List<ReviewTag> insertReviewTags(List<ReviewTagRequest> tags , Review review) {
-        List<ReviewTag> results = new ArrayList<>();
         if(tags != null && !tags.isEmpty()) {
+            List<ReviewTag> results = new ArrayList<>();
             for(ReviewTagRequest tag : tags) {
                 ReviewTagMaster reviewTagMaster = reviewTagMasterRepository.findById(tag.getTagId())
                         .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Tag Not Exist"));
@@ -277,9 +276,10 @@ public class ReviewService {
                 ReviewTag result = reviewTagRepository.save(reviewTag);
 
                 results.add(result);
+                return results;
             }
         }
-        return results;
+        return null;
     }
 
     /**
@@ -317,6 +317,38 @@ public class ReviewService {
         Page<Review> reviews = reviewRepository.findByHotelSidAndExistsPhotoAndDeletedFalse(hotelId, pageable);
         Page<ReviewResponse> responses = this.toPageReviewResponse(pageable, reviews);
         return responses;
+    }
+
+    @Transactional
+    public List<ReviewCategoryResponse> findAllReviewCategoriesByReviewSid(Long reviewSid){
+        Review review = reviewRepository.findById(reviewSid)
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found"));
+        List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
+        List<ReviewCategoryResponse> results = categories.stream()
+                .map(category -> ReviewCategoryResponse.builder()
+                        .sid(category.getSid())
+                        .reviewId(category.getReview().getSid())
+                        .reviewCategoryId(category.getReviewCategoryMaster().getSid())
+                        .rating(category.getRating())
+                        .build())
+                .toList();
+        return results;
+    }
+
+    @Transactional
+    public List<ReviewTagResponse> findAllReviewTagsByReviewSid(Long reviewSid){
+        Review review = reviewRepository.findById(reviewSid)
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found"));
+        List<ReviewTag> tags = reviewTagRepository.findByReviewSid(review.getSid());
+        List<ReviewTagResponse> results = tags.stream()
+                .map(tag -> ReviewTagResponse.builder()
+                        .reviewId(tag.getReview().getSid())
+                        .reviewTagId(tag.getReviewTagMaster().getSid())
+                        .reviewTagName(tag.getReviewTagMaster().getReviewTagName())
+                        .reviewTagCategory(tag.getReviewTagMaster().getReviewTagCategory())
+                        .build())
+                .toList();
+        return results;
     }
 
     private Page<ReviewResponse> toPageReviewResponse(Pageable pageable, Page<Review> reviews) {
