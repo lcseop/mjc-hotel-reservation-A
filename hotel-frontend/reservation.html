@@ -74,20 +74,10 @@
                             </label>
                         </div>
 
-                        <div class="form-grid two">
+                        <div class="form-grid one">
                             <label>
                                 <span>이메일 *</span>
                                 <input type="email" id="guestEmail" required>
-                            </label>
-
-                            <label>
-                                <span>국적</span>
-                                <select id="nationality">
-                                    <option value="대한민국">대한민국</option>
-                                    <option value="미국">미국</option>
-                                    <option value="일본">일본</option>
-                                    <option value="중국">중국</option>
-                                </select>
                             </label>
                         </div>
 
@@ -152,6 +142,39 @@
                     <div class="total-price">
                         <span>최종 결제금액</span>
                         <strong id="totalAmount">₩0</strong>
+                    </div>
+
+                    <div class="agreement-box">
+                        <h3>예약 전 확인사항</h3>
+
+                        <label class="agreement-all">
+                            <input type="checkbox" id="agreeAll">
+                            <span>아래 약관에 모두 동의합니다</span>
+                        </label>
+
+                        <label class="agreement-item">
+                            <input type="checkbox" class="required-agreement" id="agreeRefund">
+                            <span>
+                                <strong>환불 규정 확인</strong>
+                                체크인 1일 전까지는 무료 취소가 가능하며, 이후 취소 시 객실 정책에 따라 환불이 제한될 수 있습니다.
+                            </span>
+                        </label>
+
+                        <label class="agreement-item">
+                            <input type="checkbox" class="required-agreement" id="agreePrivacy">
+                            <span>
+                                <strong>개인정보 수집 및 이용 동의</strong>
+                                예약자 확인, 체크인 안내, 예약 처리 목적으로 이름, 연락처, 이메일 정보를 이용합니다.
+                            </span>
+                        </label>
+
+                        <label class="agreement-item">
+                            <input type="checkbox" class="required-agreement" id="agreePayment">
+                            <span>
+                                <strong>테스트 결제 진행 동의</strong>
+                                실제 결제가 아닌 예약 완료 처리를 위한 모의 결제 절차가 진행됩니다.
+                            </span>
+                        </label>
                     </div>
 
                     <button type="button" id="payBtn" class="pay-btn">
