@@ -6,6 +6,8 @@ import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationStatsDto;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.service.ReservationService;
+import com.mjc.hotel.util.ApiResponse;
+import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -109,5 +111,12 @@ public class ReservationController {
             @PathVariable Long reservationId) {
         ReservationResponseDto response = reservationService.checkOut(reservationId);
         return ResponseEntity.ok(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleReservationBadRequest(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation request failed", ex.getMessage())
+        );
     }
 }
