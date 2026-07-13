@@ -38,6 +38,9 @@ public class Promotion extends BaseEntity {
     @Column(name="end_date")
     private LocalDateTime endDate;
 
+    @Column(name = "discount_info", nullable = false)
+    private String discountContent; // 예: "최대 30%", "30,000원"
+
     public void update(String promotionName) {
         this.promotionName = promotionName;
     }
