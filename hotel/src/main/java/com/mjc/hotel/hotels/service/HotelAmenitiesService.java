@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -63,6 +64,13 @@ public class HotelAmenitiesService {
         HotelAmenities amenities = hotelAmenitiesRepository.findById(id).orElseThrow();
         if (amenities.getDeleted() != null && amenities.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         return toDto(amenities, true);
+    }
+
+    public List<HotelAmenitiesDto> findAll() {
+        return hotelAmenitiesRepository.findAll().stream()
+                .filter(amenities -> !Boolean.TRUE.equals(amenities.getDeleted()))
+                .map(amenities -> toDto(amenities, true))
+                .toList();
     }
 
     private HotelAmenitiesDto toDto(HotelAmenities ame, boolean sid) {

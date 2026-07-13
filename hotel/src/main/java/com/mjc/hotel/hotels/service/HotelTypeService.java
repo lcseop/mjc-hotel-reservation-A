@@ -69,6 +69,13 @@ public class HotelTypeService {
         return toDto(type, true);
     }
 
+    public List<HotelTypeDto> findAll() {
+        return hotelTypeRepository.findAll().stream()
+                .filter(type -> !Boolean.TRUE.equals(type.getDeleted()))
+                .map(type -> toDto(type, true))
+                .toList();
+    }
+
     public Slice<HotelTypeDto> findByTitleContain(String title, Pageable pageable) {
         Slice<HotelType> slc = hotelTypeRepository.findByTitleContains(title, pageable);
         List<HotelTypeDto> dtos = slc

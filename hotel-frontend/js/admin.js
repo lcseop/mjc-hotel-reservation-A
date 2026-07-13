@@ -1,15 +1,13 @@
 const ADMIN_PAGES = [
     { id: "dashboard", label: "대시보드", file: "admin-dashboard.html", icon: "fa-table-cells-large", group: "메인" },
-    { id: "reservations", label: "예약 관리", file: "admin-reservations.html", icon: "fa-calendar-check", group: "메인", badge: "12" },
-    { id: "checkin", label: "체크인 현황", file: "admin-checkin.html", icon: "fa-clock", group: "메인", badge: "3" },
+    { id: "reservations", label: "예약 관리", file: "admin-reservations.html", icon: "fa-calendar-check", group: "메인" },
+    { id: "checkin", label: "체크인 현황", file: "admin-checkin.html", icon: "fa-clock", group: "메인" },
     { id: "guests", label: "고객 관리", file: "admin-guests.html", icon: "fa-users", group: "메인" },
     { id: "rooms", label: "객실 관리", file: "admin-rooms.html", icon: "fa-bed", group: "객실 · 요금" },
-    { id: "rates", label: "요금 설정", file: "admin-rates.html", icon: "fa-tags", group: "객실 · 요금" },
     { id: "promotions", label: "프로모션", file: "admin-promotions.html", icon: "fa-percent", group: "객실 · 요금" },
     { id: "sales", label: "매출 분석", file: "admin-sales.html", icon: "fa-chart-bar", group: "분석 · 리포트" },
-    { id: "reviews", label: "리뷰 관리", file: "admin-reviews.html", icon: "fa-star", group: "분석 · 리포트", badge: "8" },
-    { id: "settlement", label: "정산 리포트", file: "admin-settlement.html", icon: "fa-file-invoice", group: "분석 · 리포트" },
-    { id: "settings", label: "시스템 설정", file: "admin-settings.html", icon: "fa-gear", group: "설정" }
+    { id: "reviews", label: "리뷰 관리", file: "admin-reviews.html", icon: "fa-star", group: "분석 · 리포트" },
+    { id: "settings", label: "호텔 관리", file: "admin-settings.html", icon: "fa-hotel", group: "설정" }
 ];
 
 const ADMIN_TOP_NAV = ["dashboard", "reservations", "guests", "rooms", "sales", "reviews", "settings"];
@@ -23,9 +21,18 @@ let ADMIN_GUEST_STATE = null;
 let ADMIN_SALES_STATE = null;
 let ADMIN_PROMOTION_STATE = null;
 let ADMIN_ROOM_STATE = null;
+let ADMIN_REVIEW_STATE = null;
+let ADMIN_HOTEL_MANAGE_STATE = null;
 let ADMIN_ROOM_VIEW = "card";
+let ADMIN_ROOM_PHOTO_STATE = { existing: [], added: [], deleted: [] };
+let ADMIN_HOTEL_PHOTO_STATE = { existing: [], added: [], deleted: [] };
+let ADMIN_HOTEL_CREATE_PHOTO_STATE = { added: [] };
 let ADMIN_CURRENT_PAGE = "dashboard";
 let ADMIN_ROOM_TYPES = [];
+let ADMIN_QR_STREAM = null;
+let ADMIN_QR_TIMER = null;
+let ADMIN_QR_DETECTOR = null;
+let ADMIN_QR_PROCESSING = false;
 
 const reservations = [
     ["SN-0714-8842", "김민준", "디럭스 더블 101호", "07.14", "07.16", "₩240,000", "예약확정", "green"],
@@ -135,10 +142,16 @@ function renderAdminShell(pageId, auth) {
         loadAdminGuestData();
     } else if (page.id === "rooms") {
         loadAdminRoomData();
+    } else if (page.id === "checkin") {
+        loadAdminCheckinData();
     } else if (page.id === "sales") {
         loadAdminSalesData();
     } else if (page.id === "promotions") {
         loadAdminPromotionData();
+    } else if (page.id === "reviews") {
+        loadAdminReviewData();
+    } else if (page.id === "settings") {
+        loadAdminHotelManageData();
     }
 
     clearInterval(window.adminClockTimer);
@@ -164,11 +177,30 @@ function renderAdminShell(pageId, auth) {
     $(document).off("click.adminRoomsAdd").on("click.adminRoomsAdd", "[data-admin-action='open-room-create']", function () {
         openRoomModal();
     });
+    $(document).off("click.adminCheckinCalendar").on("click.adminCheckinCalendar", "[data-admin-action='open-checkin-calendar']", function () {
+        $("#checkinCalendarPanel")[0]?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(highlightCheckinCalendarPanel, 360);
+    });
+    $(document).off("click.adminCheckinReport").on("click.adminCheckinReport", "[data-admin-action='download-checkin-report']", function () {
+        downloadCheckinReport();
+    });
+    $(document).off("click.adminQrCheckin").on("click.adminQrCheckin", "[data-admin-action='open-qr-checkin']", function () {
+        openAdminQrCheckinModal();
+    });
     $(document).off("click.adminPromotionCreate").on("click.adminPromotionCreate", "[data-admin-action='create-promotion']", function () {
         openPromotionModal();
     });
     $(document).off("click.adminCheckin").on("click.adminCheckin", "[data-admin-checkin]", function () {
         checkInAdminReservation($(this).data("adminCheckin"));
+    });
+    $(document).off("click.adminCheckout").on("click.adminCheckout", "[data-admin-checkout]", function () {
+        checkOutAdminReservation($(this).data("adminCheckout"));
+    });
+    $(document).off("click.adminCancelReservation").on("click.adminCancelReservation", "[data-admin-cancel-reservation]", function () {
+        cancelAdminReservation($(this).data("adminCancelReservation"));
+    });
+    $(document).off("click.adminHotelCreate").on("click.adminHotelCreate", "[data-admin-action='open-hotel-create']", function () {
+        openHotelManageModal();
     });
 }
 
@@ -543,12 +575,10 @@ function pageSubtitle(id) {
         checkin: `${nowLabel} · 체크인 / 체크아웃 운영`,
         guests: "회원 정보, 예약 이력, 포인트 현황 관리",
         rooms: "실시간 객실 상태, 예약, 공실 관리",
-        rates: `${nowLabel} · 객실 유형별 요금 및 시즌 정책 관리`,
         promotions: `${nowLabel} · 특가 및 할인 프로모션 관리`,
         sales: `${getAdminDateLabel()} 기준`,
-        reviews: "리뷰 답변, 신고, 평점 추이 관리",
-        settlement: `${nowLabel} · 객실 유형별 매출 및 수수료 정산 현황`,
-        settings: "권한, 호텔 정보, 외부 연동, 운영 정책 설정"
+        reviews: "호텔별 리뷰 확인 및 답변 관리",
+        settings: "호텔 정보, 편의시설, 타입, 사진 관리"
     };
     return copy[id] || nowLabel;
 }
@@ -566,6 +596,12 @@ function adminPageNote(id) {
     if (id === "promotions") {
         return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용되며, 할인 내용은 discountContent 기준으로 관리합니다.";
     }
+    if (id === "reviews") {
+        return "리뷰 관리는 왼쪽에서 선택한 호텔 기준으로 리뷰와 관리자 답변을 표시합니다.";
+    }
+    if (id === "settings") {
+        return "호텔 관리는 Hotel 관련 API만 사용해 선택 호텔의 기본 정보, 편의시설, 타입, 사진을 관리합니다.";
+    }
     return "현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다.";
 }
 
@@ -575,11 +611,11 @@ function headActions(id) {
         reservations: [["리포트 다운로드", "fa-download", "", "download-reservation-report"]],
         guests: [],
         rooms: [["리포트 다운로드", "fa-download", "", "download-rooms-report"], ["객실 추가", "fa-plus", "primary", "open-room-create"]],
-        rates: [["변경 이력", "fa-clock"], ["내보내기", "fa-download"], ["요금 추가", "fa-plus", "primary"]],
         promotions: [["프로모션 생성", "fa-plus", "primary", "create-promotion"]],
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
-        settlement: [[getAdminMonthSettlementLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
-        checkin: [["캘린더 보기", "fa-calendar"], ["내보내기", "fa-download"]]
+        checkin: [["QR 체크인", "fa-qrcode", "primary", "open-qr-checkin"], ["캘린더 보기", "fa-calendar", "", "open-checkin-calendar"], ["리포트 다운로드", "fa-download", "", "download-checkin-report"]],
+        reviews: [],
+        settings: [["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
     };
     const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
     const actionButtons = buttons.map(([text, icon, type, action]) => `<button class="admin-btn ${type || ""}" type="button"${action ? ` data-admin-action="${action}"` : ""}><i class="fa-solid ${icon}"></i> ${text}</button>`).join("");
@@ -596,11 +632,9 @@ function renderPage(id) {
         checkin: renderCheckin,
         guests: renderGuests,
         rooms: renderRooms,
-        rates: renderRates,
         promotions: renderPromotions,
         sales: renderSales,
         reviews: renderReviews,
-        settlement: renderSettlement,
         settings: renderSettings
     };
     return (pages[id] || renderDashboard)();
@@ -667,11 +701,41 @@ function renderReservations() {
 
 function renderCheckin() {
     return `
-        ${metrics([["오늘 전체 예약", "47건", "fa-calendar-check", "+3건"], ["오늘 체크인", "12건", "fa-right-to-bracket", "+2건"], ["오늘 체크아웃", "9건", "fa-right-from-bracket", "-1건", "warn"], ["승인 대기", "3건", "fa-clock", "확인필요", "danger"]])}
-        <div class="grid split" style="margin-top:22px">
-            <div class="panel">${tabs(["전체 47", "예약확정 32", "체크인 12", "체크아웃 9", "취소 4"])}${checkinTable()}</div>
-            <div class="grid">${checkinPanel()}${weekPanel()}${urgentPanel()}</div>
+        <div id="checkinMetrics" class="grid stats-grid cols-4">
+            ${dashboardMetricSkeleton("오늘 전체 예약", "fa-calendar-check")}
+            ${dashboardMetricSkeleton("오늘 체크인", "fa-right-to-bracket")}
+            ${dashboardMetricSkeleton("오늘 체크아웃", "fa-right-from-bracket")}
+            ${dashboardMetricSkeleton("현재 사용중", "fa-bed")}
         </div>
+        <div class="grid split checkin-layout" style="margin-top:22px">
+            <div class="panel checkin-admin-panel">
+                <div class="checkin-toolbar">
+                    <label class="admin-search-field">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="checkinKeyword" type="search" placeholder="예약번호, 고객명, 객실 검색">
+                    </label>
+                    <select id="checkinStatusFilter" class="admin-select">
+                        <option value="">전체 상태</option>
+                        <option value="CONFIRMED">예약확정</option>
+                        <option value="UPCOMING">체크인 예정</option>
+                        <option value="CHECKED_IN">체크인</option>
+                        <option value="CHECKED_OUT">체크아웃</option>
+                        <option value="CANCELLED">취소</option>
+                    </select>
+                    <button class="admin-btn" type="button" data-checkin-bulk="check-in">일괄 체크인</button>
+                    <button class="admin-btn" type="button" data-checkin-bulk="check-out">일괄 체크아웃</button>
+                    <button class="admin-btn danger" type="button" data-checkin-bulk="cancel">일괄 취소</button>
+                </div>
+                <div id="checkinTableWrap" class="admin-table-wrap">
+                    <div class="admin-loading">체크인 데이터를 불러오는 중입니다.</div>
+                </div>
+            </div>
+            <div class="grid">
+                <div id="todayCheckinPanel" class="panel">${emptyAdminState("오늘 체크인 현황을 불러오는 중입니다.")}</div>
+                <div id="checkinCalendarPanel" class="panel">${emptyAdminState("캘린더를 불러오는 중입니다.")}</div>
+            </div>
+        </div>
+        <div id="checkinModalRoot"></div>
     `;
 }
 
@@ -807,9 +871,33 @@ function renderSales() {
 
 function renderReviews() {
     return `
-        ${metrics([["평균 평점", "9.4점", "fa-star", "+0.2"], ["신규 리뷰", "127건", "fa-message", "이번 달"], ["답변 대기", "8건", "fa-reply", "처리필요", "warn"], ["신고 리뷰", "2건", "fa-triangle-exclamation", "확인필요", "danger"]])}
-        <div class="panel" style="margin-top:22px">${panelHead("리뷰 통계", "항목별 만족도")}<div class="review-score"><div class="big-score">9.4</div>${barLines([["청결도", 96, "9.6"], ["서비스", 94, "9.4"], ["위치", 97, "9.7"], ["시설", 91, "9.1"]])}<div class="task-list">${task("5점 65%", "")}${task("4점 24%", "")}${task("3점 이하 11%", "warn")}</div></div></div>
-        <div class="panel" style="margin-top:22px">${tabs(["전체", "사진포함", "답변 대기", "신고됨"])}<div class="review-row"><span class="avatar">김</span><div><strong>객실이 깨끗하고 위치가 좋았어요.</strong><p>그랜드 서울 호텔 · 2025.07.08</p></div><span class="status orange">답변 대기</span></div><div class="review-row"><span class="avatar">박</span><div><strong>체크인 응대가 빨랐습니다.</strong><p>파크하얏트 서울 · 2025.07.06</p></div><span class="status">답변 완료</span></div></div>
+        <div id="adminReviewMetrics" class="grid stats-grid cols-4">
+            ${dashboardMetricSkeleton("평균 평점", "fa-star")}
+            ${dashboardMetricSkeleton("전체 리뷰", "fa-message")}
+            ${dashboardMetricSkeleton("답변 완료", "fa-circle-check")}
+            ${dashboardMetricSkeleton("답변 대기", "fa-reply")}
+        </div>
+        <div class="panel admin-review-panel">
+            <div class="admin-review-toolbar">
+                <div class="tabs admin-review-tabs">
+                    <button class="chip active" type="button" data-admin-review-filter="all">전체</button>
+                    <button class="chip" type="button" data-admin-review-filter="photo">사진포함 리뷰</button>
+                    <button class="chip" type="button" data-admin-review-filter="waiting">답변 대기</button>
+                </div>
+                <label class="admin-review-sort">
+                    <span>정렬</span>
+                    <select id="adminReviewSort" class="admin-select">
+                        <option value="latest">최신순</option>
+                        <option value="ratingDesc">평점 높은순</option>
+                        <option value="ratingAsc">평점 낮은순</option>
+                        <option value="waiting">답변 대기 우선</option>
+                    </select>
+                </label>
+            </div>
+            <div id="adminReviewList" class="admin-review-list">
+                <div class="admin-loading">리뷰 데이터를 불러오는 중입니다.</div>
+            </div>
+        </div>
     `;
 }
 
@@ -826,15 +914,27 @@ function renderSettlement() {
 
 function renderSettings() {
     return `
-        <div class="grid settings-grid">
-            ${settingCard("호텔 기본 정보", "이름, 주소, 연락처, 대표 이미지")}
-            ${settingCard("관리자 권한", "ADMIN / STAFF / VIEWER 역할")}
-            ${settingCard("예약 정책", "취소, 체크인, 노쇼 기준")}
-            ${settingCard("알림 설정", "메일, SMS, 관리자 알림")}
-            ${settingCard("외부 연동", "TourAPI, Kakao Map, 결제 PG")}
-            ${settingCard("보안 로그", "접속 이력, 권한 변경 기록")}
+        <div class="hotel-manage-grid">
+            <form id="hotelManageForm" class="panel hotel-manage-form">
+                <div class="panel-head"><div><h2>호텔 기본 정보</h2><span>선택한 호텔의 검색/예약 노출 정보를 수정합니다.</span></div></div>
+                <div id="hotelManageFields" class="admin-loading">호텔 정보를 불러오는 중입니다.</div>
+            </form>
+            <aside class="hotel-manage-side">
+                <div class="panel">
+                    <div class="panel-head"><div><h2>호텔 사진</h2><span>대표 및 서브 이미지로 사용됩니다.</span></div></div>
+                    <div id="hotelPhotoGrid" class="room-photo-grid"></div>
+                    <input id="hotelPhotoFilesInput" class="room-photo-native-input" type="file" accept="image/*" multiple>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><div><h2>분류 관리</h2><span>호텔 타입과 편의시설 마스터를 관리합니다.</span></div></div>
+                    <div class="hotel-master-actions">
+                        <button class="admin-btn" type="button" data-hotel-type-manage><i class="fa-solid fa-layer-group"></i> 호텔 타입 관리</button>
+                        <button class="admin-btn" type="button" data-hotel-amenity-manage><i class="fa-solid fa-wand-magic-sparkles"></i> 편의시설 관리</button>
+                    </div>
+                </div>
+            </aside>
         </div>
-        <div class="panel" style="margin-top:22px">${panelHead("구현 판단", "필수와 보류")}<div class="task-list">${task("권한 관리는 반드시 필요합니다. 관리자 화면 전체가 ADMIN 전용이어야 합니다.", "")}${task("결제 PG 정산 자동화는 현재 가짜 결제 구조라 상세 구현은 보류가 맞습니다.", "warn")}${task("외부 OTA 채널 관리는 실제 OTA 연동 전까지 더미로 충분합니다.", "warn")}</div></div>
+        <div id="hotelManageModalRoot"></div>
     `;
 }
 
@@ -990,6 +1090,864 @@ function dashboardMetricSkeleton(label, icon) {
             <div class="progress"><i style="width:42%"></i></div>
         </article>
     `;
+}
+
+function loadAdminReviewData(filter) {
+    const activeFilter = filter || (ADMIN_REVIEW_STATE && ADMIN_REVIEW_STATE.filter) || "all";
+    const requests = {
+        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        popularHotels: adminGetSafe("/hotel/pop4", [])
+    };
+
+    $.when(requests.hotels, requests.popularHotels)
+        .done(function (hotelsResult, popularHotelsResult) {
+            const hotelPage = normalizeAjaxResult(hotelsResult);
+            const popularHotels = asArray(normalizeAjaxResult(popularHotelsResult));
+            const hotels = mergeAdminHotels(asPageContent(hotelPage), popularHotels);
+            const selectedHotel = getSelectedAdminHotel(hotels);
+
+            renderAdminHotelSelector(hotels, selectedHotel);
+            bindAdminReviewControls();
+
+            if (!selectedHotel) {
+                ADMIN_REVIEW_STATE = { selectedHotel: null, reviews: [], answers: {}, filter: activeFilter, sort: "latest" };
+                renderAdminReviewPage();
+                return;
+            }
+
+            const endpoint = activeFilter === "photo"
+                ? "/review/exists-photo-search"
+                : "/review/search";
+
+            adminGet(endpoint + "?hotelId=" + encodeURIComponent(selectedHotel.sid) + "&page=0&size=100&sort=createdAt,desc")
+                .then(function (reviewPage) {
+                    const reviews = asPageContent(reviewPage).filter(function (review) {
+                        return !review.deleted;
+                    });
+                    ADMIN_REVIEW_STATE = {
+                        selectedHotel,
+                        reviews,
+                        answers: {},
+                        photos: {},
+                        filter: activeFilter,
+                        sort: $("#adminReviewSort").val() || "latest"
+                    };
+                    fetchAdminReviewExtras(reviews).always(renderAdminReviewPage);
+                }, function () {
+                    $("#adminReviewList").html(emptyAdminState("리뷰 데이터를 불러오지 못했습니다."));
+                });
+        })
+        .fail(function () {
+            renderAdminHotelSelector([], null);
+            $("#adminReviewList").html(emptyAdminState("리뷰 데이터를 불러오지 못했습니다."));
+        });
+}
+
+function fetchAdminReviewExtras(reviews) {
+    return $.when(fetchAdminReviewAnswers(reviews), fetchAdminReviewPhotos(reviews));
+}
+
+function fetchAdminReviewAnswers(reviews) {
+    if (!reviews.length) {
+        return $.Deferred().resolve().promise();
+    }
+
+    const requests = reviews.map(function (review) {
+        return adminGetSafe("/review-answer/review-search?reviewId=" + encodeURIComponent(review.sid), null);
+    });
+
+    return $.when.apply($, requests).done(function () {
+        const results = requests.length === 1 ? [arguments[0]] : Array.from(arguments);
+        const answers = {};
+
+        reviews.forEach(function (review, index) {
+            const answer = normalizeDeferredValue(results[index]);
+            if (answer && answer.sid && !answer.deleted) {
+                answers[String(review.sid)] = answer;
+            }
+        });
+
+        if (ADMIN_REVIEW_STATE) {
+            ADMIN_REVIEW_STATE.answers = answers;
+        }
+    });
+}
+
+function fetchAdminReviewPhotos(reviews) {
+    if (!reviews.length) {
+        return $.Deferred().resolve().promise();
+    }
+
+    const requests = reviews.map(function (review) {
+        return adminGetSafe("/review-photo/search?reviewId=" + encodeURIComponent(review.sid) + "&page=0&size=20", { content: [] });
+    });
+
+    return $.when.apply($, requests).done(function () {
+        const results = requests.length === 1 ? [arguments[0]] : Array.from(arguments);
+        const photos = {};
+
+        reviews.forEach(function (review, index) {
+            photos[String(review.sid)] = asPageContent(normalizeDeferredValue(results[index]));
+        });
+
+        if (ADMIN_REVIEW_STATE) {
+            ADMIN_REVIEW_STATE.photos = photos;
+        }
+    });
+}
+
+function bindAdminReviewControls() {
+    $(".admin-review-tabs").off("click.adminReview").on("click.adminReview", "[data-admin-review-filter]", function () {
+        const filter = $(this).data("adminReviewFilter");
+        $(".admin-review-tabs .chip").removeClass("active");
+        $(this).addClass("active");
+        loadAdminReviewData(filter);
+    });
+
+    $("#adminReviewSort").off("change.adminReview").on("change.adminReview", function () {
+        if (ADMIN_REVIEW_STATE) {
+            ADMIN_REVIEW_STATE.sort = $(this).val() || "latest";
+        }
+        renderAdminReviewPage();
+    });
+
+    $("#adminReviewList").off("click.adminReviewAnswer").on("click.adminReviewAnswer", "[data-admin-answer-review]", function () {
+        answerAdminReview($(this).data("adminAnswerReview"));
+    }).off("click.adminReviewPhoto").on("click.adminReviewPhoto", "[data-review-photo-view]", function () {
+        openAdminReviewPhotoViewer($(this).data("reviewPhotoView"));
+    });
+}
+
+function renderAdminReviewPage() {
+    if (!ADMIN_REVIEW_STATE) {
+        return;
+    }
+
+    const state = ADMIN_REVIEW_STATE;
+    const allReviews = state.reviews.slice();
+    const reviews = sortAdminReviews(filterAdminReviews(allReviews, state.filter), state.sort, state.answers);
+    renderAdminReviewMetrics(allReviews, state.answers);
+
+    $(".admin-review-tabs [data-admin-review-filter]").removeClass("active");
+    $(".admin-review-tabs [data-admin-review-filter='" + state.filter + "']").addClass("active");
+    $("#adminReviewSort").val(state.sort || "latest");
+
+    $("#adminReviewList").html(
+        reviews.length
+            ? reviews.map(function (review, index) {
+                return renderAdminReviewCard(review, index, state);
+            }).join("")
+            : emptyAdminState(state.selectedHotel ? "조건에 맞는 리뷰가 없습니다." : "선택 가능한 호텔이 없습니다.")
+    );
+}
+
+function filterAdminReviews(reviews, filter) {
+    if (filter === "waiting") {
+        const answers = ADMIN_REVIEW_STATE ? ADMIN_REVIEW_STATE.answers : {};
+        return reviews.filter(function (review) {
+            return !answers[String(review.sid)];
+        });
+    }
+    return reviews;
+}
+
+function sortAdminReviews(reviews, sort, answers) {
+    return reviews.slice().sort(function (a, b) {
+        if (sort === "ratingDesc") return getAdminReviewRating(b) - getAdminReviewRating(a);
+        if (sort === "ratingAsc") return getAdminReviewRating(a) - getAdminReviewRating(b);
+        if (sort === "waiting") {
+            const aWaiting = answers[String(a.sid)] ? 1 : 0;
+            const bWaiting = answers[String(b.sid)] ? 1 : 0;
+            if (aWaiting !== bWaiting) return aWaiting - bWaiting;
+        }
+        return getAdminReviewTime(b) - getAdminReviewTime(a);
+    });
+}
+
+function renderAdminReviewMetrics(reviews, answers) {
+    const total = reviews.length;
+    const average = total ? reviews.reduce(function (sum, review) {
+        return sum + getAdminReviewRating(review);
+    }, 0) / total : 0;
+    const answered = reviews.filter(function (review) {
+        return answers[String(review.sid)];
+    }).length;
+    const waiting = Math.max(0, total - answered);
+
+    const markup = metrics([
+        ["평균 평점", average ? average.toFixed(1) + "점" : "0점", "fa-star", total ? "호텔 기준" : "리뷰 없음", "", total ? Math.min(100, average * 20) : 0],
+        ["전체 리뷰", total + "건", "fa-message", "누적", "", total ? 100 : 0],
+        ["답변 완료", answered + "건", "fa-circle-check", total ? Math.round(answered / total * 100) + "%" : "0%", "", total ? answered / total * 100 : 0],
+        ["답변 대기", waiting + "건", "fa-reply", waiting ? "처리 필요" : "완료", waiting ? "warn" : "", total ? waiting / total * 100 : 0]
+    ], 4).replace('class="grid stats-grid cols-4"', 'id="adminReviewMetrics" class="grid stats-grid cols-4"');
+    $("#adminReviewMetrics").replaceWith(markup);
+}
+
+function renderAdminReviewCard(review, index, state) {
+    const answer = state.answers[String(review.sid)];
+    const rating = getAdminReviewRating(review);
+    const titleNumber = state.reviews.findIndex(function (item) {
+        return String(item.sid) === String(review.sid);
+    }) + 1;
+    const tags = asArray(review.tags);
+    const goodTags = tags.filter(function (tag) {
+        return isPositiveReviewTag(tag);
+    });
+    const badTags = tags.filter(function (tag) {
+        return isNegativeReviewTag(tag);
+    });
+
+    return `
+        <article class="admin-review-card">
+            <div class="admin-review-avatar">${titleNumber || index + 1}</div>
+            <div class="admin-review-main">
+                <div class="admin-review-head">
+                    <div>
+                        <strong>익명 고객</strong>
+                        <p>#${titleNumber || index + 1}번째 리뷰 · ${formatAdminReviewDate(review.createdAt)} · ${escapeHtml(review.roomName || "객실 정보 없음")}${review.totalNights ? " · " + escapeHtml(review.totalNights + "박") : ""}</p>
+                    </div>
+                    <div class="admin-review-rating">
+                        <span>${rating.toFixed(1)}</span>
+                        <div>${renderAdminReviewStars(rating)}</div>
+                    </div>
+                </div>
+                ${renderAdminReviewCategoryBars(review.categories)}
+                <p class="admin-review-content">${escapeHtml(review.content || "작성된 리뷰 내용이 없습니다.")}</p>
+                ${renderAdminReviewPhotos(state.photos && state.photos[String(review.sid)])}
+                ${renderAdminReviewTagBlock("좋았던 점", goodTags, "good")}
+                ${renderAdminReviewTagBlock("아쉬운 점", badTags, "bad")}
+                <div class="admin-review-helpful">
+                    <span>이 리뷰가 도움이 되었나요?</span>
+                    <span><i class="fa-regular fa-thumbs-up"></i> ${Number(review.likeCount || 0)}</span>
+                    <span><i class="fa-regular fa-thumbs-down"></i> ${Number(review.dislikeCount || 0)}</span>
+                </div>
+                ${answer ? renderAdminReviewAnswer(answer) : renderAdminReviewAnswerForm(review)}
+            </div>
+        </article>
+    `;
+}
+
+function renderAdminReviewCategoryBars(categories) {
+    const items = asArray(categories);
+    if (!items.length) return "";
+    const labels = ["청결도", "서비스", "위치", "시설", "가성비", "조식"];
+    return `<div class="admin-review-categories">${items.map(function (category, index) {
+        const score = Number(category.rating || 0);
+        const label = labels[index] || ("항목 " + (index + 1));
+        return `<span><b>${escapeHtml(label)}</b><i>${renderAdminReviewStars(score)}</i></span>`;
+    }).join("")}</div>`;
+}
+
+function renderAdminReviewPhotos(photos) {
+    const items = asArray(photos).filter(function (photo) {
+        return photo && photo.imagePath && !photo.deleted;
+    });
+    if (!items.length) return "";
+    return `<div class="admin-review-photos">${items.map(function (photo) {
+        const src = resolveAdminImagePath(photo.imagePath);
+        return `<button type="button" class="admin-review-photo" data-review-photo-view="${escapeHtml(src)}"><img src="${escapeHtml(src)}" alt="리뷰 사진"></button>`;
+    }).join("")}</div>`;
+}
+
+function openAdminReviewPhotoViewer(src) {
+    if (!src) return;
+    $("body").append(`
+        <div class="admin-modal-backdrop nested admin-photo-viewer" data-admin-photo-viewer>
+            <button type="button" class="modal-close" data-admin-photo-viewer-close><i class="fa-solid fa-xmark"></i></button>
+            <img src="${escapeHtml(src)}" alt="리뷰 사진 크게 보기">
+        </div>
+    `);
+    $("[data-admin-photo-viewer-close], [data-admin-photo-viewer]").on("click", function (event) {
+        if (event.target !== this) return;
+        $(".admin-photo-viewer").remove();
+    });
+}
+
+function renderAdminReviewTagBlock(label, tags, tone) {
+    if (!tags.length) return "";
+    return `<div class="admin-review-tags ${tone}">
+        <strong>${label}</strong>
+        ${tags.map(function (tag) {
+            return `<span>${escapeHtml(tag.reviewTagName || "태그")}</span>`;
+        }).join("")}
+    </div>`;
+}
+
+function renderAdminReviewAnswer(answer) {
+    return `<div class="admin-review-answer">
+        <strong><i class="fa-solid fa-reply"></i> 관리자 답변</strong>
+        <p>${escapeHtml(answer.reviewAnswer || "")}</p>
+        <small>${formatAdminReviewDate(answer.createdAt)}</small>
+    </div>`;
+}
+
+function renderAdminReviewAnswerForm(review) {
+    return `<div class="admin-review-answer-form">
+        <textarea id="adminAnswerText-${escapeHtml(review.sid)}" placeholder="고객에게 전달할 답변을 입력하세요."></textarea>
+        <button class="admin-btn primary" type="button" data-admin-answer-review="${escapeHtml(review.sid)}">
+            <i class="fa-solid fa-paper-plane"></i> 답변 등록
+        </button>
+    </div>`;
+}
+
+function answerAdminReview(reviewId) {
+    const textarea = $("#adminAnswerText-" + reviewId);
+    const reviewAnswer = String(textarea.val() || "").trim();
+    if (!reviewAnswer) {
+        alert("답변 내용을 입력해주세요.");
+        textarea.focus();
+        return;
+    }
+
+    const button = $("[data-admin-answer-review='" + reviewId + "']");
+    button.prop("disabled", true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> 등록 중');
+
+    adminPost("/review-answer", { reviewId: Number(reviewId), reviewAnswer })
+        .then(function () {
+            loadAdminReviewData(ADMIN_REVIEW_STATE ? ADMIN_REVIEW_STATE.filter : "all");
+        }, function (xhr) {
+            alert(getAdminAjaxMessage(xhr, "리뷰 답변 등록에 실패했습니다."));
+            button.prop("disabled", false).html('<i class="fa-solid fa-paper-plane"></i> 답변 등록');
+        });
+}
+
+function renderAdminReviewStars(score) {
+    const normalized = Math.max(0, Math.min(5, Number(score || 0)));
+    return Array.from({ length: 5 }).map(function (_, index) {
+        return `<i class="fa-${index < Math.round(normalized) ? "solid" : "regular"} fa-star"></i>`;
+    }).join("");
+}
+
+function getAdminReviewRating(review) {
+    return Number(review && review.rating || 0);
+}
+
+function getAdminReviewTime(review) {
+    const date = parseAdminDate(review && review.createdAt);
+    return date ? date.getTime() : 0;
+}
+
+function formatAdminReviewDate(value) {
+    const date = parseAdminDate(value);
+    if (!date) return "-";
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function isPositiveReviewTag(tag) {
+    const category = String(tag && tag.reviewTagCategory || "").toUpperCase();
+    return ["PROS", "GOOD", "POSITIVE", "PLUS", "ADVANTAGE"].some(function (key) {
+        return category.includes(key);
+    });
+}
+
+function isNegativeReviewTag(tag) {
+    const category = String(tag && tag.reviewTagCategory || "").toUpperCase();
+    return ["CONS", "BAD", "NEGATIVE", "MINUS", "DISADVANTAGE"].some(function (key) {
+        return category.includes(key);
+    });
+}
+
+function loadAdminHotelManageData() {
+    const requests = {
+        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        popularHotels: adminGetSafe("/hotel/pop4", []),
+        types: adminGetSafe("/hoteltype", []),
+        amenities: adminGetSafe("/hotelame", [])
+    };
+
+    $.when(requests.hotels, requests.popularHotels, requests.types, requests.amenities)
+        .done(function (hotelsResult, popularHotelsResult, typesResult, amenitiesResult) {
+            const hotels = mergeAdminHotels(asPageContent(normalizeAjaxResult(hotelsResult)), asArray(normalizeAjaxResult(popularHotelsResult)));
+            const selectedHotel = getSelectedAdminHotel(hotels);
+            const hotelTypes = asArray(normalizeAjaxResult(typesResult));
+            const amenities = asArray(normalizeAjaxResult(amenitiesResult));
+
+            renderAdminHotelSelector(hotels, selectedHotel);
+
+            if (!selectedHotel) {
+                ADMIN_HOTEL_MANAGE_STATE = { hotels: [], selectedHotel: null, hotelTypes, amenities, selectedAmenities: [], amenityMappings: [], photos: [] };
+                renderHotelManagePage();
+                return;
+            }
+
+            $.when(
+                adminGetSafe("/hotel/" + selectedHotel.sid, selectedHotel),
+                adminGetSafe("/hoteliname/hotel/" + selectedHotel.sid, []),
+                adminGetSafe("/hotel/inimage/" + selectedHotel.sid, [])
+            ).done(function (hotelResult, mappingResult, photoResult) {
+                const hotel = Object.assign({}, selectedHotel, normalizeAjaxResult(hotelResult));
+                const mappings = asArray(normalizeAjaxResult(mappingResult));
+                const photos = asArray(normalizeAjaxResult(photoResult));
+                ADMIN_HOTEL_MANAGE_STATE = {
+                    hotels,
+                    selectedHotel: hotel,
+                    hotelTypes,
+                    amenities,
+                    selectedAmenities: mappings.map(function (mapping) { return mapping.amenitiesId; }),
+                    amenityMappings: mappings,
+                    photos
+                };
+                renderHotelManagePage();
+            });
+        })
+        .fail(function () {
+            renderAdminHotelSelector([], null);
+            $("#hotelManageFields").html(emptyAdminState("호텔 관리 데이터를 불러오지 못했습니다."));
+        });
+}
+
+function renderHotelManagePage() {
+    const state = ADMIN_HOTEL_MANAGE_STATE;
+    if (!state || !state.selectedHotel) {
+        $("#hotelManageFields").html(emptyAdminState("선택 가능한 호텔이 없습니다. 우측 상단 호텔 추가를 눌러 등록해주세요."));
+        $("#hotelPhotoGrid").empty();
+        return;
+    }
+
+    $("#hotelManageFields").html(renderHotelManageFields(state.selectedHotel, state, false));
+    initHotelPhotoManager(state.selectedHotel);
+    bindHotelManageControls();
+}
+
+function renderHotelManageFields(hotel, state, isCreate) {
+    const selectedTypeId = getHotelTypeIdFromHotel(hotel, state.hotelTypes);
+    const typeOptions = state.hotelTypes.map(function (type) {
+        return `<option value="${escapeHtml(type.sid)}"${String(type.sid) === String(selectedTypeId) ? " selected" : ""}>${escapeHtml(type.title || "타입")}</option>`;
+    }).join("");
+    const amenities = state.amenities.map(function (amenity) {
+        const checked = state.selectedAmenities.some(function (id) { return String(id) === String(amenity.sid); }) ? " checked" : "";
+        return `<label class="hotel-amenity-check">
+            <input type="checkbox" name="amenities" value="${escapeHtml(amenity.sid)}"${checked}>
+            <span><strong>${escapeHtml(amenity.title || "편의시설")}</strong><small>${escapeHtml(amenity.description || "")}</small></span>
+        </label>`;
+    }).join("");
+
+    return `
+        <input type="hidden" id="hotelSidInput" value="${escapeHtml(hotel.sid || "")}">
+        <div class="admin-form-grid hotel-form-grid">
+            <label><span>호텔 타입</span><div class="room-type-select-row"><select id="hotelTypeInput">${typeOptions}</select><button class="admin-btn" type="button" data-hotel-type-manage><i class="fa-solid fa-gear"></i></button></div></label>
+            <label><span>호텔 이름</span><input id="hotelNameInput" value="${escapeHtml(hotel.hotelName || "")}" placeholder="호텔 이름"></label>
+            <label><span>호텔 가격</span><input id="hotelPriceInput" type="number" min="0" value="${escapeHtml(hotel.hotelPrice || "")}" placeholder="대표 가격"></label>
+            <label><span>장소</span><input id="hotelLocationInput" value="${escapeHtml(hotel.location || "")}" placeholder="주소"></label>
+            <label><span>성급</span><input id="hotelStarInput" type="number" min="1" max="5" value="${escapeHtml(hotel.starRating || "")}" placeholder="1~5"></label>
+            <label><span>위도</span><input id="hotelLatitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.latitude || "")}" placeholder="37.000000"></label>
+            <label><span>경도</span><input id="hotelLongitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.longitude || "")}" placeholder="127.000000"></label>
+            <label class="full"><span>설명</span><textarea id="hotelDescriptionInput" placeholder="호텔 소개">${escapeHtml(hotel.description || "")}</textarea></label>
+            <div class="full hotel-amenities-field">
+                <div class="hotel-field-head"><span>편의시설</span><button class="admin-btn small" type="button" data-hotel-amenity-manage><i class="fa-solid fa-gear"></i> 관리</button></div>
+                <div class="hotel-amenity-grid">${amenities || '<div class="empty-admin-state">등록된 편의시설이 없습니다.</div>'}</div>
+            </div>
+        </div>
+        <div class="admin-modal-actions inline">
+            <button type="button" class="admin-btn" data-hotel-reset><i class="fa-solid fa-rotate-left"></i> 되돌리기</button>
+            <button type="submit" class="admin-btn primary"><i class="fa-solid fa-check"></i> ${isCreate ? "호텔 추가" : "호텔 저장"}</button>
+        </div>
+    `;
+}
+
+function bindHotelManageControls() {
+    $("#hotelManageForm").off("submit.hotelManage").on("submit.hotelManage", function (event) {
+        event.preventDefault();
+        saveHotelManage();
+    });
+    $("[data-hotel-reset]").off("click.hotelManage").on("click.hotelManage", function () {
+        renderHotelManagePage();
+    });
+    $("[data-hotel-type-manage]").off("click.hotelManage").on("click.hotelManage", openHotelTypeManager);
+    $("[data-hotel-amenity-manage]").off("click.hotelManage").on("click.hotelManage", openHotelAmenityManager);
+}
+
+function readHotelPayload() {
+    return {
+        sid: Number($("#hotelSidInput").val()) || null,
+        typeId: Number($("#hotelTypeInput").val()) || null,
+        hotelName: $("#hotelNameInput").val().trim(),
+        hotelPrice: Number($("#hotelPriceInput").val()) || null,
+        location: $("#hotelLocationInput").val().trim(),
+        starRating: Number($("#hotelStarInput").val()) || null,
+        description: $("#hotelDescriptionInput").val().trim(),
+        latitude: $("#hotelLatitudeInput").val() === "" ? null : Number($("#hotelLatitudeInput").val()),
+        longitude: $("#hotelLongitudeInput").val() === "" ? null : Number($("#hotelLongitudeInput").val())
+    };
+}
+
+function saveHotelManage() {
+    const payload = readHotelPayloadFrom($("#hotelManageForm"));
+    if (!payload.typeId || !payload.hotelName || !payload.hotelPrice || !payload.location) {
+        alert("호텔 타입, 이름, 가격, 장소는 필수입니다.");
+        return;
+    }
+    adminPatch("/hotel", payload).then(function (savedHotel) {
+        saveHotelAmenitiesAfterSave(savedHotel.sid || payload.sid)
+            .then(function () { return saveHotelPhotosAfterSave(savedHotel.sid || payload.sid); })
+            .always(function () { loadAdminHotelManageData(); });
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "호텔 저장에 실패했습니다."));
+    });
+}
+
+function readHotelPayloadFrom(root) {
+    const $root = $(root);
+    return {
+        sid: Number($root.find("#hotelSidInput").val()) || null,
+        typeId: Number($root.find("#hotelTypeInput").val()) || null,
+        hotelName: $root.find("#hotelNameInput").val().trim(),
+        hotelPrice: Number($root.find("#hotelPriceInput").val()) || null,
+        location: $root.find("#hotelLocationInput").val().trim(),
+        starRating: Number($root.find("#hotelStarInput").val()) || null,
+        description: $root.find("#hotelDescriptionInput").val().trim(),
+        latitude: $root.find("#hotelLatitudeInput").val() === "" ? null : Number($root.find("#hotelLatitudeInput").val()),
+        longitude: $root.find("#hotelLongitudeInput").val() === "" ? null : Number($root.find("#hotelLongitudeInput").val())
+    };
+}
+
+function openHotelManageModal() {
+    const state = ADMIN_HOTEL_MANAGE_STATE || { hotelTypes: [], amenities: [] };
+    if (!state.hotelTypes.length) {
+        alert("호텔 타입을 먼저 등록해주세요.");
+        return;
+    }
+    ADMIN_HOTEL_CREATE_PHOTO_STATE = { added: [] };
+    const modalState = Object.assign({}, state, { selectedAmenities: [] });
+    $("#hotelManageModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <form id="hotelCreateForm" class="admin-modal hotel-modal">
+                <div class="admin-modal-head">
+                    <div><h2>호텔 추가</h2><p>기본 정보, 편의시설, 사진을 함께 등록합니다.</p></div>
+                    <button type="button" class="modal-close" data-hotel-modal-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="hotel-create-body">
+                    ${renderHotelManageFields({}, modalState, true)}
+                    <div class="hotel-create-photo">
+                        <div class="room-photo-title"><span>호텔 사진</span><small>사진을 하나씩 또는 여러 장 추가할 수 있습니다.</small></div>
+                        <div id="hotelCreatePhotoGrid" class="room-photo-grid"></div>
+                        <input id="hotelCreatePhotoFilesInput" class="room-photo-native-input" type="file" accept="image/*" multiple>
+                    </div>
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="admin-btn" data-hotel-modal-close>취소</button>
+                    <button type="submit" class="admin-btn primary">호텔 추가</button>
+                </div>
+            </form>
+        </div>
+    `);
+    $("#hotelCreateForm .admin-modal-actions.inline").remove();
+    $("[data-hotel-modal-close]").on("click", closeHotelManageModal);
+    $("#hotelCreateForm [data-hotel-type-manage]").on("click", openHotelTypeManager);
+    $("#hotelCreateForm [data-hotel-amenity-manage]").on("click", openHotelAmenityManager);
+    bindHotelCreatePhotoManager();
+    renderHotelCreatePhotoGrid();
+    $("#hotelCreateForm").on("submit", function (event) {
+        event.preventDefault();
+        saveHotelCreate();
+    });
+}
+
+function closeHotelManageModal() {
+    clearHotelCreatePhotoObjectUrls();
+    $("#hotelManageModalRoot").empty();
+}
+
+function saveHotelCreate() {
+    const payload = readHotelPayloadFrom($("#hotelCreateForm"));
+    if (!payload.typeId || !payload.hotelName || !payload.hotelPrice || !payload.location) {
+        alert("호텔 타입, 이름, 가격, 장소는 필수입니다.");
+        return;
+    }
+    adminPost("/hotel", payload).then(function (savedHotel) {
+        const hotelId = savedHotel.sid;
+        localStorage.setItem(ADMIN_SELECTED_HOTEL_KEY, String(hotelId));
+        saveHotelCreateAmenities(hotelId)
+            .then(function () { return uploadHotelPhotoFiles(hotelId, ADMIN_HOTEL_CREATE_PHOTO_STATE.added.map(function (photo) { return photo.file; })) || $.Deferred().resolve().promise(); })
+            .always(function () {
+                closeHotelManageModal();
+                loadAdminHotelManageData();
+            });
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "호텔 추가에 실패했습니다."));
+    });
+}
+
+function saveHotelCreateAmenities(hotelId) {
+    const selected = $("#hotelCreateForm input[name='amenities']:checked").map(function () { return Number(this.value); }).get();
+    const requests = selected.map(function (amenityId) {
+        return adminPost("/hoteliname", { hotelId: Number(hotelId), amenitiesId: Number(amenityId) });
+    });
+    return requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
+}
+
+function bindHotelCreatePhotoManager() {
+    $("#hotelCreatePhotoGrid")
+        .off("click.hotelCreatePhotos")
+        .on("click.hotelCreatePhotos", "[data-hotel-create-photo-add]", function () {
+            $("#hotelCreatePhotoFilesInput").trigger("click");
+        })
+        .on("click.hotelCreatePhotos", "[data-hotel-create-photo-remove]", function () {
+            removeHotelCreatePhoto($(this).data("hotelCreatePhotoRemove"));
+        });
+    $("#hotelCreatePhotoFilesInput").off("change.hotelCreatePhotos").on("change.hotelCreatePhotos", function () {
+        Array.from(this.files || []).filter(function (file) {
+            return file && file.type && file.type.startsWith("image/");
+        }).forEach(function (file) {
+            ADMIN_HOTEL_CREATE_PHOTO_STATE.added.push({
+                id: "new-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+                file,
+                previewUrl: URL.createObjectURL(file)
+            });
+        });
+        this.value = "";
+        renderHotelCreatePhotoGrid();
+    });
+}
+
+function removeHotelCreatePhoto(id) {
+    const index = ADMIN_HOTEL_CREATE_PHOTO_STATE.added.findIndex(function (photo) { return String(photo.id) === String(id); });
+    if (index >= 0) {
+        const removed = ADMIN_HOTEL_CREATE_PHOTO_STATE.added.splice(index, 1)[0];
+        if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        renderHotelCreatePhotoGrid();
+    }
+}
+
+function renderHotelCreatePhotoGrid() {
+    const addedTiles = ADMIN_HOTEL_CREATE_PHOTO_STATE.added.map(function (photo) {
+        return `<div class="room-photo-tile new"><img src="${escapeHtml(photo.previewUrl)}" alt="추가할 호텔 사진"><button class="room-photo-remove" type="button" data-hotel-create-photo-remove="${escapeHtml(photo.id)}"><i class="fa-solid fa-minus"></i></button></div>`;
+    });
+    const addTile = `<button class="room-photo-add-tile" type="button" data-hotel-create-photo-add><i class="fa-solid fa-plus"></i><span>사진 추가</span></button>`;
+    $("#hotelCreatePhotoGrid").html(addedTiles.join("") + addTile);
+}
+
+function clearHotelCreatePhotoObjectUrls() {
+    ADMIN_HOTEL_CREATE_PHOTO_STATE.added.forEach(function (photo) {
+        if (photo.previewUrl) URL.revokeObjectURL(photo.previewUrl);
+    });
+}
+
+function openHotelTypeManager() {
+    const state = ADMIN_HOTEL_MANAGE_STATE || { hotelTypes: [] };
+    openHotelMasterManager({
+        title: "호텔 타입 관리",
+        placeholder: "호텔, 리조트, 펜션...",
+        items: state.hotelTypes,
+        endpoint: "/hoteltype",
+        fields: ["title"],
+        deleteMessage: "이 호텔 타입을 삭제할까요? 연결된 호텔이 있으면 삭제되지 않습니다."
+    });
+}
+
+function openHotelAmenityManager() {
+    const state = ADMIN_HOTEL_MANAGE_STATE || { amenities: [] };
+    openHotelMasterManager({
+        title: "편의시설 관리",
+        placeholder: "무료 와이파이",
+        items: state.amenities,
+        endpoint: "/hotelame",
+        fields: ["title", "description"],
+        deleteMessage: "이 편의시설을 삭제할까요? 연결된 호텔 매핑도 함께 삭제됩니다."
+    });
+}
+
+function openHotelMasterManager(config) {
+    const rows = config.items.map(function (item) {
+        return `<tr>
+            <td><strong>${escapeHtml(item.title || "-")}</strong><small>${escapeHtml(item.description || ("ID " + item.sid))}</small></td>
+            <td><div class="row-actions">
+                <button class="icon-btn" type="button" data-hotel-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn danger" type="button" data-hotel-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+    }).join("");
+    $("body").append(`
+        <div class="admin-modal-backdrop nested hotel-master-backdrop">
+            <div class="admin-modal room-type-manager">
+                <div class="admin-modal-head">
+                    <div><h2>${escapeHtml(config.title)}</h2><p>추가, 수정, 삭제 후 호텔 관리 화면에 반영됩니다.</p></div>
+                    <button type="button" class="modal-close" data-hotel-master-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form id="hotelMasterForm" class="room-type-form">
+                    <input id="hotelMasterSidInput" type="hidden">
+                    <input id="hotelMasterTitleInput" class="admin-input" placeholder="${escapeHtml(config.placeholder)}">
+                    ${config.fields.includes("description") ? '<input id="hotelMasterDescriptionInput" class="admin-input" placeholder="설명">' : ""}
+                    <button class="admin-btn primary" type="submit"><i class="fa-solid fa-plus"></i> 저장</button>
+                </form>
+                <div class="admin-table-wrap room-type-manager-table">
+                    <table class="admin-table"><thead><tr><th>이름</th><th>액션</th></tr></thead><tbody>${rows || '<tr><td colspan="2">등록된 항목이 없습니다.</td></tr>'}</tbody></table>
+                </div>
+            </div>
+        </div>
+    `);
+    $("[data-hotel-master-close]").on("click", closeHotelMasterManager);
+    $("#hotelMasterForm").on("submit", function (event) {
+        event.preventDefault();
+        saveHotelMasterItem(config);
+    });
+    $(".room-type-manager-table")
+        .on("click", "[data-hotel-master-edit]", function () {
+            const item = config.items.find((target) => String(target.sid) === String($(this).data("hotelMasterEdit")));
+            if (!item) return;
+            $("#hotelMasterSidInput").val(item.sid);
+            $("#hotelMasterTitleInput").val(item.title || "");
+            $("#hotelMasterDescriptionInput").val(item.description || "");
+        })
+        .on("click", "[data-hotel-master-delete]", function () {
+            deleteHotelMasterItem(config, $(this).data("hotelMasterDelete"));
+        });
+}
+
+function closeHotelMasterManager() {
+    $(".hotel-master-backdrop").remove();
+}
+
+function saveHotelMasterItem(config) {
+    const sid = $("#hotelMasterSidInput").val();
+    const title = $("#hotelMasterTitleInput").val().trim();
+    const description = $("#hotelMasterDescriptionInput").val() ? $("#hotelMasterDescriptionInput").val().trim() : null;
+    if (!title) {
+        alert("이름을 입력해주세요.");
+        return;
+    }
+    const payload = { title };
+    if (sid) payload.sid = Number(sid);
+    if (config.fields.includes("description")) payload.description = description;
+    const request = sid ? adminPatch(config.endpoint, payload) : adminPost(config.endpoint, payload);
+    request.then(function () {
+        closeHotelMasterManager();
+        loadAdminHotelManageData();
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "저장에 실패했습니다."));
+    });
+}
+
+function deleteHotelMasterItem(config, id) {
+    if (!id || !confirm(config.deleteMessage)) return;
+    $.ajax({
+        url: window.StayNowConfig.apiUrl(config.endpoint + "/" + id),
+        type: "DELETE",
+        headers: adminAuthHeaders()
+    }).done(function () {
+        closeHotelMasterManager();
+        loadAdminHotelManageData();
+    }).fail(function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "삭제에 실패했습니다."));
+    });
+}
+
+function saveHotelAmenitiesAfterSave(hotelId) {
+    const state = ADMIN_HOTEL_MANAGE_STATE || { amenityMappings: [] };
+    const selected = $("input[name='amenities']:checked").map(function () { return Number(this.value); }).get();
+    const current = state.amenityMappings || [];
+    const deleteRequests = current
+        .filter(function (mapping) { return !selected.some(function (id) { return String(id) === String(mapping.amenitiesId); }); })
+        .map(function (mapping) {
+            return $.ajax({ url: window.StayNowConfig.apiUrl("/hoteliname/" + mapping.sid), type: "DELETE", headers: adminAuthHeaders() });
+        });
+    const addRequests = selected
+        .filter(function (amenityId) { return !current.some(function (mapping) { return String(mapping.amenitiesId) === String(amenityId); }); })
+        .map(function (amenityId) {
+            return adminPost("/hoteliname", { hotelId: Number(hotelId), amenitiesId: Number(amenityId) });
+        });
+    const requests = deleteRequests.concat(addRequests);
+    return requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
+}
+
+function initHotelPhotoManager(hotel) {
+    clearHotelPhotoObjectUrls();
+    ADMIN_HOTEL_PHOTO_STATE = {
+        existing: asArray(ADMIN_HOTEL_MANAGE_STATE.photos).map(function (photo) { return { sid: photo.sid, imagePath: photo.imagePath }; }),
+        added: [],
+        deleted: []
+    };
+    bindHotelPhotoManager();
+    renderHotelPhotoGrid();
+}
+
+function bindHotelPhotoManager() {
+    $("#hotelPhotoGrid").off("click.hotelPhotos")
+        .on("click.hotelPhotos", "[data-hotel-photo-add]", function () { $("#hotelPhotoFilesInput").trigger("click"); })
+        .on("click.hotelPhotos", "[data-hotel-photo-remove]", function () { removeHotelPhoto($(this).data("hotelPhotoRemove")); });
+    $("#hotelPhotoFilesInput").off("change.hotelPhotos").on("change.hotelPhotos", function () {
+        addHotelPhotoFiles(this.files);
+        this.value = "";
+    });
+}
+
+function addHotelPhotoFiles(fileList) {
+    Array.from(fileList || []).filter(function (file) {
+        return file && file.type && file.type.startsWith("image/");
+    }).forEach(function (file) {
+        ADMIN_HOTEL_PHOTO_STATE.added.push({
+            id: "new-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+            file,
+            previewUrl: URL.createObjectURL(file)
+        });
+    });
+    renderHotelPhotoGrid();
+}
+
+function removeHotelPhoto(id) {
+    const key = String(id);
+    const existingIndex = ADMIN_HOTEL_PHOTO_STATE.existing.findIndex(function (photo) { return String(photo.sid) === key; });
+    if (existingIndex >= 0) {
+        const removed = ADMIN_HOTEL_PHOTO_STATE.existing.splice(existingIndex, 1)[0];
+        if (removed.sid) ADMIN_HOTEL_PHOTO_STATE.deleted.push(removed.sid);
+        renderHotelPhotoGrid();
+        return;
+    }
+    const addedIndex = ADMIN_HOTEL_PHOTO_STATE.added.findIndex(function (photo) { return String(photo.id) === key; });
+    if (addedIndex >= 0) {
+        const removed = ADMIN_HOTEL_PHOTO_STATE.added.splice(addedIndex, 1)[0];
+        if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        renderHotelPhotoGrid();
+    }
+}
+
+function renderHotelPhotoGrid() {
+    const existingTiles = ADMIN_HOTEL_PHOTO_STATE.existing.map(function (photo) {
+        return `<div class="room-photo-tile"><img src="${escapeHtml(resolveAdminImagePath(photo.imagePath))}" alt="호텔 사진"><button class="room-photo-remove" type="button" data-hotel-photo-remove="${escapeHtml(photo.sid)}"><i class="fa-solid fa-minus"></i></button></div>`;
+    });
+    const addedTiles = ADMIN_HOTEL_PHOTO_STATE.added.map(function (photo) {
+        return `<div class="room-photo-tile new"><img src="${escapeHtml(photo.previewUrl)}" alt="추가할 호텔 사진"><button class="room-photo-remove" type="button" data-hotel-photo-remove="${escapeHtml(photo.id)}"><i class="fa-solid fa-minus"></i></button></div>`;
+    });
+    const addTile = `<button class="room-photo-add-tile" type="button" data-hotel-photo-add><i class="fa-solid fa-plus"></i><span>사진 추가</span></button>`;
+    $("#hotelPhotoGrid").html(existingTiles.concat(addedTiles).join("") + addTile);
+}
+
+function clearHotelPhotoObjectUrls() {
+    if (!ADMIN_HOTEL_PHOTO_STATE || !ADMIN_HOTEL_PHOTO_STATE.added) return;
+    ADMIN_HOTEL_PHOTO_STATE.added.forEach(function (photo) {
+        if (photo.previewUrl) URL.revokeObjectURL(photo.previewUrl);
+    });
+}
+
+function saveHotelPhotosAfterSave(hotelId) {
+    const deleteRequests = ADMIN_HOTEL_PHOTO_STATE.deleted.map(function (photoId) {
+        return $.ajax({ url: window.StayNowConfig.apiUrl("/hotelphoto/" + photoId), type: "DELETE", headers: adminAuthHeaders() });
+    });
+    const files = ADMIN_HOTEL_PHOTO_STATE.added.map(function (photo) { return photo.file; });
+    const uploadRequest = uploadHotelPhotoFiles(hotelId, files);
+    const requests = deleteRequests.concat(uploadRequest ? [uploadRequest] : []);
+    return requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
+}
+
+function uploadHotelPhotoFiles(hotelId, files) {
+    if (!files || !files.length) return null;
+    const formData = new FormData();
+    formData.append("hotelId", Number(hotelId));
+    files.forEach(function (file) { formData.append("photos", file); });
+    return $.ajax({
+        url: window.StayNowConfig.apiUrl("/hotelphoto/upload"),
+        type: "POST",
+        headers: adminAuthHeaders(),
+        data: formData,
+        processData: false,
+        contentType: false
+    });
+}
+
+function getHotelTypeIdFromHotel(hotel, hotelTypes) {
+    if (hotel.typeId) return hotel.typeId;
+    const matched = hotelTypes.find(function (type) { return String(type.title) === String(hotel.typeTitle); });
+    return matched ? matched.sid : (hotelTypes[0] && hotelTypes[0].sid);
 }
 
 function loadAdminDashboardData() {
@@ -1237,6 +2195,7 @@ function buildAdminRoomStates(rooms, reservations, selectedHotel) {
     const now = new Date();
     const activeReservations = reservations.filter(function (reservation) {
         if (["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(reservation.reservationStatus)) return false;
+        if (reservation.reservationStatus === "CHECKED_IN") return true;
         const checkIn = parseAdminDate(reservation.checkInDate);
         const checkOut = parseAdminDate(reservation.checkOutDate);
         if (!checkIn || !checkOut) return false;
@@ -1244,6 +2203,7 @@ function buildAdminRoomStates(rooms, reservations, selectedHotel) {
     });
     const futureReservations = reservations.filter(function (reservation) {
         if (["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(reservation.reservationStatus)) return false;
+        if (reservation.reservationStatus === "CHECKED_IN") return false;
         const checkIn = parseAdminDate(reservation.checkInDate);
         return checkIn && checkIn > now;
     });
@@ -1598,10 +2558,18 @@ function openRoomModal(room) {
                     <label><span>반려동물 동반</span><select id="roomPetInput">${petSmokeOptions(room && room.pet)}</select></label>
                     <label><span>흡연 가능 여부</span><select id="roomSmokeInput">${petSmokeOptions(room && room.smoke)}</select></label>
                     <label><span>신분증 검사</span><select id="roomIdCardInput">${roomOption("ESSENTIAL", "필수", room && room.idCard)}${roomOption("OPTIONAL", "선택", room && room.idCard)}</select></label>
+                    <div class="admin-form-full room-photo-field">
+                        <div class="room-photo-title">
+                            <span>객실 사진</span>
+                            <small>사진 오른쪽 위의 - 버튼으로 제거하고, + 타일로 한 장 또는 여러 장을 추가할 수 있습니다.</small>
+                        </div>
+                        <div id="roomPhotoGrid" class="room-photo-grid"></div>
+                        <input id="roomPhotoFilesInput" class="room-photo-native-input" type="file" accept="image/*" multiple>
+                    </div>
                 </div>
                 <div class="admin-modal-actions">
                     <button type="button" class="admin-btn" data-room-modal-close>취소</button>
-                    <button type="submit" class="admin-btn primary">${isEdit ? "수정 저장" : "객실 추가"}</button>
+                    <button type="submit" class="admin-btn primary">${isEdit ? "저장" : "추가"}</button>
                 </div>
             </form>
         </div>
@@ -1609,6 +2577,7 @@ function openRoomModal(room) {
 
     $("[data-room-modal-close]").on("click", closeRoomModal);
     $("[data-room-type-manage]").on("click", openRoomTypeManager);
+    initRoomPhotoManager(room);
     $("#roomForm").on("submit", function (event) {
         event.preventDefault();
         saveRoom(room);
@@ -1616,7 +2585,115 @@ function openRoomModal(room) {
 }
 
 function closeRoomModal() {
+    clearRoomPhotoObjectUrls();
     $("#roomModalRoot").empty();
+}
+
+function initRoomPhotoManager(room) {
+    clearRoomPhotoObjectUrls();
+    ADMIN_ROOM_PHOTO_STATE = { existing: [], added: [], deleted: [] };
+    bindRoomPhotoManager();
+    renderRoomPhotoGrid();
+    if (room && room.sid) {
+        adminGetSafe("/room/inimage/" + room.sid, []).then(function (photos) {
+            ADMIN_ROOM_PHOTO_STATE.existing = asArray(photos).map(function (photo) {
+                return {
+                    sid: photo.sid,
+                    imagePath: photo.imagePath
+                };
+            });
+            renderRoomPhotoGrid();
+        });
+    }
+}
+
+function bindRoomPhotoManager() {
+    $("#roomPhotoGrid")
+        .off("click.roomPhotos")
+        .on("click.roomPhotos", "[data-room-photo-add]", function () {
+            $("#roomPhotoFilesInput").trigger("click");
+        })
+        .on("click.roomPhotos", "[data-room-photo-remove]", function () {
+            removeRoomPhoto($(this).data("roomPhotoRemove"));
+        });
+    $("#roomPhotoFilesInput")
+        .off("change.roomPhotos")
+        .on("change.roomPhotos", function () {
+            addRoomPhotoFiles(this.files);
+            this.value = "";
+        });
+}
+
+function addRoomPhotoFiles(fileList) {
+    const files = Array.from(fileList || []).filter(function (file) {
+        return file && file.type && file.type.startsWith("image/");
+    });
+    if (!files.length) return;
+    files.forEach(function (file) {
+        ADMIN_ROOM_PHOTO_STATE.added.push({
+            id: "new-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+            file,
+            previewUrl: URL.createObjectURL(file)
+        });
+    });
+    renderRoomPhotoGrid();
+}
+
+function removeRoomPhoto(id) {
+    const key = String(id);
+    const existingIndex = ADMIN_ROOM_PHOTO_STATE.existing.findIndex(function (photo) {
+        return String(photo.sid) === key;
+    });
+    if (existingIndex >= 0) {
+        const removed = ADMIN_ROOM_PHOTO_STATE.existing.splice(existingIndex, 1)[0];
+        if (removed && removed.sid) ADMIN_ROOM_PHOTO_STATE.deleted.push(removed.sid);
+        renderRoomPhotoGrid();
+        return;
+    }
+    const addedIndex = ADMIN_ROOM_PHOTO_STATE.added.findIndex(function (photo) {
+        return String(photo.id) === key;
+    });
+    if (addedIndex >= 0) {
+        const removed = ADMIN_ROOM_PHOTO_STATE.added.splice(addedIndex, 1)[0];
+        if (removed && removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        renderRoomPhotoGrid();
+    }
+}
+
+function renderRoomPhotoGrid() {
+    const grid = $("#roomPhotoGrid");
+    if (!grid.length) return;
+    const existingTiles = ADMIN_ROOM_PHOTO_STATE.existing.map(function (photo) {
+        return `<div class="room-photo-tile">
+            <img src="${escapeHtml(resolveAdminImagePath(photo.imagePath))}" alt="객실 사진">
+            <button class="room-photo-remove" type="button" data-room-photo-remove="${escapeHtml(photo.sid)}" aria-label="사진 제거"><i class="fa-solid fa-minus"></i></button>
+        </div>`;
+    });
+    const addedTiles = ADMIN_ROOM_PHOTO_STATE.added.map(function (photo) {
+        return `<div class="room-photo-tile new">
+            <img src="${escapeHtml(photo.previewUrl)}" alt="추가할 객실 사진">
+            <button class="room-photo-remove" type="button" data-room-photo-remove="${escapeHtml(photo.id)}" aria-label="사진 제거"><i class="fa-solid fa-minus"></i></button>
+        </div>`;
+    });
+    const addTile = `<button class="room-photo-add-tile" type="button" data-room-photo-add>
+        <i class="fa-solid fa-plus"></i>
+        <span>사진 추가</span>
+    </button>`;
+    grid.html(existingTiles.concat(addedTiles).join("") + addTile);
+}
+
+function clearRoomPhotoObjectUrls() {
+    if (!ADMIN_ROOM_PHOTO_STATE || !ADMIN_ROOM_PHOTO_STATE.added) return;
+    ADMIN_ROOM_PHOTO_STATE.added.forEach(function (photo) {
+        if (photo.previewUrl) URL.revokeObjectURL(photo.previewUrl);
+    });
+}
+
+function resolveAdminImagePath(path) {
+    if (!path) return "";
+    if (/^(https?:)?\/\//.test(path) || path.startsWith("data:") || path.startsWith("blob:")) return path;
+    if (path.startsWith("/")) return window.StayNowConfig.assetUrl(path);
+    return path;
 }
 
 function openRoomTypeManager() {
@@ -1677,7 +2754,7 @@ function renderRoomTypeManager() {
             if (!type) return;
             $("#roomTypeSidInput").val(type.sid);
             $("#roomTypeTitleInput").val(type.title || "").trigger("focus");
-            $("#roomTypeForm .primary").html('<i class="fa-solid fa-check"></i> 수정 저장');
+            $("#roomTypeForm .primary").html('<i class="fa-solid fa-check"></i> 저장');
         })
         .on("click.roomType", "[data-room-type-delete]", function () {
             deleteRoomType($(this).attr("data-room-type-delete"));
@@ -1804,12 +2881,55 @@ function saveRoom(original) {
     }
 
     const request = original ? adminPatch("/room", payload) : adminPost("/room", payload);
-    request.then(function () {
-        closeRoomModal();
-        loadAdminRoomData();
+    request.then(function (savedRoom) {
+        saveRoomPhotosAfterRoomSave(savedRoom && savedRoom.sid ? savedRoom.sid : payload.sid)
+            .always(function () {
+                closeRoomModal();
+                loadAdminRoomData();
+            });
     }, function (xhr) {
         console.error("Room save failed", { payload, response: xhr && (xhr.responseJSON || xhr.responseText) });
         alert(getAdminAjaxMessage(xhr, "객실 저장에 실패했습니다."));
+    });
+}
+
+function saveRoomPhotosAfterRoomSave(roomId) {
+    if (!roomId) {
+        return $.Deferred().resolve().promise();
+    }
+    const deleteRequests = ADMIN_ROOM_PHOTO_STATE.deleted.map(function (photoId) {
+        return $.ajax({
+            url: window.StayNowConfig.apiUrl("/roomphoto/" + photoId),
+            type: "DELETE",
+            headers: adminAuthHeaders()
+        });
+    });
+    const uploadRequest = uploadRoomPhotoFiles(roomId, ADMIN_ROOM_PHOTO_STATE.added.map(function (photo) {
+        return photo.file;
+    }));
+    const requests = deleteRequests.concat(uploadRequest ? [uploadRequest] : []);
+    if (!requests.length) {
+        return $.Deferred().resolve().promise();
+    }
+    return $.when.apply($, requests);
+}
+
+function uploadRoomPhotoFiles(roomId, files) {
+    if (!files || !files.length) {
+        return null;
+    }
+    const formData = new FormData();
+    formData.append("roomId", Number(roomId));
+    files.forEach(function (file) {
+        formData.append("photos", file);
+    });
+    return $.ajax({
+        url: window.StayNowConfig.apiUrl("/roomphoto/upload"),
+        type: "POST",
+        headers: adminAuthHeaders(),
+        data: formData,
+        processData: false,
+        contentType: false
     });
 }
 
@@ -2584,7 +3704,7 @@ function openPromotionModal(promotion) {
                 </div>
                 <div class="admin-modal-actions">
                     <button type="button" class="admin-btn" data-promotion-modal-close>취소</button>
-                    <button type="submit" class="admin-btn primary">${isEdit ? "수정 저장" : "프로모션 생성"}</button>
+                    <button type="submit" class="admin-btn primary">${isEdit ? "저장" : "생성"}</button>
                 </div>
             </form>
         </div>
@@ -2849,6 +3969,276 @@ function renderReservationActions(reservation, canCheckIn) {
     </span>`;
 }
 
+function loadAdminCheckinData() {
+    const requests = {
+        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        popularHotels: adminGetSafe("/hotel/pop4", []),
+        reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=checkInDate,asc", { content: [] })
+    };
+
+    $.when(requests.hotels, requests.popularHotels, requests.reservations)
+        .done(function (hotelsResult, popularHotelsResult, reservationsResult) {
+            const hotels = mergeAdminHotels(asPageContent(normalizeAjaxResult(hotelsResult)), asArray(normalizeAjaxResult(popularHotelsResult)));
+            const selectedHotel = getSelectedAdminHotel(hotels);
+            const reservations = filterReservationsByHotel(asPageContent(normalizeAjaxResult(reservationsResult)), selectedHotel);
+            renderAdminHotelSelector(hotels, selectedHotel);
+            window.ADMIN_CHECKIN_STATE = { selectedHotel, reservations };
+            bindAdminCheckinPage();
+            renderAdminCheckinPage();
+        })
+        .fail(function () {
+            $("#checkinTableWrap").html(emptyAdminState("체크인 데이터를 불러오지 못했습니다."));
+        });
+}
+
+function bindAdminCheckinPage() {
+    $("#checkinKeyword, #checkinStatusFilter")
+        .off("input.adminCheckin change.adminCheckin")
+        .on("input.adminCheckin change.adminCheckin", debounce(renderAdminCheckinPage, 160));
+
+    $(".checkin-admin-panel")
+        .off("change.adminCheckinSelect")
+        .on("change.adminCheckinSelect", "#checkinSelectAll", function () {
+            $(".checkin-row-check").prop("checked", $(this).is(":checked"));
+        })
+        .off("click.adminCheckinBulk")
+        .on("click.adminCheckinBulk", "[data-checkin-bulk]", function () {
+            bulkAdminCheckinAction($(this).data("checkinBulk"));
+        });
+
+    $("#todayCheckinPanel")
+        .off("click.adminTodayMore")
+        .on("click.adminTodayMore", "[data-open-today-checkins]", openTodayCheckinModal);
+
+    $("#checkinModalRoot")
+        .off("click.adminCheckinModal")
+        .on("click.adminCheckinModal", "[data-checkin-modal-close]", function () {
+            $("#checkinModalRoot").empty();
+        });
+}
+
+function getFilteredCheckinReservations() {
+    const state = window.ADMIN_CHECKIN_STATE || { reservations: [] };
+    const keyword = ($("#checkinKeyword").val() || "").trim().toLowerCase();
+    const status = $("#checkinStatusFilter").val() || "";
+    return state.reservations.filter(function (reservation) {
+        const text = [
+            reservation.reservationNumber,
+            reservation.memberName,
+            reservation.guestName,
+            makeAdminRoomName(reservation)
+        ].join(" ").toLowerCase();
+        const matchesKeyword = !keyword || text.includes(keyword);
+        const matchesStatus = !status || reservation.reservationStatus === status;
+        return matchesKeyword && matchesStatus;
+    });
+}
+
+function renderAdminCheckinPage() {
+    const state = window.ADMIN_CHECKIN_STATE || { reservations: [] };
+    const reservations = getFilteredCheckinReservations();
+    const todayCheckIns = state.reservations.filter(function (reservation) { return isToday(reservation.checkInDate); });
+    const todayCheckOuts = state.reservations.filter(function (reservation) { return isToday(reservation.checkOutDate); });
+    const inUse = state.reservations.filter(function (reservation) { return reservation.reservationStatus === "CHECKED_IN"; });
+    const todayTotal = state.reservations.filter(function (reservation) {
+        return isToday(reservation.checkInDate) || isToday(reservation.checkOutDate) || isToday(reservation.createdAt);
+    });
+
+    renderCheckinMetrics({
+        todayTotal: todayTotal.length,
+        todayCheckIns: todayCheckIns.length,
+        todayCheckOuts: todayCheckOuts.length,
+        inUse: inUse.length
+    });
+    renderCheckinTable(reservations);
+    renderTodayCheckinPanel(todayCheckIns);
+    renderCheckinCalendar(state.reservations);
+}
+
+function renderCheckinMetrics(summary) {
+    const cards = [
+        ["오늘 전체 예약", summary.todayTotal + "건", "fa-calendar-check", "오늘 기준"],
+        ["오늘 체크인", summary.todayCheckIns + "건", "fa-right-to-bracket", "도착 예정"],
+        ["오늘 체크아웃", summary.todayCheckOuts + "건", "fa-right-from-bracket", "퇴실 예정", "warn"],
+        ["현재 사용중", summary.inUse + "실", "fa-bed", "체크인 완료"]
+    ];
+    $("#checkinMetrics").html(cards.map(function ([label, value, icon, trend, tone]) {
+        return `<article class="metric-card">
+            <div class="metric-top"><span class="metric-icon ${tone || ""}"><i class="fa-solid ${icon}"></i></span><span class="trend ${tone || ""}">${escapeHtml(trend)}</span></div>
+            <div class="metric-label">${escapeHtml(label)}</div>
+            <div class="metric-value">${escapeHtml(value)}</div>
+        </article>`;
+    }).join(""));
+}
+
+function renderCheckinTable(reservations) {
+    if (!reservations.length) {
+        $("#checkinTableWrap").html(emptyAdminState("조건에 맞는 예약이 없습니다."));
+        return;
+    }
+
+    const rows = reservations.map(function (reservation) {
+        const status = reservation.reservationStatus;
+        const canCheckIn = status === "CONFIRMED" || status === "UPCOMING";
+        const canCheckOut = status === "CHECKED_IN";
+        const canCancel = !["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(status);
+        return `<tr>
+            <td><input class="checkin-row-check" type="checkbox" value="${escapeHtml(reservation.sid)}"></td>
+            <td><strong>${escapeHtml(reservation.reservationNumber || ("RSV-" + reservation.sid))}</strong></td>
+            <td>${renderAdminGuestCell(reservation)}</td>
+            <td>${escapeHtml(makeAdminRoomName(reservation))}</td>
+            <td>${formatAdminShortDate(reservation.checkInDate)}</td>
+            <td>${formatAdminShortDate(reservation.checkOutDate)}</td>
+            <td><span class="status ${adminStatusTone(status)}">${escapeHtml(formatAdminStatus(status))}</span></td>
+            <td><div class="row-actions">
+                <button class="icon-btn ${canCheckIn ? "" : "disabled"}" type="button" ${canCheckIn ? `data-admin-checkin="${escapeHtml(reservation.sid)}"` : "disabled"} title="체크인"><i class="fa-solid fa-right-to-bracket"></i></button>
+                <button class="icon-btn ${canCheckOut ? "" : "disabled"}" type="button" ${canCheckOut ? `data-admin-checkout="${escapeHtml(reservation.sid)}"` : "disabled"} title="체크아웃"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button class="icon-btn danger ${canCancel ? "" : "disabled"}" type="button" ${canCancel ? `data-admin-cancel-reservation="${escapeHtml(reservation.sid)}"` : "disabled"} title="취소"><i class="fa-solid fa-xmark"></i></button>
+            </div></td>
+        </tr>`;
+    }).join("");
+
+    $("#checkinTableWrap").html(`
+        <table class="admin-table admin-checkin-table">
+            <thead><tr><th><input id="checkinSelectAll" type="checkbox"></th><th>예약번호</th><th>고객명</th><th>객실</th><th>체크인</th><th>체크아웃</th><th>상태</th><th>액션</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `);
+}
+
+function renderTodayCheckinPanel(todayCheckIns) {
+    const visible = todayCheckIns.slice(0, 2);
+    const rows = visible.map(function (reservation) {
+        return `<div class="schedule-item">
+            <span class="schedule-avatar">${escapeHtml((reservation.memberName || reservation.guestName || "고").slice(0, 1))}</span>
+            <div><strong>${escapeHtml(reservation.memberName || reservation.guestName || "고객")}</strong><small>${escapeHtml(makeAdminRoomName(reservation))} · ${formatAdminShortDate(reservation.checkInDate)}</small></div>
+            <span class="status">${escapeHtml(formatAdminStatus(reservation.reservationStatus))}</span>
+        </div>`;
+    }).join("");
+    const more = Math.max(0, todayCheckIns.length - visible.length);
+    $("#todayCheckinPanel").html(panelHead("오늘 체크인 현황", todayCheckIns.length + "건") + `
+        <div class="schedule-list">${rows || emptyAdminState("오늘 체크인 예정이 없습니다.")}</div>
+        ${more ? `<button class="admin-btn wide" type="button" data-open-today-checkins>나머지 ${more}건 더 보기</button>` : ""}
+    `);
+}
+
+function renderCheckinCalendar(reservations) {
+    const today = new Date();
+    const days = Array.from({ length: 7 }, function (_, index) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + index);
+        const count = reservations.filter(function (reservation) {
+            return isSameAdminDate(reservation.checkInDate, date);
+        }).length;
+        return `<div class="calendar-day ${index === 0 ? "today" : ""}">
+            <strong>${ADMIN_WEEKDAYS[date.getDay()]}</strong>
+            <span>${date.getDate()}</span>
+            <em>${count}건</em>
+        </div>`;
+    }).join("");
+    $("#checkinCalendarPanel").html(panelHead("체크인 캘린더", "오늘부터 7일") + `<div class="checkin-calendar">${days}</div>`);
+}
+
+function isSameAdminDate(value, date) {
+    const parsed = parseAdminDate(value);
+    return parsed && parsed.getFullYear() === date.getFullYear() && parsed.getMonth() === date.getMonth() && parsed.getDate() === date.getDate();
+}
+
+function openTodayCheckinModal() {
+    const state = window.ADMIN_CHECKIN_STATE || { reservations: [] };
+    const todayCheckIns = state.reservations.filter(function (reservation) { return isToday(reservation.checkInDate); });
+    const rows = todayCheckIns.map(function (reservation) {
+        return `<tr><td>${escapeHtml(reservation.reservationNumber || "")}</td><td>${escapeHtml(reservation.memberName || reservation.guestName || "고객")}</td><td>${escapeHtml(makeAdminRoomName(reservation))}</td><td>${formatAdminShortDate(reservation.checkInDate)}</td><td><span class="status ${adminStatusTone(reservation.reservationStatus)}">${escapeHtml(formatAdminStatus(reservation.reservationStatus))}</span></td></tr>`;
+    }).join("");
+    $("#checkinModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <div class="admin-modal">
+                <div class="admin-modal-head">
+                    <div><h2>오늘 체크인 전체</h2><p>${todayCheckIns.length}건의 체크인 예정/진행 예약</p></div>
+                    <button type="button" class="modal-close" data-checkin-modal-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-table-wrap modal-table-wrap">
+                    <table class="admin-table"><thead><tr><th>예약번호</th><th>고객명</th><th>객실</th><th>체크인</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function bulkAdminCheckinAction(action) {
+    const ids = $(".checkin-row-check:checked").map(function () { return $(this).val(); }).get();
+    if (!ids.length) {
+        alert("처리할 예약을 선택해주세요.");
+        return;
+    }
+    const label = action === "check-in" ? "체크인" : action === "check-out" ? "체크아웃" : "취소";
+    const reservations = (window.ADMIN_CHECKIN_STATE && window.ADMIN_CHECKIN_STATE.reservations) || [];
+    const selected = ids.map(function (id) {
+        return reservations.find(function (reservation) { return String(reservation.sid) === String(id); });
+    }).filter(Boolean);
+    const processable = selected.filter(function (reservation) {
+        return canBulkProcessReservation(reservation, action);
+    });
+    const skippedCount = selected.length - processable.length;
+    if (!processable.length) {
+        alert("선택된 예약 중 " + label + " 처리 가능한 예약이 없습니다.");
+        return;
+    }
+    const confirmText = skippedCount
+        ? skippedCount + "건은 " + label + " 처리할 수 없어 제외됩니다. 가능한 " + processable.length + "건만 처리할까요?"
+        : processable.length + "건을 " + label + " 처리할까요?";
+    if (!confirm(confirmText)) return;
+    processAdminReservationBatch(processable.map(function (reservation) { return reservation.sid; }), action, 0, { success: 0, fail: 0 });
+}
+
+function canBulkProcessReservation(reservation, action) {
+    const status = String(reservation && reservation.reservationStatus ? reservation.reservationStatus : "").toUpperCase();
+    if (action === "check-in") {
+        return status === "CONFIRMED" || status === "UPCOMING";
+    }
+    if (action === "check-out") {
+        return status === "CHECKED_IN";
+    }
+    return status !== "CANCELLED" && status !== "NO_SHOW" && status !== "CHECKED_OUT" && status !== "COMPLETED";
+}
+
+function processAdminReservationBatch(ids, action, index, result) {
+    if (index >= ids.length) {
+        if (result && result.fail) {
+            alert("처리 완료: 성공 " + result.success + "건, 실패 " + result.fail + "건");
+        }
+        loadAdminCheckinData();
+        return;
+    }
+    const id = ids[index];
+    let request;
+    if (action === "check-in") {
+        request = adminPatch("/reservation/" + id + "/check-in", {});
+    } else if (action === "check-out") {
+        request = adminPatch("/reservation/" + id + "/check-out", {});
+    } else {
+        request = adminPost("/reservation/cancel", { sid: Number(id), cancelReason: "관리자 일괄 취소" });
+    }
+    request.then(function () {
+        result.success += 1;
+    }, function () {
+        result.fail += 1;
+    }).always(function () {
+        processAdminReservationBatch(ids, action, index + 1, result);
+    });
+}
+
+function highlightCheckinCalendarPanel() {
+    const panel = $("#checkinCalendarPanel");
+    if (!panel.length) return;
+    panel.removeClass("calendar-pulse");
+    void panel[0].offsetWidth;
+    panel.addClass("calendar-pulse");
+    setTimeout(function () {
+        panel.removeClass("calendar-pulse");
+    }, 1800);
+}
+
 function renderAdminReservationPagination(page) {
     const totalPages = Number(page.totalPages || 1);
     const number = Number(page.number || 0);
@@ -2877,11 +4267,209 @@ function checkInAdminReservation(reservationId) {
             loadAdminDashboardData();
             return;
         }
+        if (ADMIN_CURRENT_PAGE === "checkin") {
+            loadAdminCheckinData();
+            return;
+        }
         requestAdminReservationMetrics(selectedHotel);
         requestAdminReservations(selectedHotel, 0);
     }).fail(function (xhr) {
         alert((xhr.responseJSON && xhr.responseJSON.message) || "체크인 처리에 실패했습니다.");
     });
+}
+
+function checkOutAdminReservation(reservationId) {
+    if (!reservationId || !confirm("이 예약을 체크아웃 처리할까요?")) return;
+    adminPatch("/reservation/" + reservationId + "/check-out", {})
+        .then(function () {
+            if (ADMIN_CURRENT_PAGE === "checkin") {
+                loadAdminCheckinData();
+                return;
+            }
+            reloadCurrentAdminPage();
+        }, function (xhr) {
+            alert(getAdminAjaxMessage(xhr, "체크아웃 처리에 실패했습니다."));
+        });
+}
+
+function cancelAdminReservation(reservationId) {
+    if (!reservationId) return;
+    const reason = prompt("예약 취소 사유를 입력해주세요.", "관리자 취소");
+    if (!reason) return;
+    adminPost("/reservation/cancel", { sid: Number(reservationId), cancelReason: reason })
+        .then(function () {
+            if (ADMIN_CURRENT_PAGE === "checkin") {
+                loadAdminCheckinData();
+                return;
+            }
+            reloadCurrentAdminPage();
+        }, function (xhr) {
+            alert(getAdminAjaxMessage(xhr, "예약 취소에 실패했습니다."));
+        });
+}
+
+function downloadCheckinReport() {
+    const state = window.ADMIN_CHECKIN_STATE;
+    if (!state) {
+        alert("아직 다운로드할 체크인 데이터가 없습니다.");
+        return;
+    }
+    const rows = [
+        ["예약번호", "고객명", "객실", "체크인", "체크아웃", "상태"],
+        ...state.reservations.map(function (reservation) {
+            return [
+                reservation.reservationNumber || "",
+                reservation.memberName || reservation.guestName || "고객",
+                makeAdminRoomName(reservation),
+                reservation.checkInDate || "",
+                reservation.checkOutDate || "",
+                formatAdminStatus(reservation.reservationStatus)
+            ];
+        })
+    ];
+    const today = new Date();
+    downloadAdminCsv(rows, "staynow-checkin-" + today.getFullYear() + String(today.getMonth() + 1).padStart(2, "0") + String(today.getDate()).padStart(2, "0") + ".csv");
+}
+
+function openAdminQrCheckinModal() {
+    stopAdminQrScanner();
+    ADMIN_QR_PROCESSING = false;
+    $("#checkinModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <div class="admin-modal admin-qr-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>QR 체크인</h2>
+                        <p>예약 완료 화면의 QR 코드를 카메라로 스캔해 체크인 처리합니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-admin-qr-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-qr-body">
+                    <div class="admin-qr-status">
+                        <span id="adminQrSupport"><i class="fa-solid fa-circle-notch fa-spin"></i> 카메라 확인 중</span>
+                    </div>
+                    <div class="admin-qr-camera">
+                        <video id="adminQrVideo" playsinline muted></video>
+                        <div class="admin-qr-placeholder">
+                            <i class="fa-solid fa-camera"></i>
+                            <strong>스캔 시작을 눌러주세요</strong>
+                            <span>QR이 프레임 안에 들어오면 자동으로 체크인됩니다.</span>
+                        </div>
+                        <div class="admin-qr-frame" aria-hidden="true"></div>
+                    </div>
+                    <div id="adminQrResult" class="admin-qr-result empty">아직 스캔된 QR이 없습니다.</div>
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="admin-btn" id="adminQrStopBtn"><i class="fa-solid fa-stop"></i> 중지</button>
+                    <button type="button" class="admin-btn primary" id="adminQrStartBtn"><i class="fa-solid fa-camera"></i> 스캔 시작</button>
+                </div>
+            </div>
+        </div>
+    `);
+    initAdminQrSupport();
+    $("#adminQrStartBtn").off("click.adminQr").on("click.adminQr", startAdminQrScanner);
+    $("#adminQrStopBtn").off("click.adminQr").on("click.adminQr", stopAdminQrScanner);
+    $("[data-admin-qr-close]").off("click.adminQr").on("click.adminQr", closeAdminQrCheckinModal);
+}
+
+function closeAdminQrCheckinModal() {
+    stopAdminQrScanner();
+    $("#checkinModalRoot").empty();
+}
+
+function initAdminQrSupport() {
+    if ("BarcodeDetector" in window) {
+        ADMIN_QR_DETECTOR = new BarcodeDetector({ formats: ["qr_code"] });
+        $("#adminQrSupport").html('<i class="fa-solid fa-check"></i> 카메라 스캔 가능');
+        return;
+    }
+    ADMIN_QR_DETECTOR = null;
+    $("#adminQrSupport").html('<i class="fa-solid fa-triangle-exclamation"></i> 이 브라우저는 QR 카메라 스캔을 지원하지 않습니다.');
+    $("#adminQrStartBtn").prop("disabled", true);
+}
+
+function startAdminQrScanner() {
+    if (!ADMIN_QR_DETECTOR) {
+        showAdminQrResult("이 브라우저는 QR 카메라 스캔을 지원하지 않습니다.", true);
+        return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showAdminQrResult("카메라 API를 사용할 수 없습니다. 브라우저 권한과 HTTPS/localhost 환경을 확인해주세요.", true);
+        return;
+    }
+    $("#adminQrStartBtn").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 카메라 여는 중');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+        .then(function (stream) {
+            ADMIN_QR_STREAM = stream;
+            const video = document.getElementById("adminQrVideo");
+            video.srcObject = stream;
+            video.play();
+            $(".admin-qr-camera").addClass("active");
+            $("#adminQrStartBtn").html('<i class="fa-solid fa-camera"></i> 스캔 중');
+            showAdminQrResult("QR 코드를 카메라 중앙에 맞춰주세요.", false, true);
+            ADMIN_QR_TIMER = window.setInterval(scanAdminQrFrame, 650);
+        })
+        .catch(function () {
+            $("#adminQrStartBtn").prop("disabled", false).html('<i class="fa-solid fa-camera"></i> 스캔 시작');
+            showAdminQrResult("카메라를 시작하지 못했습니다. 브라우저 카메라 권한을 확인해주세요.", true);
+        });
+}
+
+function stopAdminQrScanner() {
+    if (ADMIN_QR_TIMER) {
+        window.clearInterval(ADMIN_QR_TIMER);
+        ADMIN_QR_TIMER = null;
+    }
+    if (ADMIN_QR_STREAM) {
+        ADMIN_QR_STREAM.getTracks().forEach(function (track) { track.stop(); });
+        ADMIN_QR_STREAM = null;
+    }
+    $(".admin-qr-camera").removeClass("active");
+    $("#adminQrStartBtn").prop("disabled", false).html('<i class="fa-solid fa-camera"></i> 스캔 시작');
+}
+
+function scanAdminQrFrame() {
+    if (ADMIN_QR_PROCESSING || !ADMIN_QR_DETECTOR) return;
+    const video = document.getElementById("adminQrVideo");
+    if (!video || video.readyState < 2) return;
+    ADMIN_QR_DETECTOR.detect(video).then(function (codes) {
+        if (!codes.length) return;
+        processAdminQrCheckin(codes[0].rawValue);
+    }).catch(function () {
+        showAdminQrResult("QR 인식 중 오류가 발생했습니다. 카메라를 다시 시작해주세요.", true);
+    });
+}
+
+function processAdminQrCheckin(qrValue) {
+    const value = String(qrValue || "").trim();
+    if (!value) return;
+    ADMIN_QR_PROCESSING = true;
+    showAdminQrResult("QR을 인식했습니다. 체크인 처리 중입니다.", false, true);
+    adminPatch("/reservation/check-in/qr", { qrValue: value })
+        .then(function (reservation) {
+            stopAdminQrScanner();
+            showAdminQrResult(
+                "<strong>체크인이 완료되었습니다.</strong><br>" +
+                "예약번호: " + escapeHtml(reservation.reservationNumber || "-") + "<br>" +
+                "호텔: " + escapeHtml(reservation.hotelName || "호텔명 없음") + "<br>" +
+                "투숙객: " + escapeHtml(reservation.guestName || reservation.memberName || "투숙객"),
+                false
+            );
+            loadAdminCheckinData();
+        }, function (xhr) {
+            showAdminQrResult(getAdminAjaxMessage(xhr, "체크인 처리에 실패했습니다."), true);
+        })
+        .always(function () {
+            ADMIN_QR_PROCESSING = false;
+        });
+}
+
+function showAdminQrResult(message, isError, isMuted) {
+    $("#adminQrResult")
+        .removeClass("empty error muted")
+        .toggleClass("error", Boolean(isError))
+        .toggleClass("muted", Boolean(isMuted))
+        .html(message);
 }
 
 function loadDashboardRoomsAndReviews(baseData) {
@@ -3270,12 +4858,24 @@ function reloadCurrentAdminPage() {
         loadAdminRoomData();
         return;
     }
+    if (ADMIN_CURRENT_PAGE === "checkin") {
+        loadAdminCheckinData();
+        return;
+    }
     if (ADMIN_CURRENT_PAGE === "sales") {
         loadAdminSalesData();
         return;
     }
     if (ADMIN_CURRENT_PAGE === "promotions") {
         loadAdminPromotionData();
+        return;
+    }
+    if (ADMIN_CURRENT_PAGE === "reviews") {
+        loadAdminReviewData();
+        return;
+    }
+    if (ADMIN_CURRENT_PAGE === "settings") {
+        loadAdminHotelManageData();
     }
 }
 
