@@ -1,7 +1,6 @@
 package com.mjc.hotel.promotion.mapper;
 
 import com.mjc.hotel.promotion.dto.PromotionDto;
-import com.mjc.hotel.promotion.entity.Condition;
 import com.mjc.hotel.promotion.entity.ConditionType;
 import com.mjc.hotel.promotion.entity.Promotion;
 import com.mjc.hotel.room.entity.RoomType;
@@ -21,10 +20,11 @@ public class PromotionMapper {
                 .build();
     }
 
-    public static PromotionDto toDto(Promotion promotion, Condition condition) {
+    public static PromotionDto toDto(Promotion promotion) {
         String status = "진행중";
 
-        if (condition != null && condition.getConditiontype() == ConditionType.STOP) {
+        // Condition 엔티티 대신, Promotion의 통합된 conditionType 필드를 사용합니다.
+        if (promotion.getConditionType() == ConditionType.STOP) {
             status = "일시정지";
         } else {
             LocalDateTime now = LocalDateTime.now();
