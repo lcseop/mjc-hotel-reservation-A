@@ -35,14 +35,15 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
                         p.sid,
                         p.roomType.sid,
                         p.promotionName,
+                        p.discountContent,
                         p.startDate,
                         p.endDate,
                         Expressions.asString("Active")
                 ))
-                .from(p) // 조인 없이 p에서만 가져옵니다.
+                .from(p)
                 .where(
                         nameCond(p, req.getPromotionName()),
-                        typeCond(p, req.getConditionType()), // 여기서 p는 이제 QPromotion입니다.
+                        typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
                 )
                 .offset(pageable.getOffset())
@@ -53,7 +54,7 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
         // 2. total 쿼리 수정 (조인 제거)
         Long total = queryFactory
                 .select(p.count())
-                .from(p) // 조인 없이 p에서만 카운트합니다.
+                .from(p)
                 .where(
                         nameCond(p, req.getPromotionName()),
                         typeCond(p, req.getConditionType()),
@@ -72,7 +73,6 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
         if (type == null) {
             return null;
         }
-        // 이제 p가 QPromotion이므로 conditionType 필드를 사용할 수 있습니다.
         return p.conditionType.eq(type);
     }
 
