@@ -729,6 +729,7 @@ function renderPromotions() {
             ${dashboardMetricSkeleton("총 할인 정책", "fa-tags")}
         </div>
         <div class="panel promotion-admin-panel">
+            <div id="promotionFilterBar" class="promotion-filter-bar"></div>
             <div id="promotionTableWrap">${emptyAdminState("프로모션 데이터를 불러오는 중입니다.")}</div>
         </div>
         <div id="promotionModalRoot"></div>
@@ -1672,7 +1673,8 @@ function loadAdminPromotionData() {
             const promotions = asPageContent(promotionPage);
             ADMIN_PROMOTION_STATE = { promotions, roomTypes };
             renderPromotionMetrics(promotions);
-            renderPromotionTable(promotions, roomTypes);
+            renderPromotionFilters(roomTypes);
+            renderPromotionTable(filterPromotions(promotions), roomTypes);
         })
         .fail(function () {
             $("#promotionTableWrap").html(emptyAdminState("프로모션 데이터를 불러오지 못했습니다."));
@@ -1697,9 +1699,62 @@ function renderPromotionMetrics(promotions) {
     }).join(""));
 }
 
+function renderPromotionFilters(roomTypes) {
+    $("#promotionFilterBar").html(`
+        <div class="admin-filter-row promotion-filters">
+            <label class="admin-search-field">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="promotionKeywordFilter" type="search" placeholder="프로모션명 검색">
+            </label>
+            <select id="promotionStatusFilter" class="admin-filter-select">
+                <option value="">전체 상태</option>
+                <option value="ACTIVE">진행중</option>
+                <option value="EXPECTED">예정</option>
+                <option value="STOP">일시정지</option>
+                <option value="END">종료</option>
+            </select>
+            <select id="promotionRoomTypeFilter" class="admin-filter-select">
+                <option value="">전체 객실 타입</option>
+                ${(roomTypes || []).map(function (roomType) {
+                    return `<option value="${escapeHtml(roomType.sid)}">${escapeHtml(roomType.title)}</option>`;
+                }).join("")}
+            </select>
+            <button type="button" class="admin-btn ghost" id="promotionFilterReset">필터 초기화</button>
+        </div>
+    `);
+
+    $("#promotionKeywordFilter, #promotionStatusFilter, #promotionRoomTypeFilter")
+        .off("input.adminPromotionFilter change.adminPromotionFilter")
+        .on("input.adminPromotionFilter change.adminPromotionFilter", function () {
+            const state = ADMIN_PROMOTION_STATE || { promotions: [], roomTypes: [] };
+            renderPromotionTable(filterPromotions(state.promotions), state.roomTypes);
+        });
+
+    $("#promotionFilterReset").off("click.adminPromotionFilter").on("click.adminPromotionFilter", function () {
+        $("#promotionKeywordFilter").val("");
+        $("#promotionStatusFilter").val("");
+        $("#promotionRoomTypeFilter").val("");
+        const state = ADMIN_PROMOTION_STATE || { promotions: [], roomTypes: [] };
+        renderPromotionTable(state.promotions, state.roomTypes);
+    });
+}
+
+function filterPromotions(promotions) {
+    const keyword = String($("#promotionKeywordFilter").val() || "").trim().toLowerCase();
+    const status = $("#promotionStatusFilter").val();
+    const roomTypeId = $("#promotionRoomTypeFilter").val();
+
+    return (promotions || []).filter(function (promotion) {
+        const matchesKeyword = !keyword || String(promotion.promotionName || "").toLowerCase().includes(keyword);
+        const matchesStatus = !status || getPromotionStatusKey(promotion) === status;
+        const matchesRoomType = !roomTypeId || String(promotion.roomTypeId) === String(roomTypeId);
+        return matchesKeyword && matchesStatus && matchesRoomType;
+    });
+}
+
 function renderPromotionTable(promotions, roomTypes) {
     if (!promotions.length) {
-        $("#promotionTableWrap").html(emptyAdminState("등록된 프로모션이 없습니다."));
+        $("#promotionTableWrap").html(emptyAdminState("조건에 맞는 프로모션이 없습니다."));
         return;
     }
 
@@ -1845,7 +1900,15 @@ function savePromotion(original) {
     }
 
     const payload = isEdit
-        ? Object.assign({}, original, { promotionName: name, status })
+        ? {
+            sid: original.sid,
+            roomTypeId: Number(original.roomTypeId || $("#promotionRoomTypeInput").val()),
+            promotionName: name,
+            discountContent: original.discountContent,
+            startDate: original.startDate,
+            endDate: original.endDate,
+            status
+        }
         : {
             roomTypeId: Number($("#promotionRoomTypeInput").val()),
             promotionName: name,

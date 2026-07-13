@@ -646,12 +646,17 @@ function loadDealRoomPrice(hotelId, discountRate) {
                 return;
             }
 
+            const minRoom = rooms.reduce(function (minRoom, room) {
+                const price = Number(room.discountedRoomPrice || room.roomPrice || 0);
+                const minPrice = Number(minRoom.discountedRoomPrice || minRoom.roomPrice || 0);
+                return price > 0 && price < minPrice ? room : minRoom;
+            }, rooms[0]);
             const minRoomPrice = rooms.reduce(function (min, room) {
                 const price = room.roomPrice || min;
                 return Math.min(min, price);
             }, rooms[0].roomPrice || 0);
 
-            const discountedPrice = Math.floor(minRoomPrice * (100 - discountRate) / 100);
+            const discountedPrice = Number(minRoom.discountedRoomPrice || Math.floor(minRoomPrice * (100 - discountRate) / 100));
             const dealCard = $(".deal-card[data-hotel-id='" + hotelId + "']");
 
             dealCard.find("[data-price-role='old']").text("₩" + minRoomPrice.toLocaleString());

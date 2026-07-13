@@ -648,6 +648,10 @@ textarea{
     color:#0f172a;
 }
 
+#promotionDiscountRow strong{
+    color:#ef4444;
+}
+
 .total-price{
     display:flex;
     justify-content:space-between;
