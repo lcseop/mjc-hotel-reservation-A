@@ -320,7 +320,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public List<ReviewCategoryResponse> findAllReviewCategoriesByReviewSid(Long reviewSid){
+    public List<ReviewCategoryResponse> findReviewCategoriesByReviewSid(Long reviewSid){
         Review review = reviewRepository.findById(reviewSid)
                 .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found"));
         List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
@@ -336,7 +336,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public List<ReviewTagResponse> findAllReviewTagsByReviewSid(Long reviewSid){
+    public List<ReviewTagResponse> findReviewTagsByReviewSid(Long reviewSid){
         Review review = reviewRepository.findById(reviewSid)
                 .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found"));
         List<ReviewTag> tags = reviewTagRepository.findByReviewSid(review.getSid());
