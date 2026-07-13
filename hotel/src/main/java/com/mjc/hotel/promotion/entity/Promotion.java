@@ -28,6 +28,10 @@ public class Promotion extends BaseEntity {
     @Column(length = 50, name="promotion_name")
     private String promotionName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "condition_type")
+    private ConditionType conditionType;
+
     @Column(name="start_date")
     private LocalDateTime startDate;
 
