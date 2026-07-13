@@ -18,6 +18,7 @@ import lombok.*;
 public class RoomResponseDto {
     private Long sid;
     private HotelInPhotoResponseDto hotel;
+    private Long roomTypeId;
     private String roomTypeTitle;
     private String roomName;
     private Integer roomPrice;
@@ -25,6 +26,7 @@ public class RoomResponseDto {
     private Integer promotionDiscountAmount;
     private Integer promotionDiscountRate;
     private String promotionDiscountContent;
+    private Boolean roomAvailable;
     private Integer roomNumber;
     private Integer floor;
     private Integer area;
