@@ -243,6 +243,13 @@ public class ReservationService {
             throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
         }
 
+        if (reservationRepository.existsCheckedInReservationForRoom(
+                reservation.getRoom().getSid(),
+                reservation.getSid()
+        )) {
+            throw new IllegalArgumentException("현재 사용 중인 객실입니다. 기존 투숙객 체크아웃 후 체크인할 수 있습니다.");
+        }
+
         reservation.setReservationStatus(ReservationStatus.CHECKED_IN);
         return convertToResponseDto(reservation);
     }

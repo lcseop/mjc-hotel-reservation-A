@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/hoteliname")
 @RequiredArgsConstructor
@@ -65,6 +67,18 @@ public class HotelInAmenitiesRestController {
         HotelInAmenitiesDto dto = hotelInAmenitiesService.findById(id);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel in amenities get success", dto)
+        );
+    }
+
+    @Operation(
+            summary = "호텔별 편의시설 매핑 목록 조회",
+            description = "호텔 ID에 연결된 편의시설 매핑 목록을 가져옵니다."
+    )
+    @GetMapping("/hotel/{hotelId}")
+    public ResponseEntity<ApiResponse<List<HotelInAmenitiesDto>>> findByHotelId(@PathVariable Long hotelId) {
+        List<HotelInAmenitiesDto> dto = hotelInAmenitiesService.findByHotelId(hotelId);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel in amenities list success", dto)
         );
     }
 }

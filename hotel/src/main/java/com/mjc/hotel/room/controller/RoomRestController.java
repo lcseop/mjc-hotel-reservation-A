@@ -50,6 +50,19 @@ public class RoomRestController {
     }
 
     @Operation(
+            summary = "객실 판매 가능 여부 수정",
+            description = "공실 객실의 예약 가능/불가능 상태를 수정합니다."
+    )
+    @PatchMapping("/{id}/availability")
+    public ResponseEntity<ApiResponse<RoomResponseDto>> updateAvailability(@PathVariable Long id,
+                                                                           @RequestBody RoomRequestDto dto) {
+        RoomResponseDto update = roomService.updateAvailability(id, dto.getRoomAvailable());
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "room availability update success", update)
+        );
+    }
+
+    @Operation(
             summary = "객실 데이터 삭제",
             description = "객실 데이터를 삭제합니다."
     )
