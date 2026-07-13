@@ -28,9 +28,19 @@ function bindReservationEvents() {
         location.href = "hotel-detail.html?id=" + reservationState.hotelId + "#rooms";
     });
 
+    $("#guestPhone").on("input", function () {
+        $(this).val(formatPhoneNumber($(this).val()));
+    });
+
     $("#specialRequests").on("input", function () {
         $("#requestCount").text($(this).val().length);
     });
+
+    $("#agreeAll").on("change", function () {
+        $(".required-agreement").prop("checked", this.checked);
+    });
+
+    $(".required-agreement").on("change", syncAgreementAll);
 
     $("#payBtn").on("click", submitReservation);
 }
@@ -86,6 +96,31 @@ function fillMemberInfo() {
     const auth = reservationState.auth || {};
     $("#guestName").val(auth.name || "");
     $("#guestEmail").val(auth.email || "");
+
+    if (auth.phone) {
+        $("#guestPhone").val(formatPhoneNumber(auth.phone));
+        return;
+    }
+
+    if (auth.memberSid) {
+        $.ajax({
+            url: API_BASE + "/member/" + auth.memberSid,
+            type: "GET",
+            headers: authHeaders(),
+            success: function (member) {
+                const data = member && (member.data || member);
+
+                if (!data) {
+                    return;
+                }
+
+                $("#guestName").val($("#guestName").val() || data.name || "");
+                $("#guestEmail").val($("#guestEmail").val() || data.email || "");
+                $("#guestPhone").val(formatPhoneNumber(data.phone || ""));
+                updateStoredAuthPhone(data.phone);
+            }
+        });
+    }
 }
 
 function drawRoomPills(room) {
@@ -175,8 +210,7 @@ function submitReservation() {
                     guest: {
                         name: $("#guestName").val().trim(),
                         phone: $("#guestPhone").val().trim(),
-                        email: $("#guestEmail").val().trim(),
-                        nationality: $("#nationality").val()
+                        email: $("#guestEmail").val().trim()
                     },
                     reservation: result.reservation,
                     payment: result.payment,
@@ -247,6 +281,11 @@ function validateReservationForm() {
         return "연락처를 입력해주세요.";
     }
 
+    if (!/^01[016789]-\d{3,4}-\d{4}$/.test($("#guestPhone").val().trim())) {
+        $("#guestPhone").focus();
+        return "연락처를 010-0000-0000 형식으로 입력해주세요.";
+    }
+
     if (!$("#guestEmail").val().trim()) {
         $("#guestEmail").focus();
         return "이메일을 입력해주세요.";
@@ -257,7 +296,46 @@ function validateReservationForm() {
         return "올바른 이메일 형식이 아닙니다.";
     }
 
+    if ($(".required-agreement:not(:checked)").length > 0) {
+        $(".agreement-box").addClass("shake");
+        setTimeout(function () {
+            $(".agreement-box").removeClass("shake");
+        }, 420);
+        return "필수 약관에 모두 동의해야 결제할 수 있습니다.";
+    }
+
     return "";
+}
+
+function syncAgreementAll() {
+    const total = $(".required-agreement").length;
+    const checked = $(".required-agreement:checked").length;
+    $("#agreeAll").prop("checked", total > 0 && total === checked);
+}
+
+function formatPhoneNumber(value) {
+    const numbers = String(value || "").replace(/\D/g, "").slice(0, 11);
+
+    if (numbers.length <= 3) {
+        return numbers;
+    }
+
+    if (numbers.length <= 7) {
+        return numbers.slice(0, 3) + "-" + numbers.slice(3);
+    }
+
+    return numbers.slice(0, 3) + "-" + numbers.slice(3, 7) + "-" + numbers.slice(7);
+}
+
+function updateStoredAuthPhone(phone) {
+    if (!phone) {
+        return;
+    }
+
+    const storage = localStorage.getItem("staynowAuth") ? localStorage : sessionStorage;
+    const auth = readJson("staynowAuth") || {};
+    auth.phone = formatPhoneNumber(phone);
+    storage.setItem("staynowAuth", JSON.stringify(auth));
 }
 
 function setPaymentLoading(loading) {

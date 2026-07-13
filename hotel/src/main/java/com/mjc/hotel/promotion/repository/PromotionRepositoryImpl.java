@@ -42,6 +42,7 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
                 ))
                 .from(p)
                 .where(
+                        p.deleted.isFalse(),
                         nameCond(p, req.getPromotionName()),
                         typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
@@ -56,6 +57,7 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
                 .select(p.count())
                 .from(p)
                 .where(
+                        p.deleted.isFalse(),
                         nameCond(p, req.getPromotionName()),
                         typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
