@@ -121,6 +121,9 @@ function renderAdminShell(pageId, auth) {
     `);
 
     initAdminTopbar(auth);
+    if (page.id === "promotions") {
+        renderPromotionHotelScope();
+    }
 
     if (page.id === "dashboard") {
         loadAdminDashboardData();
@@ -1902,11 +1905,7 @@ function savePromotion(original) {
     const payload = isEdit
         ? {
             sid: original.sid,
-            roomTypeId: Number(original.roomTypeId || $("#promotionRoomTypeInput").val()),
             promotionName: name,
-            discountContent: original.discountContent,
-            startDate: original.startDate,
-            endDate: original.endDate,
             status
         }
         : {
@@ -1928,6 +1927,11 @@ function savePromotion(original) {
         closePromotionModal();
         loadAdminPromotionData();
     }, function (xhr) {
+        console.error("Promotion save failed", {
+            payload,
+            status: xhr && xhr.status,
+            response: xhr && (xhr.responseJSON || xhr.responseText)
+        });
         alert(getAdminAjaxMessage(xhr, "프로모션 저장에 실패했습니다."));
     });
 }
@@ -2389,6 +2393,14 @@ function renderAdminHotelSelector(hotels, selectedHotel) {
         return;
     }
 
+    if (ADMIN_CURRENT_PAGE === "promotions") {
+        renderPromotionHotelScope();
+        return;
+    }
+
+    switcher.removeClass("global-scope");
+    toggle.prop("disabled", false);
+
     if (!hotels.length) {
         label.text("등록된 호텔 없음");
         switcher.attr("aria-disabled", "true");
@@ -2440,6 +2452,29 @@ function renderAdminHotelSelector(hotels, selectedHotel) {
         switcher.removeClass("open");
         menu.prop("hidden", true);
     });
+}
+
+function renderPromotionHotelScope() {
+    const switcher = $("#adminHotelSwitcher");
+    const toggle = $("#adminHotelToggle");
+    const label = $("#adminHotelName");
+    const menu = $("#adminHotelMenu");
+    const search = $("#adminHotelSearch");
+    const options = $("#adminHotelOptions");
+
+    if (!switcher.length || !toggle.length || !label.length) {
+        return;
+    }
+
+    label.text("호텔 선택 불가");
+    switcher.attr("aria-disabled", "true").addClass("global-scope");
+    toggle.attr("aria-disabled", "true").prop("disabled", true);
+    search.val("");
+    options.empty();
+    menu.prop("hidden", true);
+    switcher.off("click.adminHotel");
+    menu.off("click.adminHotel");
+    search.off("click.adminHotelSearch keydown.adminHotelSearch input.adminHotelSearch");
 }
 
 function getHotelLocationText(hotel) {
@@ -2751,7 +2786,7 @@ function unwrapApiResponse(response) {
 
 function getAdminAjaxMessage(xhr, fallback) {
     if (xhr && xhr.responseJSON) {
-        return xhr.responseJSON.message || xhr.responseJSON.data || fallback;
+        return xhr.responseJSON.data || xhr.responseJSON.message || fallback;
     }
     if (xhr && xhr.responseText) {
         return xhr.responseText;
