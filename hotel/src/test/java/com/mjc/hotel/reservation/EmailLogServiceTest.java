@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -159,13 +160,136 @@ public class EmailLogServiceTest {
     @Test
     @DisplayName("getLogsByReservation - 예약 ID로 로그 목록을 조회한다")
     void getLogsByReservation_success() {
-        EmailLog log1 = EmailLog.builder().sid(1L).reservation(reservation).recipientEmail("a@test.com").emailStatus(EmailStatus.SEND).emailType(EmailType.RESERVATION_CONFIRMATION).build();
-        EmailLog log2 = EmailLog.builder().sid(2L).reservation(reservation).recipientEmail("a@test.com").emailStatus(EmailStatus.SEND).emailType(EmailType.CEHCK_IN_QR).build();
+        EmailLog log1 = EmailLog.builder()
+                .sid(1L).reservation(reservation)
+                .recipientEmail("a@test.com")
+                .emailStatus(EmailStatus.SEND)
+                .emailType(EmailType.RESERVATION_CONFIRMATION)
+                .build();
+        EmailLog log2 = EmailLog.builder()
+                .sid(2L)
+                .reservation(reservation)
+                .recipientEmail("a@test.com")
+                .emailStatus(EmailStatus.SEND)
+                .emailType(EmailType.CHECK_IN_QR)
+                .build();
 
         when(emailLogRepository.findByReservation_Sid(1L)).thenReturn(List.of(log1, log2));
 
         List<EmailLogResponseDto> result = emailLogService.getLogsByReservation(1L);
 
         assertThat(result).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("예약 확정 이메일은 예약 정보가 포함된 제목과 본문으로 발송된다")
+    void sendEmailAndLog_shouldBuildReservationConfirmationMailCorrectly() {
+        String testEmail = "guest@example.com";
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+
+        when(emailLogRepository.save(any(EmailLog.class))).thenAnswer(invocation -> {
+            EmailLog log = invocation.getArgument(0);
+            log.setSid(100L);
+            return log;
+        });
+
+        EmailLogRequestDto request = new EmailLogRequestDto();
+        request.setSid(1L);
+        request.setRecipientEmail(testEmail);
+        request.setEmailType(EmailType.RESERVATION_CONFIRMATION);
+
+       EmailLogResponseDto response = emailLogService.sendEmailAndLog(request);
+
+       assertThat(response.getEmailStatus()).isEqualTo(EmailStatus.SEND.name());
+
+        ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+        verify(mailSender, times(1)).send(messageCaptor.capture());
+
+        SimpleMailMessage sentMessage = messageCaptor.getValue();
+
+        assertThat(sentMessage.getTo()).containsExactly(testEmail);
+        assertThat(sentMessage.getSubject())
+                .contains("예약이 확정되었습니다")
+                .contains("RSV-TEST1234");
+                assertThat(sentMessage.getText())
+                        .contains("홍길동님")
+                        .contains("예약번호: RSV-TEST1234")
+                        .contains("결제금액: 100000원");
+    }
+
+    @Test
+    @DisplayName("예약 취소 이메일은 취소 안내 제목과 예약번호를 포함한다")
+void sendEmailAndLog_cancellationNotice() {
+        String testEmail = "guest@example.com";
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+
+        when(emailLogRepository.save(any(EmailLog.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        EmailLogRequestDto request = new EmailLogRequestDto();
+        request.setSid(1L);
+        request.setRecipientEmail(testEmail);
+        request.setEmailType(EmailType.CANCELLATION_NOTICE);
+
+        EmailLogResponseDto response = emailLogService.sendEmailAndLog(request);
+
+        assertThat(response.getEmailStatus()).isEqualTo(EmailStatus.SEND.name());
+
+        ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+        verify(mailSender).send(messageCaptor.capture());
+
+        SimpleMailMessage message = messageCaptor.getValue();
+
+        assertThat(message.getTo()).containsExactly(testEmail);
+        assertThat(message.getSubject())
+                .contains("예약이 취소되었습니다")
+                .contains("RSV-TEST1234");
+        assertThat(message.getText())
+                .contains("홍길동님")
+                .contains("예약이 취소되었습니다")
+                .contains("RSV-TEST1234");
+    }
+
+    @Test
+    @DisplayName("체크인 QR 이메일은 QR 코드 정보를 포함한다")
+    void sendEmailAndLog_checkInQr() {
+        String testEmail = "guest@example.com";
+        String checkInQr = "https://example.com/check-in/RSV-TEST1234";
+
+        reservation.setCheckInQr(checkInQr);
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+
+        when(emailLogRepository.save(any(EmailLog.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        EmailLogRequestDto request = new EmailLogRequestDto();
+        request.setSid(1L);
+        request.setRecipientEmail(testEmail);
+        request.setEmailType(EmailType.CHECK_IN_QR);
+
+        EmailLogResponseDto response = emailLogService.sendEmailAndLog(request);
+
+        assertThat(response.getEmailStatus()).isEqualTo(EmailStatus.SEND.name());
+
+        ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+        verify(mailSender, times(1)).send(messageCaptor.capture());
+
+        SimpleMailMessage message = messageCaptor.getValue();
+
+        assertThat(message.getTo()).containsExactly(testEmail);
+        assertThat(message.getSubject()).contains("체크인 QR코드 안내");
+        assertThat(message.getText())
+                .contains("예약번호: RSV-TEST1234")
+                .contains("QR코드")
+                .contains(checkInQr);
     }
 }
