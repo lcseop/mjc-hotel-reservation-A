@@ -38,11 +38,11 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
                         p.discountContent,
                         p.startDate,
                         p.endDate,
-                        Expressions.asString("Active")
+                        p.conditionType.stringValue()
                 ))
                 .from(p)
                 .where(
-                        p.deleted.isFalse(),
+                        notDeletedPromotion(p),
                         nameCond(p, req.getPromotionName()),
                         typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
@@ -57,7 +57,7 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
                 .select(p.count())
                 .from(p)
                 .where(
-                        p.deleted.isFalse(),
+                        notDeletedPromotion(p),
                         nameCond(p, req.getPromotionName()),
                         typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
@@ -69,6 +69,10 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
 
     private BooleanExpression nameCond(QPromotion p, String name) {
         return (name != null && !name.isEmpty()) ? p.promotionName.contains(name) : null;
+    }
+
+    private BooleanExpression notDeletedPromotion(QPromotion p) {
+        return p.deleted.isFalse().or(p.deleted.isNull());
     }
 
     private BooleanExpression typeCond(QPromotion p, ConditionType type) {

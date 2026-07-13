@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +30,10 @@ public class PromotionService {
     private PromotionRepository promotionRepository;
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private DiscountRateRepository discountRateRepository;
+    @Autowired
+    private FlatRepository flatRepository;
 
     @Transactional
     public PromotionDto insert(PromotionDto promotionDto) {
@@ -47,6 +50,7 @@ public class PromotionService {
                 .build();
 
         Promotion saved =  promotionRepository.save(promotion);
+        syncDiscountRate(saved);
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
@@ -63,7 +67,10 @@ public class PromotionService {
     public PromotionDto update(PromotionDto promotionDto) {
         Promotion promotion = promotionRepository.findById(promotionDto.getSid())
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로모션이 없습니다."));
-        RoomType roomType = roomTypeRepository.findById(promotionDto.getRoomTypeId()).orElseThrow();
+        Long roomTypeId = promotionDto.getRoomTypeId() != null
+                ? promotionDto.getRoomTypeId()
+                : promotion.getRoomType().getSid();
+        RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow();
 
         if (promotion.getDeleted() != null && promotion.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, promotion.getPromotionName() + " is not found");
@@ -80,8 +87,11 @@ public class PromotionService {
                 .build();
 
         updated.setCreatedAt(promotion.getCreatedAt());
+        updated.setDeleted(promotion.getDeleted());
+        updated.setDeletedAt(promotion.getDeletedAt());
 
         Promotion saved = promotionRepository.save(updated);
+        syncDiscountRate(saved);
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
@@ -172,5 +182,33 @@ public class PromotionService {
                 default -> fallback != null ? fallback : ConditionType.ACTIVE;
             };
         }
+    }
+
+    private void syncDiscountRate(Promotion promotion) {
+        discountRateRepository.deleteByPromotion_Sid(promotion.getSid());
+        flatRepository.deleteByPromotion_Sid(promotion.getSid());
+
+        if (PromotionDiscountCalculator.isFlatDiscount(promotion.getDiscountContent())) {
+            Integer sale = PromotionDiscountCalculator.extractDiscountValue(promotion.getDiscountContent());
+            if (sale != null && sale > 0) {
+                flatRepository.save(Flat.builder()
+                        .promotion(promotion)
+                        .type("FLAT")
+                        .sale(sale)
+                        .build());
+            }
+            return;
+        }
+
+        Integer sale = PromotionDiscountCalculator.extractDiscountRate(promotion.getDiscountContent());
+        if (sale == null || sale <= 0) {
+            return;
+        }
+
+        discountRateRepository.save(DiscountRate.builder()
+                .promotion(promotion)
+                .type("RATE")
+                .sale(sale)
+                .build());
     }
 }

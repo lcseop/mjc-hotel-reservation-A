@@ -16,7 +16,7 @@ public class PromotionMapper {
                 .roomType(roomType)
                 .promotionName(dto.getPromotionName())
                 .discountContent(dto.getDiscountContent())
-                .conditionType(dto.getStatus() != null ? ConditionType.valueOf(dto.getStatus()) : ConditionType.ACTIVE)
+                .conditionType(resolveConditionType(dto.getStatus()))
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .build();
@@ -46,5 +46,23 @@ public class PromotionMapper {
                 .endDate(promotion.getEndDate())
                 .status(status)
                 .build();
+    }
+
+    private static ConditionType resolveConditionType(String status) {
+        if (status == null || status.isBlank()) {
+            return ConditionType.ACTIVE;
+        }
+
+        try {
+            return ConditionType.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return switch (status.trim()) {
+                case "예정" -> ConditionType.EXPECTED;
+                case "진행중" -> ConditionType.ACTIVE;
+                case "일시정지", "중지" -> ConditionType.STOP;
+                case "종료" -> ConditionType.END;
+                default -> ConditionType.ACTIVE;
+            };
+        }
     }
 }
