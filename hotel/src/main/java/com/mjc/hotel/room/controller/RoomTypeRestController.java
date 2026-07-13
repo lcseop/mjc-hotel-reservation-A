@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/roomtype")
 @RequiredArgsConstructor
@@ -59,6 +61,18 @@ public class RoomTypeRestController {
     @Operation(
             summary = "객실 타입 조회",
             description = "객실 타입을 가져옵니다."
+    )
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<RoomTypeDto>>> findAll() {
+        List<RoomTypeDto> search = roomTypeService.findAll();
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "room type search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "객실 타입 단일 조회",
+            description = "객실 타입 한 개를 가져옵니다."
     )
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RoomTypeDto>> findById(@PathVariable(name = "id") Long hotelId) {

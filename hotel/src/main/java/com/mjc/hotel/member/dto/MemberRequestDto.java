@@ -18,6 +18,5 @@ public class MemberRequestDto {
     private MemberStatus status;
     private MemberRole role;
     private Boolean emailVerified;
-    private Boolean phoneVerified;
     private Integer point;
 }

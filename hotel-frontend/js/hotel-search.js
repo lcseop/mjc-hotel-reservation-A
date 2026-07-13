@@ -1,4 +1,5 @@
-const HOTEL_SEARCH_API = "http://localhost:33000/api/hotel/search";
+const HOTEL_API_BASE = window.StayNowConfig.apiBase;
+const HOTEL_SEARCH_API = window.StayNowConfig.apiUrl("/hotel/search");
 const HOTEL_SEARCH_COOKIE = "staynowSearchRequest";
 const PAGE_SIZE = 5;
 let currentHotels = [];
@@ -263,9 +264,10 @@ function drawHotels(hotels) {
                     </div>
                 </div>
 
-                <div class="hotel-price">
-                    <small>1박 기준</small>
-                    <strong>₩${price.toLocaleString()}</strong>
+                <div class="hotel-price" data-hotel-id="${hotel.sid || ""}">
+                    <small class="price-room-label">예약 가능한 객실 최저가</small>
+                    <strong class="price-value">₩${price.toLocaleString()}~</strong>
+                    <span class="price-room-name">객실 확인 중</span>
                     <a class="reserve-btn" href="hotel-detail.html?id=${hotel.sid || ""}">예약하기</a>
                 </div>
             </article>
@@ -276,7 +278,55 @@ function drawHotels(hotels) {
     });
 
     loadHotelThumbnails(sortedHotels);
+    loadLowestRoomPrices(sortedHotels);
 
+}
+
+function loadLowestRoomPrices(hotels) {
+    hotels.forEach(function (hotel) {
+        if (!hotel.sid) {
+            return;
+        }
+
+        $.ajax({
+            url: HOTEL_API_BASE + "/hotel/inroom/" + hotel.sid,
+            type: "GET",
+            success: function (result) {
+                const rooms = (result.data || []).filter(function (room) {
+                    return Number(room.roomPrice || 0) > 0;
+                });
+                const target = $(".hotel-price[data-hotel-id='" + hotel.sid + "']");
+
+                if (rooms.length === 0) {
+                    target.find(".price-room-label").text("예약 가능한 객실 없음");
+                    target.find(".price-value").text("가격 확인");
+                    target.find(".price-room-name").text("상세에서 객실 정보를 확인해주세요");
+                    return;
+                }
+
+                const cheapest = rooms.sort(function (a, b) {
+                    return Number(a.roomPrice || 0) - Number(b.roomPrice || 0);
+                })[0];
+                const hotelIndex = currentHotels.findIndex(function (item) {
+                    return String(item.sid) === String(hotel.sid);
+                });
+
+                if (hotelIndex >= 0) {
+                    currentHotels[hotelIndex].lowestRoomPrice = Number(cheapest.roomPrice || 0);
+                    currentHotels[hotelIndex].lowestRoomName = cheapest.roomName || cheapest.roomTypeTitle || "객실";
+                }
+
+                target.find(".price-room-label").text("1박 기준");
+                target.find(".price-value").text("₩" + Number(cheapest.roomPrice || 0).toLocaleString() + "~");
+                target.find(".price-room-name").text((cheapest.roomName || cheapest.roomTypeTitle || "객실"));
+            },
+            error: function () {
+                const target = $(".hotel-price[data-hotel-id='" + hotel.sid + "']");
+                target.find(".price-room-label").text("객실 기준가 확인 필요");
+                target.find(".price-room-name").text("상세에서 객실 정보를 확인해주세요");
+            }
+        });
+    });
 }
 
 function sortHotels(hotels) {
@@ -286,13 +336,13 @@ function sortHotels(hotels) {
 
     if (sortType === "priceAsc") {
         return copiedHotels.sort(function (a, b) {
-            return (a.hotelPrice || 0) - (b.hotelPrice || 0);
+            return getSortPrice(a) - getSortPrice(b);
         });
     }
 
     if (sortType === "priceDesc") {
         return copiedHotels.sort(function (a, b) {
-            return (b.hotelPrice || 0) - (a.hotelPrice || 0);
+            return getSortPrice(b) - getSortPrice(a);
         });
     }
 
@@ -315,7 +365,7 @@ function loadHotelThumbnails(hotels) {
         }
 
         $.ajax({
-            url: "http://localhost:33000/api/hotel/inimage/" + hotel.sid,
+            url: HOTEL_API_BASE + "/hotel/inimage/" + hotel.sid,
             type: "GET",
 
             success: function (result) {
@@ -333,11 +383,7 @@ function loadHotelThumbnails(hotels) {
 
             },
 
-            error: function () {
-
-                console.log("호텔 사진을 불러오지 못했습니다.", hotel.sid);
-
-            }
+            error: function () {}
         });
 
     });
@@ -444,6 +490,10 @@ function getStoredRequest() {
 
     return cookieRequest;
 
+}
+
+function getSortPrice(hotel) {
+    return Number(hotel.lowestRoomPrice || hotel.hotelPrice || 0);
 }
 
 function saveStoredRequest(request) {
