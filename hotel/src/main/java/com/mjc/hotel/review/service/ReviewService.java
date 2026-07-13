@@ -18,6 +18,8 @@ import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
 import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
+import com.mjc.hotel.room.entity.Room;
+import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
@@ -50,9 +52,7 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final PointHistoryRepository pointHistoryRepository;
-
-    private final RoomService roomService;
-    private final ReservationService reservationService;
+    private final RoomRepository roomRepository;
 
     @Transactional
     public ReviewResponse insertReview(ReviewCreateRequest request) {
@@ -363,23 +363,20 @@ public class ReviewService {
     }
 
 //    @Transactional
-//    public ReviewWriteStatusResponse memberStatus(ReviewWriteStatusRequest request, Pageable pageable) {
+//    public ReviewWriteStatusResponse opinionReviewWriteStatus(ReviewWriteStatusRequest request, Pageable pageable) {
 //        Room room = roomRepository.findById(request.getRoomId())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Room Not Exist"));
 //        Member member = memberRepository.findById(request.getMemberId())
 //                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Member Not Found"));
-//        Hotel hotel = hotelRepository.findById(room.getHotelId().getSid())
-//                .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Hotel Not Found"));
 //
 //        //리뷰 작성이 가능한지 검증
 //        Page<Reservation> reservations = reservationRepository.findByMemberSidAndRoomSidAndReservationStatusIn(
 //                                                  member.getSid(),
 //                                                  room.getSid(),
 //                                                  List.of(ReservationStatus.CHECKED_OUT,ReservationStatus.UPCOMING,ReservationStatus.COMPLETED),
-//                                                  pageable
-//                                              );
+//                                                  pageable);
 //        //예약이 하나도 없으므로 리뷰 작성 불가능한 상태
-//        if(reservations.isEmpty) {
+//        if(reservations.isEmpty()) {
 //            return this.toReviewWriteStatusResponse(false,null,null,null);
 //        }
 //        //예약이 여러개 있을 수 있으므로 예약Id, 리뷰 존재 상태, 리뷰 Id를 List 형태로 반환.
@@ -399,14 +396,14 @@ public class ReviewService {
 //                reviewIds.add(review.getSid());
 //            }
 //        }
-//        return this.toReviewWriteStatusResponse(true,reservation.getSid(),existsReviews,reviewIds);
+//        return this.toReviewWriteStatusResponse(true,reservationIds,existsReviews,reviewIds);
 //    }
 
-    private ReviewWriteStatusResponse toReviewWriteStatusResponse(Boolean checked, List<Long> reservationIds, List<Boolean> existsReview, List<Long> reviewIds) {
+    private ReviewWriteStatusResponse toReviewWriteStatusResponse(Boolean afterCheckOut, List<Long> reservationIds, List<Boolean> existsReviews, List<Long> reviewIds) {
         return ReviewWriteStatusResponse.builder()
-                .checked(checked)
+                .checked(afterCheckOut)
                 .reservationIds(reservationIds)
-                .existsReviews(existsReview)
+                .existsReviews(existsReviews)
                 .reviewIds(reviewIds)
                 .build();
     }
