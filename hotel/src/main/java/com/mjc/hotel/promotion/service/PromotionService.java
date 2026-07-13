@@ -54,7 +54,7 @@ public class PromotionService {
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
                 .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
@@ -74,6 +74,9 @@ public class PromotionService {
 
         if (promotion.getDeleted() != null && promotion.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, promotion.getPromotionName() + " is not found");
+        }
+        if (promotion.getRoomType() == null && promotionDto.getRoomTypeId() == null) {
+            throw new IllegalArgumentException("객실 타입이 없는 프로모션은 수정할 수 없습니다. 삭제 후 다시 생성해주세요.");
         }
 
         Promotion updated = Promotion.builder()
@@ -95,7 +98,7 @@ public class PromotionService {
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
                 .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
@@ -120,7 +123,7 @@ public class PromotionService {
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
                 .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())

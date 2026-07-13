@@ -133,6 +133,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .where(
                         r.hotelId.eq(h),
                         notDeletedRoom(r),
+                        availableRoom(r),
 
                         capacityCond(r, req.getTotalPeople()),
                         priceCond(r, req.getMinPrice(), req.getMaxPrice()),
@@ -145,6 +146,10 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
 
     private BooleanExpression notDeletedRoom(QRoom r) {
         return r.deleted.isFalse().or(r.deleted.isNull());
+    }
+
+    private BooleanExpression availableRoom(QRoom r) {
+        return r.roomAvailable.isTrue().or(r.roomAvailable.isNull());
     }
 
     private BooleanExpression notDeletedPromotion(QPromotion p) {

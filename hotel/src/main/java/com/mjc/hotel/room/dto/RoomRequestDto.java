@@ -17,6 +17,7 @@ public class RoomRequestDto {
     private Long roomTypeId;
     private String roomName;
     private Integer roomPrice;
+    private Boolean roomAvailable;
     private Integer roomNumber;
     private Integer floor;
     private Integer area;
