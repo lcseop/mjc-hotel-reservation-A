@@ -21,6 +21,7 @@ let ADMIN_DASHBOARD_STATE = null;
 let ADMIN_RESERVATION_STATE = null;
 let ADMIN_GUEST_STATE = null;
 let ADMIN_SALES_STATE = null;
+let ADMIN_PROMOTION_STATE = null;
 let ADMIN_CURRENT_PAGE = "dashboard";
 let ADMIN_ROOM_TYPES = [];
 
@@ -129,6 +130,8 @@ function renderAdminShell(pageId, auth) {
         loadAdminGuestData();
     } else if (page.id === "sales") {
         loadAdminSalesData();
+    } else if (page.id === "promotions") {
+        loadAdminPromotionData();
     }
 
     clearInterval(window.adminClockTimer);
@@ -147,6 +150,9 @@ function renderAdminShell(pageId, auth) {
     });
     $(document).off("click.adminSalesReport").on("click.adminSalesReport", "[data-admin-action='download-sales-report']", function () {
         downloadSalesReport();
+    });
+    $(document).off("click.adminPromotionCreate").on("click.adminPromotionCreate", "[data-admin-action='create-promotion']", function () {
+        openPromotionModal();
     });
     $(document).off("click.adminCheckin").on("click.adminCheckin", "[data-admin-checkin]", function () {
         checkInAdminReservation($(this).data("adminCheckin"));
@@ -544,6 +550,9 @@ function adminPageNote(id) {
     if (id === "reservations" || id === "guests") {
         return "현재 화면은 선택한 호텔 기준의 실제 예약 및 회원 데이터를 활용합니다.";
     }
+    if (id === "promotions") {
+        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용되며, 할인 내용은 discountContent 기준으로 관리합니다.";
+    }
     return "현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다.";
 }
 
@@ -553,7 +562,7 @@ function headActions(id) {
         reservations: [["엑셀 다운로드", "fa-download", "", "download-reservation-report"]],
         guests: [],
         rates: [["변경 이력", "fa-clock"], ["내보내기", "fa-download"], ["요금 추가", "fa-plus", "primary"]],
-        promotions: [["필터", "fa-sliders"], ["내보내기", "fa-download"], ["프로모션 생성", "fa-plus", "primary"]],
+        promotions: [["프로모션 생성", "fa-plus", "primary", "create-promotion"]],
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
         settlement: [[getAdminMonthSettlementLabel(), "fa-calendar"], ["엑셀 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
         checkin: [["캘린더 보기", "fa-calendar"], ["내보내기", "fa-download"]]
@@ -714,9 +723,15 @@ function renderRates() {
 
 function renderPromotions() {
     return `
-        ${metrics([["진행중 프로모션", "5개", "fa-percent", "+2개"], ["프로모션 예약 수", "284건", "fa-ticket", "+18.4%"], ["총 할인 제공액", "₩38.2M", "fa-coins", "+22.1%", "danger"], ["전환율", "34.7%", "fa-wand-magic-sparkles", "+3.2%"]])}
-        ${filterPanel("프로모션명 검색...", ["전체", "진행중", "예정", "종료", "일시중지"])}
-        <div class="panel">${simpleTable(["프로모션명", "유형", "할인율/금액", "적용 객실", "기간", "예약수", "전환율", "상태"], [["여름 성수기 특가", "할인율", "최대 30%", "디럭스 전 객실", "2025.07.01 ~ 08.31", "142건", "38.2%", "진행중"], ["주중 특별 할인", "정액할인", "₩30,000", "스탠다드 전 객실", "2025.07.07 ~ 09.30", "68건", "29.5%", "진행중"], ["장기 투숙 패키지", "패키지", "20% + 조식", "전 객실", "2025.06.01 ~ 12.31", "211건", "42.1%", "진행중"], ["멤버십 전용 특가", "할인율", "10~25%", "프리미엄 · 스위트", "2025.07.01 ~ 10.31", "34건", "18.3%", "일시중지"]])}</div>
+        <div id="promotionMetrics" class="grid stats-grid cols-3">
+            ${dashboardMetricSkeleton("진행중 프로모션", "fa-percent")}
+            ${dashboardMetricSkeleton("예정 프로모션", "fa-calendar-plus")}
+            ${dashboardMetricSkeleton("총 할인 정책", "fa-tags")}
+        </div>
+        <div class="panel promotion-admin-panel">
+            <div id="promotionTableWrap">${emptyAdminState("프로모션 데이터를 불러오는 중입니다.")}</div>
+        </div>
+        <div id="promotionModalRoot"></div>
     `;
 }
 
@@ -1644,6 +1659,321 @@ function guestStatusTone(status) {
     return "blue";
 }
 
+function loadAdminPromotionData() {
+    const requests = {
+        promotions: adminGetSafe("/prom/search?page=0&size=200&sort=createdAt,desc", { content: [] }),
+        roomTypes: adminGetSafe("/roomtype", [])
+    };
+
+    $.when(requests.promotions, requests.roomTypes)
+        .done(function (promotionsResult, roomTypesResult) {
+            const promotionPage = normalizeAjaxResult(promotionsResult);
+            const roomTypes = asArray(normalizeAjaxResult(roomTypesResult));
+            const promotions = asPageContent(promotionPage);
+            ADMIN_PROMOTION_STATE = { promotions, roomTypes };
+            renderPromotionMetrics(promotions);
+            renderPromotionTable(promotions, roomTypes);
+        })
+        .fail(function () {
+            $("#promotionTableWrap").html(emptyAdminState("프로모션 데이터를 불러오지 못했습니다."));
+        });
+}
+
+function renderPromotionMetrics(promotions) {
+    const active = promotions.filter(function (promotion) { return getPromotionStatusKey(promotion) === "ACTIVE"; }).length;
+    const expected = promotions.filter(function (promotion) { return getPromotionStatusKey(promotion) === "EXPECTED"; }).length;
+    const cards = [
+        ["진행중 프로모션", active + "개", "fa-percent", "현재 적용 중", ""],
+        ["예정 프로모션", expected + "개", "fa-calendar-plus", "시작 대기", "warn"],
+        ["총 할인 정책", promotions.length + "개", "fa-tags", "객실 타입 기준", ""]
+    ];
+
+    $("#promotionMetrics").html(cards.map(function ([label, value, icon, trend, tone]) {
+        return `<article class="metric-card">
+            <div class="metric-top"><span class="metric-icon ${tone || ""}"><i class="fa-solid ${icon}"></i></span><span class="trend ${tone || ""}">${escapeHtml(trend)}</span></div>
+            <div class="metric-label">${escapeHtml(label)}</div>
+            <div class="metric-value">${escapeHtml(value)}</div>
+        </article>`;
+    }).join(""));
+}
+
+function renderPromotionTable(promotions, roomTypes) {
+    if (!promotions.length) {
+        $("#promotionTableWrap").html(emptyAdminState("등록된 프로모션이 없습니다."));
+        return;
+    }
+
+    const rows = promotions.map(function (promotion) {
+        const status = getPromotionStatusKey(promotion);
+        const roomType = findPromotionRoomType(promotion.roomTypeId, roomTypes);
+        return `<tr>
+            <td>
+                <div class="promotion-name-cell">
+                    <strong>${escapeHtml(promotion.promotionName || "프로모션명 없음")}</strong>
+                    <small>전체 호텔 · ${escapeHtml(roomType ? roomType.title : "객실 타입 없음")} 객실</small>
+                </div>
+            </td>
+            <td>${escapeHtml(formatPromotionDiscount(promotion.discountContent))}</td>
+            <td>${escapeHtml(roomType ? roomType.title : "-")}</td>
+            <td>${escapeHtml(formatPromotionPeriod(promotion))}</td>
+            <td><span class="status ${promotionStatusTone(status)}">${escapeHtml(formatPromotionStatus(status))}</span></td>
+            <td>${renderPromotionActions(promotion.sid)}</td>
+        </tr>`;
+    }).join("");
+
+    $("#promotionTableWrap").html(`
+        <div class="admin-table-wrap">
+            <table class="admin-table promotion-table">
+                <thead>
+                    <tr>
+                        <th>프로모션명</th>
+                        <th>할인율/금액</th>
+                        <th>적용 객실 타입</th>
+                        <th>기간</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `);
+
+    bindPromotionTableActions();
+}
+
+function bindPromotionTableActions() {
+    $("#promotionTableWrap").off("click.adminPromotionEdit").on("click.adminPromotionEdit", "[data-promotion-edit]", function () {
+        const promotion = findPromotionById($(this).data("promotionEdit"));
+        if (promotion) openPromotionModal(promotion);
+    });
+
+    $("#promotionTableWrap").off("click.adminPromotionDelete").on("click.adminPromotionDelete", "[data-promotion-delete]", function () {
+        deletePromotion($(this).data("promotionDelete"));
+    });
+}
+
+function renderPromotionActions(id) {
+    return `<div class="row-actions">
+        <button class="icon-btn" type="button" title="수정" data-promotion-edit="${escapeHtml(id)}"><i class="fa-solid fa-pen"></i></button>
+        <button class="icon-btn danger" type="button" title="삭제" data-promotion-delete="${escapeHtml(id)}"><i class="fa-solid fa-trash"></i></button>
+    </div>`;
+}
+
+function openPromotionModal(promotion) {
+    const isEdit = Boolean(promotion);
+    const roomTypes = ADMIN_PROMOTION_STATE ? ADMIN_PROMOTION_STATE.roomTypes : [];
+    const status = promotion ? getPromotionStatusKey(promotion) : "ACTIVE";
+    const discount = parsePromotionDiscount(promotion && promotion.discountContent);
+
+    $("#promotionModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <form id="promotionForm" class="admin-modal promotion-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>${isEdit ? "프로모션 수정" : "프로모션 생성"}</h2>
+                        <p>${isEdit ? "이름과 상태만 변경할 수 있습니다." : "전체 호텔의 선택 객실 타입에 할인을 적용합니다."}</p>
+                    </div>
+                    <button type="button" class="modal-close" data-promotion-modal-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-form-grid">
+                    <label>
+                        <span>프로모션 이름</span>
+                        <input id="promotionNameInput" type="text" maxlength="50" value="${escapeHtml(promotion ? promotion.promotionName || "" : "")}" required>
+                    </label>
+                    <label>
+                        <span>상태</span>
+                        <select id="promotionStatusInput">${promotionStatusOptions(status)}</select>
+                    </label>
+                    <label>
+                        <span>시작일</span>
+                        <input id="promotionStartInput" type="date" value="${promotionDateValue(promotion && promotion.startDate)}" ${isEdit ? "disabled" : "required"}>
+                    </label>
+                    <label>
+                        <span>종료일</span>
+                        <input id="promotionEndInput" type="date" value="${promotionDateValue(promotion && promotion.endDate)}" ${isEdit ? "disabled" : "required"}>
+                    </label>
+                    <label>
+                        <span>적용할 객실 타입</span>
+                        <select id="promotionRoomTypeInput" ${isEdit ? "disabled" : "required"}>
+                            <option value="">객실 타입 선택</option>
+                            ${roomTypes.map(function (roomType) {
+                                const selected = promotion && String(promotion.roomTypeId) === String(roomType.sid) ? "selected" : "";
+                                return `<option value="${escapeHtml(roomType.sid)}" ${selected}>${escapeHtml(roomType.title)}</option>`;
+                            }).join("")}
+                        </select>
+                    </label>
+                    <label>
+                        <span>할인 타입</span>
+                        <select id="promotionDiscountTypeInput" ${isEdit ? "disabled" : ""}>
+                            <option value="RATE" ${discount.type === "RATE" ? "selected" : ""}>퍼센트 할인</option>
+                            <option value="FLAT" ${discount.type === "FLAT" ? "selected" : ""}>지정 금액 할인</option>
+                        </select>
+                    </label>
+                    <label class="admin-form-full">
+                        <span>할인 값</span>
+                        <input id="promotionDiscountValueInput" type="number" min="1" value="${escapeHtml(discount.value || "")}" ${isEdit ? "disabled" : "required"} placeholder="예: 30 또는 30000">
+                    </label>
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="admin-btn" data-promotion-modal-close>취소</button>
+                    <button type="submit" class="admin-btn primary">${isEdit ? "수정 저장" : "프로모션 생성"}</button>
+                </div>
+            </form>
+        </div>
+    `);
+
+    $("[data-promotion-modal-close]").on("click", closePromotionModal);
+    $("#promotionForm").on("submit", function (event) {
+        event.preventDefault();
+        savePromotion(promotion);
+    });
+}
+
+function closePromotionModal() {
+    $("#promotionModalRoot").empty();
+}
+
+function savePromotion(original) {
+    const isEdit = Boolean(original);
+    const name = $("#promotionNameInput").val().trim();
+    const status = $("#promotionStatusInput").val();
+
+    if (!name) {
+        alert("프로모션 이름을 입력해주세요.");
+        return;
+    }
+
+    const payload = isEdit
+        ? Object.assign({}, original, { promotionName: name, status })
+        : {
+            roomTypeId: Number($("#promotionRoomTypeInput").val()),
+            promotionName: name,
+            discountContent: makePromotionDiscountContent($("#promotionDiscountTypeInput").val(), $("#promotionDiscountValueInput").val()),
+            startDate: $("#promotionStartInput").val() + "T00:00:00",
+            endDate: $("#promotionEndInput").val() + "T23:59:59",
+            status
+        };
+
+    if (!isEdit && (!payload.roomTypeId || !$("#promotionStartInput").val() || !$("#promotionEndInput").val() || !$("#promotionDiscountValueInput").val())) {
+        alert("프로모션 생성 정보를 모두 입력해주세요.");
+        return;
+    }
+
+    const request = isEdit ? adminPatch("/prom", payload) : adminPost("/prom", payload);
+    request.then(function () {
+        closePromotionModal();
+        loadAdminPromotionData();
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "프로모션 저장에 실패했습니다."));
+    });
+}
+
+function deletePromotion(id) {
+    if (!id || !confirm("이 프로모션을 삭제할까요?")) return;
+
+    $.ajax({
+        url: window.StayNowConfig.apiUrl("/prom/" + id),
+        type: "DELETE",
+        headers: adminAuthHeaders()
+    }).done(function () {
+        loadAdminPromotionData();
+    }).fail(function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "프로모션 삭제에 실패했습니다."));
+    });
+}
+
+function findPromotionById(id) {
+    const promotions = ADMIN_PROMOTION_STATE ? ADMIN_PROMOTION_STATE.promotions : [];
+    return promotions.find(function (promotion) {
+        return String(promotion.sid) === String(id);
+    });
+}
+
+function findPromotionRoomType(roomTypeId, roomTypes) {
+    return (roomTypes || []).find(function (roomType) {
+        return String(roomType.sid) === String(roomTypeId);
+    });
+}
+
+function getPromotionStatusKey(promotion) {
+    const status = String((promotion && promotion.status) || "").trim();
+    if (status === "예정") return "EXPECTED";
+    if (status === "진행중" || status === "Active") return "ACTIVE";
+    if (status === "일시정지" || status === "중지") return "STOP";
+    if (status === "종료") return "END";
+    if (["EXPECTED", "ACTIVE", "STOP", "END"].includes(status.toUpperCase())) return status.toUpperCase();
+
+    if (promotion && promotion.startDate && promotion.endDate) {
+        const now = new Date();
+        const start = parseAdminDate(promotion.startDate);
+        const end = parseAdminDate(promotion.endDate);
+        if (start && now < start) return "EXPECTED";
+        if (end && now > end) return "END";
+    }
+
+    return "ACTIVE";
+}
+
+function formatPromotionStatus(status) {
+    const labels = {
+        EXPECTED: "예정",
+        ACTIVE: "진행중",
+        STOP: "일시정지",
+        END: "종료"
+    };
+    return labels[status] || status || "상태 없음";
+}
+
+function promotionStatusTone(status) {
+    if (status === "EXPECTED") return "orange";
+    if (status === "STOP" || status === "END") return "red";
+    return "";
+}
+
+function promotionStatusOptions(selected) {
+    return [
+        ["EXPECTED", "예정"],
+        ["ACTIVE", "진행중"],
+        ["STOP", "일시정지"],
+        ["END", "종료"]
+    ].map(function ([value, label]) {
+        return `<option value="${value}" ${value === selected ? "selected" : ""}>${label}</option>`;
+    }).join("");
+}
+
+function promotionDateValue(value) {
+    if (!value) return "";
+    return String(value).slice(0, 10);
+}
+
+function formatPromotionPeriod(promotion) {
+    return promotionDateValue(promotion.startDate).replaceAll("-", ".") + " ~ " + promotionDateValue(promotion.endDate).replaceAll("-", ".");
+}
+
+function makePromotionDiscountContent(type, value) {
+    const amount = Number(value || 0);
+    if (type === "FLAT") {
+        return amount.toLocaleString() + "원";
+    }
+    return amount + "%";
+}
+
+function parsePromotionDiscount(content) {
+    const text = String(content || "");
+    const valueMatch = text.match(/\d[\d,]*/);
+    const value = valueMatch ? Number(valueMatch[0].replaceAll(",", "")) : "";
+    return {
+        type: text.includes("원") ? "FLAT" : "RATE",
+        value
+    };
+}
+
+function formatPromotionDiscount(content) {
+    return content || "-";
+}
+
+
 function renderReservationMetrics(reservations) {
     const todayNew = reservations.filter(function (item) { return isToday(item.createdAt); }).length;
     const checkIns = reservations.filter(function (item) { return isToday(item.checkInDate); }).length;
@@ -2131,6 +2461,10 @@ function reloadCurrentAdminPage() {
     }
     if (ADMIN_CURRENT_PAGE === "sales") {
         loadAdminSalesData();
+        return;
+    }
+    if (ADMIN_CURRENT_PAGE === "promotions") {
+        loadAdminPromotionData();
     }
 }
 
@@ -2321,6 +2655,16 @@ function adminPost(path, payload) {
     }).then(unwrapApiResponse);
 }
 
+function adminPatch(path, payload) {
+    return $.ajax({
+        url: window.StayNowConfig.apiUrl(path),
+        type: "PATCH",
+        contentType: "application/json",
+        headers: adminAuthHeaders(),
+        data: JSON.stringify(payload || {})
+    }).then(unwrapApiResponse);
+}
+
 function adminGetSafe(path, fallback) {
     return adminGet(path).then(null, function () {
         return fallback;
@@ -2340,6 +2684,16 @@ function adminAuthHeaders() {
 
 function unwrapApiResponse(response) {
     return response && Object.prototype.hasOwnProperty.call(response, "data") ? response.data : response;
+}
+
+function getAdminAjaxMessage(xhr, fallback) {
+    if (xhr && xhr.responseJSON) {
+        return xhr.responseJSON.message || xhr.responseJSON.data || fallback;
+    }
+    if (xhr && xhr.responseText) {
+        return xhr.responseText;
+    }
+    return fallback;
 }
 
 function normalizeAjaxResult(result) {

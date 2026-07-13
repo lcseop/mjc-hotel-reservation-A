@@ -15,6 +15,8 @@ public class PromotionMapper {
                 .sid(dto.getSid())
                 .roomType(roomType)
                 .promotionName(dto.getPromotionName())
+                .discountContent(dto.getDiscountContent())
+                .conditionType(dto.getStatus() != null ? ConditionType.valueOf(dto.getStatus()) : ConditionType.ACTIVE)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .build();
@@ -39,6 +41,7 @@ public class PromotionMapper {
                 .sid(promotion.getSid())
                 .roomTypeId(promotion.getRoomType().getSid())
                 .promotionName(promotion.getPromotionName())
+                .discountContent(promotion.getDiscountContent())
                 .startDate(promotion.getStartDate())
                 .endDate(promotion.getEndDate())
                 .status(status)

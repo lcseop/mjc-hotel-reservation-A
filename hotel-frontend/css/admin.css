@@ -1110,6 +1110,146 @@ a {
     margin-top: 22px;
 }
 
+.promotion-admin-panel {
+    margin-top: 22px;
+    overflow: hidden;
+}
+
+.promotion-name-cell strong,
+.promotion-name-cell small {
+    display: block;
+}
+
+.promotion-name-cell strong {
+    color: var(--admin-text);
+    font-size: 16px;
+}
+
+.promotion-name-cell small {
+    margin-top: 5px;
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.promotion-table {
+    min-width: 920px;
+}
+
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, .48);
+    backdrop-filter: blur(4px);
+}
+
+.admin-modal {
+    width: min(720px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    border: 1px solid var(--admin-line);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, .28);
+}
+
+.admin-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 26px;
+    border-bottom: 1px solid #edf2f7;
+    background: linear-gradient(135deg, #0ea5e9, #5b6df5);
+    color: #fff;
+}
+
+.admin-modal-head h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+}
+
+.admin-modal-head p {
+    margin: 0;
+    color: rgba(255, 255, 255, .78);
+    font-weight: 800;
+}
+
+.modal-close {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    cursor: pointer;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 24px 26px;
+}
+
+.admin-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.admin-form-grid input,
+.admin-form-grid select {
+    width: 100%;
+    height: 48px;
+    border: 1px solid var(--admin-line);
+    border-radius: 11px;
+    padding: 0 13px;
+    background: #f8fbfe;
+    color: var(--admin-text);
+    outline: 0;
+}
+
+.admin-form-grid input:focus,
+.admin-form-grid select:focus {
+    border-color: var(--admin-blue);
+    box-shadow: 0 0 0 3px rgba(25, 168, 242, .14);
+}
+
+.admin-form-grid input:disabled,
+.admin-form-grid select:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.admin-form-full {
+    grid-column: 1 / -1;
+}
+
+.admin-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 18px 26px 24px;
+    border-top: 1px solid #edf2f7;
+    background: #f8fbfe;
+}
+
 .icon-btn.disabled,
 .icon-btn:disabled {
     opacity: .45;
