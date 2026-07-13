@@ -506,6 +506,13 @@ function drawRooms(rooms) {
     $.each(rooms, function (index, room) {
         const image = room.roomPhotoPath ? normalizeImagePath(room.roomPhotoPath) : FALLBACK_IMAGE;
         const price = room.roomPrice || 0;
+        const discountedPrice = Number(room.discountedRoomPrice || price);
+        const hasPromotion = room.promotionDiscountAmount && discountedPrice < price;
+        const priceHtml = hasPromotion
+            ? `<small>${escapeHtml(room.promotionDiscountContent || "프로모션 할인")}</small>
+               <span class="room-original-price">₩${price.toLocaleString()}</span>
+               <strong>₩${discountedPrice.toLocaleString()}</strong>`
+            : `<small>1박 기준</small><strong>₩${price.toLocaleString()}</strong>`;
 
         list.append(`
             <article class="room-card" data-room-id="${room.sid}">
@@ -526,8 +533,7 @@ function drawRooms(rooms) {
                 </div>
 
                 <div class="room-price">
-                    <small>1박 기준</small>
-                    <strong>₩${price.toLocaleString()}</strong>
+                    ${priceHtml}
                     <a href="#" data-room-id="${room.sid}">이 객실 선택</a>
                 </div>
             </article>

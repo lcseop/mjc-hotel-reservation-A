@@ -21,6 +21,10 @@ public class RoomResponseDto {
     private String roomTypeTitle;
     private String roomName;
     private Integer roomPrice;
+    private Integer discountedRoomPrice;
+    private Integer promotionDiscountAmount;
+    private Integer promotionDiscountRate;
+    private String promotionDiscountContent;
     private Integer roomNumber;
     private Integer floor;
     private Integer area;

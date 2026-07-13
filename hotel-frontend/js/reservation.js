@@ -86,6 +86,12 @@ function renderReservationPage() {
     $("#summaryHotel").text(hotel.hotelName || "호텔명 없음");
     $("#summaryLocation").text(hotel.location || "위치 정보 없음");
     $("#originalAmount").text(formatWon(price.originalAmount));
+    if (price.promotionDiscountAmount > 0) {
+        $("#promotionDiscountRow").show();
+        $("#promotionDiscountAmount").text("-" + formatWon(price.promotionDiscountAmount));
+    } else {
+        $("#promotionDiscountRow").hide();
+    }
     $("#taxAmount").text(formatWon(price.taxAmount));
     $("#totalAmount").text(formatWon(price.totalAmount));
 
@@ -365,14 +371,19 @@ function getStayInfo() {
 function getPriceInfo() {
     const stay = getStayInfo();
     const roomPrice = Number(reservationState.room.roomPrice || reservationState.hotel.hotelPrice || 0);
+    const discountedRoomPrice = Number(reservationState.room.discountedRoomPrice || roomPrice);
+    const promotionDiscountAmount = Math.max(0, roomPrice - discountedRoomPrice) * stay.nights;
     const originalAmount = roomPrice * stay.nights;
-    const taxAmount = Math.round(originalAmount * 0.1);
+    const subtotalAmount = Math.max(0, originalAmount - promotionDiscountAmount);
+    const taxAmount = Math.round(subtotalAmount * 0.1);
 
     return {
         roomPrice,
+        discountedRoomPrice,
+        promotionDiscountAmount,
         originalAmount,
         taxAmount,
-        totalAmount: originalAmount + taxAmount
+        totalAmount: subtotalAmount + taxAmount
     };
 }
 

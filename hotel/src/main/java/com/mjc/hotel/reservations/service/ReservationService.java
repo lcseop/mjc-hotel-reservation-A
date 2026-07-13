@@ -5,6 +5,10 @@ import com.mjc.hotel.coupon.entity.CouponIssue;
 import com.mjc.hotel.coupon.repository.CouponIssueRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.promotion.entity.ConditionType;
+import com.mjc.hotel.promotion.entity.Promotion;
+import com.mjc.hotel.promotion.repository.PromotionRepository;
+import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
 import com.mjc.hotel.reservations.dto.*;
 import com.mjc.hotel.reservations.entity.*;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
@@ -36,6 +40,7 @@ public class ReservationService {
     private final PointHistoryRepository pointHistoryRepository;
     private final ReservationCancelRepository reservationCancelRepository;
     private final EmailLogService emailLogService;
+    private final PromotionRepository promotionRepository;
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
@@ -52,7 +57,8 @@ public class ReservationService {
         }
 
         Integer originalAmount = room.getRoomPrice() * (int) totalNights;
-        Integer totalAmount = originalAmount;
+        Integer promotionDiscount = calculatePromotionDiscount(room) * (int) totalNights;
+        Integer totalAmount = Math.max(0, originalAmount - promotionDiscount);
         Integer couponDiscount = 0;
         Integer pointDiscount = 0;
         Integer memberPoint = member.getPoint() != null ? member.getPoint() : 0;
@@ -82,7 +88,7 @@ public class ReservationService {
             member.setPoint(memberPoint);
         }
 
-        Integer discountAmount = couponDiscount + pointDiscount;
+        Integer discountAmount = promotionDiscount + couponDiscount + pointDiscount;
         String reservationNumber = generateReservationNumber();
 
         Reservation reservation = Reservation.builder()
@@ -349,6 +355,25 @@ public class ReservationService {
             default:
                 return 0;
         }
+    }
+
+    private Integer calculatePromotionDiscount(Room room) {
+        if (room == null || room.getRoomTypeId() == null || room.getRoomTypeId().getSid() == null) {
+            return 0;
+        }
+
+        Promotion promotion = PromotionDiscountCalculator.findBestPromotion(
+                promotionRepository.findActivePromotionsByRoomType(
+                        room.getRoomTypeId().getSid(),
+                        ConditionType.ACTIVE,
+                        LocalDateTime.now()
+                ),
+                room.getRoomPrice()
+        );
+
+        return promotion == null
+                ? 0
+                : PromotionDiscountCalculator.calculateDiscountAmount(room.getRoomPrice(), promotion.getDiscountContent());
     }
 
     private String generateReservationNumber() {
