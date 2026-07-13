@@ -499,6 +499,21 @@ a {
     cursor: text;
 }
 
+.hotel-switcher.global-scope,
+.hotel-switcher.global-scope .admin-hotel-toggle,
+.hotel-switcher.global-scope .admin-hotel-toggle * {
+    cursor: default;
+}
+
+.hotel-switcher.global-scope .admin-hotel-toggle {
+    background: #f8fbfe;
+    color: #64748b;
+}
+
+.hotel-switcher.global-scope .admin-hotel-toggle .fa-chevron-down {
+    opacity: .35;
+}
+
 #adminHotelOptions {
     max-height: 286px;
     overflow-y: auto;
