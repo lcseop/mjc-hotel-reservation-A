@@ -279,6 +279,10 @@ textarea{
     gap:18px;
 }
 
+.form-grid.one{
+    grid-template-columns:1fr;
+}
+
 .form-grid.two{
     grid-template-columns:1fr 1fr;
 }
@@ -644,6 +648,10 @@ textarea{
     color:#0f172a;
 }
 
+#promotionDiscountRow strong{
+    color:#ef4444;
+}
+
 .total-price{
     display:flex;
     justify-content:space-between;
@@ -659,6 +667,75 @@ textarea{
 
 .total-price strong{
     font-size:30px;
+}
+
+.agreement-box{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:20px;
+    padding:16px;
+    border:1px solid #dbeafe;
+    border-radius:14px;
+    background:#f8fbff;
+}
+
+.agreement-box h3{
+    font-size:15px;
+}
+
+.agreement-box label{
+    cursor:pointer;
+}
+
+.agreement-box input{
+    flex:0 0 18px;
+    width:18px;
+    height:18px;
+    accent-color:#0ea5e9;
+    cursor:pointer;
+}
+
+.agreement-all,
+.agreement-item{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+}
+
+.agreement-all{
+    padding-bottom:12px;
+    border-bottom:1px solid #e2e8f0;
+    color:#0f172a;
+    font-size:14px;
+    font-weight:900;
+}
+
+.agreement-item{
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.45;
+}
+
+.agreement-item strong{
+    display:block;
+    margin-bottom:2px;
+    color:#334155;
+    font-size:13px;
+}
+
+.agreement-box.shake{
+    animation:agreement-shake .36s ease;
+    border-color:#fca5a5;
+    background:#fff7f7;
+}
+
+@keyframes agreement-shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-5px);}
+    50%{transform:translateX(5px);}
+    75%{transform:translateX(-3px);}
 }
 
 .pay-btn,

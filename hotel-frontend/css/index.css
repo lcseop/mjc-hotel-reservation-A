@@ -5,6 +5,13 @@
     font-family:"Pretendard","맑은 고딕",sans-serif;
 }
 
+html,
+body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+}
+
 body{
     background:#f4f6fb;
 }

@@ -305,20 +305,26 @@ function loadLowestRoomPrices(hotels) {
                 }
 
                 const cheapest = rooms.sort(function (a, b) {
-                    return Number(a.roomPrice || 0) - Number(b.roomPrice || 0);
+                    return Number(a.discountedRoomPrice || a.roomPrice || 0) - Number(b.discountedRoomPrice || b.roomPrice || 0);
                 })[0];
+                const basePrice = Number(cheapest.roomPrice || 0);
+                const displayPrice = Number(cheapest.discountedRoomPrice || basePrice);
+                const hasPromotion = cheapest.promotionDiscountAmount && displayPrice < basePrice;
                 const hotelIndex = currentHotels.findIndex(function (item) {
                     return String(item.sid) === String(hotel.sid);
                 });
 
                 if (hotelIndex >= 0) {
-                    currentHotels[hotelIndex].lowestRoomPrice = Number(cheapest.roomPrice || 0);
+                    currentHotels[hotelIndex].lowestRoomPrice = displayPrice;
                     currentHotels[hotelIndex].lowestRoomName = cheapest.roomName || cheapest.roomTypeTitle || "객실";
                 }
 
-                target.find(".price-room-label").text("1박 기준");
-                target.find(".price-value").text("₩" + Number(cheapest.roomPrice || 0).toLocaleString() + "~");
-                target.find(".price-room-name").text((cheapest.roomName || cheapest.roomTypeTitle || "객실"));
+                target.find(".price-room-label").text(hasPromotion ? "프로모션 최저가 · 1박 기준" : "1박 기준");
+                target.find(".price-value").text("₩" + displayPrice.toLocaleString() + "~");
+                target.find(".price-room-name").text((cheapest.roomName || cheapest.roomTypeTitle || "객실") + (hasPromotion ? " · " + (cheapest.promotionDiscountContent || "할인 적용") : ""));
+                if (hasPromotion && !$(".hotel-thumb[data-hotel-id='" + hotel.sid + "'] .sale-badge").length) {
+                    $(".hotel-thumb[data-hotel-id='" + hotel.sid + "']").append(`<span class="sale-badge show">${escapeHtml(cheapest.promotionDiscountContent || "SALE")}</span>`);
+                }
             },
             error: function () {
                 const target = $(".hotel-price[data-hotel-id='" + hotel.sid + "']");

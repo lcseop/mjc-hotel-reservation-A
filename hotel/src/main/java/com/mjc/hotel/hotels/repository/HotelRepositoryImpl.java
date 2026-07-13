@@ -3,6 +3,7 @@ package com.mjc.hotel.hotels.repository;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.QHotel;
+import com.mjc.hotel.promotion.entity.ConditionType;
 import com.mjc.hotel.promotion.entity.QDiscountRate;
 import com.mjc.hotel.promotion.entity.QPromotion;
 import com.mjc.hotel.reservations.entity.QReservation;
@@ -64,6 +65,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                                                         )
                                         ),
                                         notDeletedPromotion(p),
+                                        p.conditionType.eq(ConditionType.ACTIVE),
                                         p.startDate.loe(now),
                                         p.endDate.goe(now)
                                 )

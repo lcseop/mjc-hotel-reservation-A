@@ -28,11 +28,18 @@ public class Promotion extends BaseEntity {
     @Column(length = 50, name="promotion_name")
     private String promotionName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "condition_type")
+    private ConditionType conditionType;
+
     @Column(name="start_date")
     private LocalDateTime startDate;
 
     @Column(name="end_date")
     private LocalDateTime endDate;
+
+    @Column(name = "discount_info", nullable = false)
+    private String discountContent; // 예: "최대 30%", "30,000원"
 
     public void update(String promotionName) {
         this.promotionName = promotionName;

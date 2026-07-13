@@ -4,6 +4,10 @@ import com.mjc.hotel.hotels.dto.*;
 import com.mjc.hotel.hotels.entity.*;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.*;
+import com.mjc.hotel.promotion.entity.ConditionType;
+import com.mjc.hotel.promotion.entity.Promotion;
+import com.mjc.hotel.promotion.repository.PromotionRepository;
+import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
 import com.mjc.hotel.review.entity.Review;
 import com.mjc.hotel.review.entity.ReviewCategory;
 import com.mjc.hotel.review.entity.ReviewTag;
@@ -57,6 +61,8 @@ public class HotelService {
     private ReviewTagRepository reviewTagRepository;
     @Autowired
     private JPAQueryFactory queryFactory;
+    @Autowired
+    private PromotionRepository promotionRepository;
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
@@ -124,7 +130,15 @@ public class HotelService {
     }
 
     public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {
-        return hotelRepository.search(dto, pageable);
+        Page<HotelResponseDto> page = hotelRepository.search(dto, pageable);
+        page.getContent().forEach(hotel -> {
+            int maxDiscountRate = Math.max(
+                    hotel.getMaxDiscountRate() != null ? hotel.getMaxDiscountRate() : 0,
+                    calculateMaxDiscountRate(hotel.getSid())
+            );
+            hotel.setMaxDiscountRate(maxDiscountRate);
+        });
+        return page;
     }
 
     public HotelResponseDto findById(Long id) {
@@ -153,24 +167,62 @@ public class HotelService {
         List<Room> inRooms = roomRepository.findByHotelIdSid(hotelId);
         return inRooms.stream()
                 .filter(r -> !Boolean.TRUE.equals(r.getDeleted()))
-                .map(r -> RoomResponseNoHotelDto
-                            .builder()
-                            .sid(r.getSid())
-                            .roomTypeTitle(r.getRoomTypeId().getTitle())
-                            .roomName(r.getRoomName())
-                            .roomPrice(r.getRoomPrice())
-                            .roomNumber(r.getRoomNumber())
-                            .floor(r.getFloor())
-                            .area(r.getArea())
-                            .maximumPeople(r.getMaximumPeople())
-                            .checkInTime(r.getCheckInTime())
-                            .checkOutTime(r.getCheckOutTime())
-                            .pet(r.getPet())
-                            .parking(r.getParking())
-                            .smoke(r.getSmoke())
-                            .idCard(r.getIdCard())
-                            .build())
+                .map(r -> {
+                    RoomResponseNoHotelDto dto = RoomResponseNoHotelDto
+                                .builder()
+                                .sid(r.getSid())
+                                .roomTypeTitle(r.getRoomTypeId().getTitle())
+                                .roomName(r.getRoomName())
+                                .roomPrice(r.getRoomPrice())
+                                .roomNumber(r.getRoomNumber())
+                                .floor(r.getFloor())
+                                .area(r.getArea())
+                                .maximumPeople(r.getMaximumPeople())
+                                .checkInTime(r.getCheckInTime())
+                                .checkOutTime(r.getCheckOutTime())
+                                .pet(r.getPet())
+                                .parking(r.getParking())
+                                .smoke(r.getSmoke())
+                                .idCard(r.getIdCard())
+                                .build();
+                    applyPromotion(dto, r);
+                    return dto;
+                })
                 .toList();
+    }
+
+    private void applyPromotion(RoomResponseNoHotelDto dto, Room room) {
+        Promotion promotion = findBestPromotion(room);
+        String discountContent = promotion != null ? promotion.getDiscountContent() : null;
+        dto.setPromotionDiscountContent(discountContent);
+        dto.setPromotionDiscountRate(PromotionDiscountCalculator.extractDiscountRate(discountContent));
+        dto.setPromotionDiscountAmount(PromotionDiscountCalculator.calculateDiscountAmount(room.getRoomPrice(), discountContent));
+        dto.setDiscountedRoomPrice(PromotionDiscountCalculator.calculateDiscountedPrice(room.getRoomPrice(), discountContent));
+    }
+
+    private Promotion findBestPromotion(Room room) {
+        if (room.getRoomTypeId() == null || room.getRoomTypeId().getSid() == null) {
+            return null;
+        }
+
+        return PromotionDiscountCalculator.findBestPromotion(
+                promotionRepository.findActivePromotionsByRoomType(
+                        room.getRoomTypeId().getSid(),
+                        ConditionType.ACTIVE,
+                        LocalDateTime.now()
+                ),
+                room.getRoomPrice()
+        );
+    }
+
+    private int calculateMaxDiscountRate(Long hotelId) {
+        return roomRepository.findByHotelIdSid(hotelId).stream()
+                .filter(room -> !Boolean.TRUE.equals(room.getDeleted()))
+                .map(this::findBestPromotion)
+                .filter(promotion -> promotion != null)
+                .mapToInt(promotion -> PromotionDiscountCalculator.extractDiscountRate(promotion.getDiscountContent()))
+                .max()
+                .orElse(0);
     }
 
     public List<HotelPopularResponseDto> findPopularHotels() {
