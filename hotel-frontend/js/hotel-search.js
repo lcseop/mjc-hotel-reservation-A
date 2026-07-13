@@ -293,7 +293,7 @@ function loadLowestRoomPrices(hotels) {
             type: "GET",
             success: function (result) {
                 const rooms = (result.data || []).filter(function (room) {
-                    return Number(room.roomPrice || 0) > 0;
+                    return room.roomAvailable !== false && Number(room.roomPrice || 0) > 0;
                 });
                 const target = $(".hotel-price[data-hotel-id='" + hotel.sid + "']");
 

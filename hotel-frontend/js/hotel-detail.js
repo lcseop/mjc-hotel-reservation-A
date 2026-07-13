@@ -494,7 +494,10 @@ function loadRooms(hotelId) {
 function drawRooms(rooms) {
     const list = $("#roomList");
 
-    currentRooms = rooms || [];
+    rooms = (rooms || []).filter(function (room) {
+        return room.roomAvailable !== false;
+    });
+    currentRooms = rooms;
     list.empty();
     $("#roomCount").text(rooms.length + "개 객실");
 

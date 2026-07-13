@@ -133,9 +133,11 @@ public class RoomService {
                             .builder()
                             .sid(r.getSid())
                             .hotel(hotel)
+                            .roomTypeId(r.getRoomTypeId().getSid())
                             .roomTypeTitle(r.getRoomTypeId().getTitle())
                             .roomName(r.getRoomName())
                             .roomPrice(r.getRoomPrice())
+                            .roomAvailable(r.getRoomAvailable() != null ? r.getRoomAvailable() : true)
                             .roomNumber(r.getRoomNumber())
                             .floor(r.getFloor())
                             .area(r.getArea())
@@ -158,9 +160,11 @@ public class RoomService {
                 .builder()
                 .sid(saved.getSid())
                 .hotel(HotelMapper.photoResponse(saved.getHotelId()))
+                .roomTypeId(saved.getRoomTypeId().getSid())
                 .roomTypeTitle(saved.getRoomTypeId().getTitle())
                 .roomName(saved.getRoomName())
                 .roomPrice(saved.getRoomPrice())
+                .roomAvailable(saved.getRoomAvailable() != null ? saved.getRoomAvailable() : true)
                 .roomNumber(saved.getRoomNumber())
                 .floor(saved.getFloor())
                 .area(saved.getArea())
@@ -174,6 +178,16 @@ public class RoomService {
                 .build();
         applyPromotion(dto, saved);
         return dto;
+    }
+
+    @Transactional
+    public RoomResponseDto updateAvailability(Long id, Boolean available) {
+        Room room = roomRepository.findById(id).orElseThrow();
+        if (room.getDeleted() != null && room.getDeleted()) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        }
+        room.setRoomAvailable(available != null ? available : true);
+        return response(roomRepository.save(room));
     }
 
     private void applyPromotion(RoomResponseDto dto, Room room) {

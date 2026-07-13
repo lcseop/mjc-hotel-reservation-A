@@ -640,7 +640,9 @@ function loadDealRoomPrice(hotelId, discountRate) {
         type: "GET",
 
         success: function (result) {
-            const rooms = result.data || [];
+            const rooms = (result.data || []).filter(function (room) {
+                return room.roomAvailable !== false;
+            });
 
             if (rooms.length === 0) {
                 return;

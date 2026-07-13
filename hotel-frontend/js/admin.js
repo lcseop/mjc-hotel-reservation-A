@@ -22,6 +22,8 @@ let ADMIN_RESERVATION_STATE = null;
 let ADMIN_GUEST_STATE = null;
 let ADMIN_SALES_STATE = null;
 let ADMIN_PROMOTION_STATE = null;
+let ADMIN_ROOM_STATE = null;
+let ADMIN_ROOM_VIEW = "card";
 let ADMIN_CURRENT_PAGE = "dashboard";
 let ADMIN_ROOM_TYPES = [];
 
@@ -131,6 +133,8 @@ function renderAdminShell(pageId, auth) {
         loadAdminReservationData();
     } else if (page.id === "guests") {
         loadAdminGuestData();
+    } else if (page.id === "rooms") {
+        loadAdminRoomData();
     } else if (page.id === "sales") {
         loadAdminSalesData();
     } else if (page.id === "promotions") {
@@ -153,6 +157,12 @@ function renderAdminShell(pageId, auth) {
     });
     $(document).off("click.adminSalesReport").on("click.adminSalesReport", "[data-admin-action='download-sales-report']", function () {
         downloadSalesReport();
+    });
+    $(document).off("click.adminRoomsReport").on("click.adminRoomsReport", "[data-admin-action='download-rooms-report']", function () {
+        downloadRoomReport();
+    });
+    $(document).off("click.adminRoomsAdd").on("click.adminRoomsAdd", "[data-admin-action='open-room-create']", function () {
+        openRoomModal();
     });
     $(document).off("click.adminPromotionCreate").on("click.adminPromotionCreate", "[data-admin-action='create-promotion']", function () {
         openPromotionModal();
@@ -562,12 +572,13 @@ function adminPageNote(id) {
 function headActions(id) {
     const byPage = {
         dashboard: [["리포트 다운로드", "fa-download", "", "download-dashboard-report"], ["새로고침", "fa-rotate-right", "", "refresh-dashboard"]],
-        reservations: [["엑셀 다운로드", "fa-download", "", "download-reservation-report"]],
+        reservations: [["리포트 다운로드", "fa-download", "", "download-reservation-report"]],
         guests: [],
+        rooms: [["리포트 다운로드", "fa-download", "", "download-rooms-report"], ["객실 추가", "fa-plus", "primary", "open-room-create"]],
         rates: [["변경 이력", "fa-clock"], ["내보내기", "fa-download"], ["요금 추가", "fa-plus", "primary"]],
         promotions: [["프로모션 생성", "fa-plus", "primary", "create-promotion"]],
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
-        settlement: [[getAdminMonthSettlementLabel(), "fa-calendar"], ["엑셀 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
+        settlement: [[getAdminMonthSettlementLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"], ["정산 확정", "fa-check-double", "primary"]],
         checkin: [["캘린더 보기", "fa-calendar"], ["내보내기", "fa-download"]]
     };
     const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
@@ -704,12 +715,50 @@ function renderGuests() {
 
 function renderRooms() {
     return `
-        ${metrics([["전체 객실", "120실", "fa-bed", "기준"], ["사용중", "73실", "fa-door-closed", "61%"], ["예약완료", "28실", "fa-calendar-check", "23%"], ["공실", "19실", "fa-door-open", "16%"]])}
-        <div class="panel">${panelHead("객실 현황 맵", "층별 실시간 상태")}${roomMap()}</div>
-        <div class="grid split" style="margin-top:22px">
-            <div class="panel">${panelHead("객실 목록", "예약 상태 기준")} ${simpleTable(["객실", "상태", "층", "객실 타입", "메모"], [["501", "사용중", "5F", "디럭스", "투숙 중"], ["502", "예약완료", "5F", "스위트", "체크인 예정"], ["503", "공실", "5F", "스탠다드", "예약 가능"]])}</div>
-            <div class="panel">${panelHead("구현 의견", "객실 관리")}<div class="task-list">${task("Room 자체에는 운영 상태가 없으므로 예약 기간 기준으로 상태를 계산합니다.", "warn")}${task("공실/사용중/예약완료만 우선 노출합니다.", "")}</div></div>
+        <div id="roomMetrics" class="grid stats-grid cols-5 room-stats-grid">
+            ${dashboardMetricSkeleton("전체 객실", "fa-bed")}
+            ${dashboardMetricSkeleton("사용중", "fa-users")}
+            ${dashboardMetricSkeleton("예약완료", "fa-calendar-check")}
+            ${dashboardMetricSkeleton("공실", "fa-door-open")}
+            ${dashboardMetricSkeleton("예약 불가", "fa-ban")}
         </div>
+        <div class="room-control-panel">
+            <div class="room-filter-grid">
+                <label class="admin-search-field">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="roomKeywordFilter" type="search" placeholder="객실번호, 타입 검색...">
+                </label>
+                <select id="roomFloorFilter" class="admin-select">
+                    <option value="">전체 층</option>
+                </select>
+                <select id="roomTypeFilter" class="admin-select">
+                    <option value="">객실 유형 전체</option>
+                </select>
+                <select id="roomStatusFilter" class="admin-select">
+                    <option value="">상태 전체</option>
+                    <option value="use">사용중</option>
+                    <option value="done">예약완료</option>
+                    <option value="available">공실</option>
+                    <option value="blocked">예약 불가</option>
+                </select>
+                <div class="room-view-switch" aria-label="보기 방식">
+                    <button class="active" type="button" title="카드 보기" data-room-view="card"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button type="button" title="리스트 보기" data-room-view="list"><i class="fa-solid fa-list"></i></button>
+                </div>
+                <select id="roomSortFilter" class="admin-select">
+                    <option value="numberAsc">객실번호순</option>
+                    <option value="numberDesc">객실번호 역순</option>
+                    <option value="priceDesc">높은 가격순</option>
+                    <option value="priceAsc">낮은 가격순</option>
+                </select>
+                <button id="roomFilterReset" class="admin-btn" type="button" title="필터 초기화"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+        </div>
+        <div id="roomFloorPanel" class="room-floor-panel">
+            ${emptyAdminState("객실 현황을 불러오는 중입니다.")}
+        </div>
+        <div id="roomTypeSummaryPanel" class="panel room-type-summary-panel">${emptyAdminState("객실 유형별 현황을 불러오는 중입니다.")}</div>
+        <div id="roomModalRoot"></div>
     `;
 }
 
@@ -1141,6 +1190,666 @@ function loadAdminGuestData() {
             $("#guestMetrics").html("");
             $("#guestTableWrap").html(emptyAdminState("고객 데이터를 불러오지 못했습니다."));
         });
+}
+
+function loadAdminRoomData() {
+    const requests = {
+        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        popularHotels: adminGetSafe("/hotel/pop4", []),
+        reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
+        roomTypes: adminGetSafe("/roomtype", [])
+    };
+
+    $.when(requests.hotels, requests.popularHotels, requests.reservations, requests.roomTypes)
+        .done(function (hotelsResult, popularHotelsResult, reservationsResult, roomTypesResult) {
+            const hotelPage = normalizeAjaxResult(hotelsResult);
+            const popularHotels = asArray(normalizeAjaxResult(popularHotelsResult));
+            const hotels = mergeAdminHotels(asPageContent(hotelPage), popularHotels);
+            const selectedHotel = getSelectedAdminHotel(hotels);
+            const reservations = filterReservationsByHotel(asPageContent(normalizeAjaxResult(reservationsResult)), selectedHotel);
+            const roomTypes = asArray(normalizeAjaxResult(roomTypesResult));
+
+            renderAdminHotelSelector(hotels, selectedHotel);
+
+            if (!selectedHotel || !selectedHotel.sid) {
+                renderRoomFailure("관리할 호텔을 선택해주세요.");
+                return;
+            }
+
+            adminGet("/hotel/inroom/" + selectedHotel.sid)
+                .then(function (rooms) {
+                    const roomStates = buildAdminRoomStates(asArray(rooms), reservations, selectedHotel);
+                    ADMIN_ROOM_STATE = { selectedHotel, rooms: roomStates, reservations, roomTypes };
+                    renderRoomFilters(roomStates, roomTypes);
+                    bindRoomFilters();
+                    renderRoomPage();
+                }, function () {
+                    renderRoomFailure("객실 데이터를 불러오지 못했습니다.");
+                });
+        })
+        .fail(function () {
+            renderAdminHotelSelector([], null);
+            renderRoomFailure("객실 관리 데이터를 불러오지 못했습니다.");
+        });
+}
+
+function buildAdminRoomStates(rooms, reservations, selectedHotel) {
+    const now = new Date();
+    const activeReservations = reservations.filter(function (reservation) {
+        if (["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(reservation.reservationStatus)) return false;
+        const checkIn = parseAdminDate(reservation.checkInDate);
+        const checkOut = parseAdminDate(reservation.checkOutDate);
+        if (!checkIn || !checkOut) return false;
+        return checkIn <= now && checkOut > now;
+    });
+    const futureReservations = reservations.filter(function (reservation) {
+        if (["CANCELLED", "NO_SHOW", "CHECKED_OUT", "COMPLETED"].includes(reservation.reservationStatus)) return false;
+        const checkIn = parseAdminDate(reservation.checkInDate);
+        return checkIn && checkIn > now;
+    });
+
+    return rooms.map(function (room) {
+        const current = activeReservations.find(function (reservation) {
+            return String(reservation.roomId) === String(room.sid);
+        });
+        const next = futureReservations
+            .filter(function (reservation) { return String(reservation.roomId) === String(room.sid); })
+            .sort(function (a, b) { return new Date(a.checkInDate) - new Date(b.checkInDate); })[0];
+        const available = room.roomAvailable !== false;
+        const status = current ? "use" : next ? "done" : available ? "available" : "blocked";
+
+        return Object.assign({}, room, {
+            hotelId: selectedHotel.sid,
+            adminStatus: status,
+            adminStatusLabel: formatAdminRoomStatus(status),
+            adminReservation: current || next || null,
+            adminAvailable: available
+        });
+    }).sort(function (a, b) {
+        return Number(a.roomNumber || 0) - Number(b.roomNumber || 0);
+    });
+}
+
+function renderRoomFilters(rooms, roomTypes) {
+    const typeOptions = ['<option value="">객실 유형 전체</option>'].concat(roomTypes.map(function (type) {
+        return `<option value="${escapeHtml(type.sid)}">${escapeHtml(type.title || ("타입 " + type.sid))}</option>`;
+    }));
+    const floors = Array.from(new Set(rooms.map(function (room) {
+        return room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || 1;
+    }))).sort(function (a, b) { return Number(b) - Number(a); });
+    const floorOptions = ['<option value="">층수 전체</option>'].concat(floors.map(function (floor) {
+        return `<option value="${escapeHtml(floor)}">${escapeHtml(floor)}층</option>`;
+    }));
+
+    $("#roomTypeFilter").html(typeOptions.join(""));
+    $("#roomFloorFilter").html(floorOptions.join(""));
+}
+
+function bindRoomFilters() {
+    $("#roomKeywordFilter, #roomStatusFilter, #roomTypeFilter, #roomFloorFilter, #roomSortFilter")
+        .off("input.adminRooms change.adminRooms")
+        .on("input.adminRooms change.adminRooms", debounce(renderRoomPage, 180));
+
+    $("#roomFilterReset").off("click.adminRooms").on("click.adminRooms", function () {
+        $("#roomKeywordFilter").val("");
+        $("#roomStatusFilter").val("");
+        $("#roomTypeFilter").val("");
+        $("#roomFloorFilter").val("");
+        $("#roomSortFilter").val("numberAsc");
+        renderRoomPage();
+    });
+
+    $(".room-view-switch").off("click.adminRooms").on("click.adminRooms", "[data-room-view]", function () {
+        ADMIN_ROOM_VIEW = $(this).data("roomView") || "card";
+        $(".room-view-switch [data-room-view]").removeClass("active");
+        $(this).addClass("active");
+        renderRoomPage();
+    });
+
+    $(document)
+        .off("click.adminRoomAvailability")
+        .on("click.adminRoomAvailability", "[data-room-availability]", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const roomId = $(this).attr("data-room-availability");
+            const available = String($(this).attr("data-available")) === "true";
+            updateRoomAvailability(roomId, available, this);
+        })
+        .off("click.adminRoomEdit")
+        .on("click.adminRoomEdit", "[data-room-edit]", function (event) {
+            event.preventDefault();
+            const roomId = $(this).attr("data-room-edit");
+            const room = (ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.rooms : []).find(function (item) {
+                return String(item.sid) === String(roomId);
+            });
+            if (room) openRoomModal(room);
+        });
+}
+
+function getRoomFilterValues() {
+    return {
+        keyword: ($("#roomKeywordFilter").val() || "").trim().toLowerCase(),
+        status: $("#roomStatusFilter").val() || "",
+        roomTypeId: $("#roomTypeFilter").val() || "",
+        floor: $("#roomFloorFilter").val() || "",
+        sort: $("#roomSortFilter").val() || "numberAsc"
+    };
+}
+
+function getFilteredAdminRooms() {
+    const state = ADMIN_ROOM_STATE || { rooms: [] };
+    const filters = getRoomFilterValues();
+
+    const filtered = state.rooms.filter(function (room) {
+        const floor = String(room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || 1);
+        const text = [room.roomName, room.roomNumber, room.roomTypeTitle, room.adminStatusLabel].join(" ").toLowerCase();
+        const matchesKeyword = !filters.keyword || text.includes(filters.keyword);
+        const matchesStatus = !filters.status || room.adminStatus === filters.status;
+        const matchesType = !filters.roomTypeId || String(room.roomTypeId || "") === String(filters.roomTypeId);
+        const matchesFloor = !filters.floor || floor === String(filters.floor);
+        return matchesKeyword && matchesStatus && matchesType && matchesFloor;
+    });
+
+    return filtered.sort(function (a, b) {
+        if (filters.sort === "numberDesc") return Number(b.roomNumber || 0) - Number(a.roomNumber || 0);
+        if (filters.sort === "priceDesc") return Number(b.roomPrice || 0) - Number(a.roomPrice || 0);
+        if (filters.sort === "priceAsc") return Number(a.roomPrice || 0) - Number(b.roomPrice || 0);
+        return Number(a.roomNumber || 0) - Number(b.roomNumber || 0);
+    });
+}
+
+function renderRoomPage() {
+    const rooms = getFilteredAdminRooms();
+    const allRooms = ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.rooms : [];
+    syncRoomViewButtons();
+    renderRoomMetrics(allRooms);
+    if (ADMIN_ROOM_VIEW === "list") {
+        renderRoomListView(rooms);
+    } else {
+        renderRoomFloorPanel(rooms);
+    }
+    renderRoomTypeSummaryPanel(allRooms);
+}
+
+function syncRoomViewButtons() {
+    $(".room-view-switch [data-room-view]").removeClass("active");
+    $(`.room-view-switch [data-room-view="${ADMIN_ROOM_VIEW}"]`).addClass("active");
+}
+
+function renderRoomMetrics(rooms) {
+    const counts = {
+        total: rooms.length,
+        use: rooms.filter(function (room) { return room.adminStatus === "use"; }).length,
+        done: rooms.filter(function (room) { return room.adminStatus === "done"; }).length,
+        available: rooms.filter(function (room) { return room.adminStatus === "available"; }).length,
+        blocked: rooms.filter(function (room) { return room.adminStatus === "blocked"; }).length
+    };
+    const percent = function (value) {
+        return counts.total ? Math.round((value / counts.total) * 100) + "%" : "0%";
+    };
+    const cards = [
+        ["전체 객실", counts.total + "실", "fa-building", "전체", "blue"],
+        ["사용중", counts.use + "실", "fa-users", percent(counts.use), "blue"],
+        ["예약완료", counts.done + "실", "fa-calendar-check", percent(counts.done), "green"],
+        ["공실", counts.available + "실", "fa-door-open", percent(counts.available), "orange"],
+        ["예약 불가", counts.blocked + "실", "fa-ban", percent(counts.blocked), "red"]
+    ];
+
+    $("#roomMetrics").html(cards.map(function ([label, value, icon, badge, tone]) {
+        return `<article class="room-stat-card ${tone}">
+            <div class="room-stat-top">
+                <span class="room-stat-icon"><i class="fa-solid ${icon}"></i></span>
+                <span class="room-stat-badge">${escapeHtml(badge)}</span>
+            </div>
+            <div class="room-stat-value">${escapeHtml(value)}</div>
+            <div class="room-stat-label">${escapeHtml(label)}</div>
+        </article>`;
+    }).join(""));
+}
+
+function renderRoomFloorPanel(rooms) {
+    if (!rooms.length) {
+        $("#roomFloorPanel").html(emptyAdminState("조건에 맞는 객실이 없습니다."));
+        return;
+    }
+
+    const grouped = {};
+    rooms.forEach(function (room) {
+        const floor = room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || 1;
+        if (!grouped[floor]) grouped[floor] = [];
+        grouped[floor].push(room);
+    });
+
+    $("#roomFloorPanel").html(Object.keys(grouped).sort(function (a, b) { return Number(b) - Number(a); }).map(function (floor) {
+        const floorRooms = grouped[floor];
+        const counts = countRoomsByStatus(floorRooms);
+        return `<section class="admin-room-floor-section">
+            <header class="admin-room-floor-head">
+                <div class="floor-title"><span><i class="fa-solid fa-layer-group"></i></span><strong>${escapeHtml(floor)}층</strong><em>${floorRooms.length}실</em></div>
+                <div class="floor-legend">
+                    <span class="use">사용 ${counts.use}</span>
+                    <span class="done">예약 ${counts.done}</span>
+                    <span class="available">공실 ${counts.available}</span>
+                    <span class="blocked">예약 불가 ${counts.blocked}</span>
+                </div>
+            </header>
+            <div class="admin-room-card-grid">${floorRooms.map(renderRoomCard).join("")}</div>
+        </section>`;
+    }).join(""));
+}
+
+function renderRoomListView(rooms) {
+    if (!rooms.length) {
+        $("#roomFloorPanel").html(emptyAdminState("조건에 맞는 객실이 없습니다."));
+        return;
+    }
+
+    const rows = rooms.map(function (room) {
+        const reservation = room.adminReservation;
+        const canManage = room.adminStatus === "available" || room.adminStatus === "blocked";
+        const price = Number(room.discountedRoomPrice || room.roomPrice || 0);
+        const guest = reservation ? (reservation.memberName || reservation.guestName || "예약자") : "-";
+        return `<tr>
+            <td class="room-number-cell"><strong>${escapeHtml(room.roomNumber || "-")}호</strong><small>${escapeHtml((room.floor || "-") + "층")}</small></td>
+            <td>${escapeHtml(room.roomName || "-")}</td>
+            <td>${escapeHtml(room.roomTypeTitle || "-")}</td>
+            <td><span class="status ${roomStatusTone(room.adminStatus)}">${escapeHtml(room.adminStatusLabel)}</span></td>
+            <td>${escapeHtml(guest)}</td>
+            <td>${price ? formatAdminWon(price) : "-"}</td>
+            <td>${canManage ? `<div class="row-actions">
+                <button class="icon-btn" type="button" title="${room.adminAvailable ? "예약 불가" : "예약 가능"}" data-room-availability="${escapeHtml(room.sid)}" data-available="${!room.adminAvailable}"><i class="fa-solid ${room.adminAvailable ? "fa-ban" : "fa-check"}"></i></button>
+                <button class="icon-btn" type="button" title="수정" data-room-edit="${escapeHtml(room.sid)}"><i class="fa-solid fa-pen"></i></button>
+            </div>` : `<span class="muted">변경 불가</span>`}</td>
+        </tr>`;
+    }).join("");
+
+    $("#roomFloorPanel").html(`
+        <div class="panel room-list-view-panel">
+            ${panelHead("객실 리스트", "현재 필터와 정렬 기준")}
+            <div class="admin-table-wrap">
+                <table class="admin-table admin-room-table">
+                    <thead><tr><th>객실번호</th><th>객실 이름</th><th>객실 타입</th><th>상태</th><th>예약자</th><th>가격</th><th>액션</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        </div>
+    `);
+}
+
+function renderRoomCard(room) {
+    const floor = room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || 1;
+    const reservation = room.adminReservation;
+    const canToggle = room.adminStatus === "available" || room.adminStatus === "blocked";
+    const guestName = reservation ? (reservation.memberName || reservation.guestName || "예약자") : "";
+    const dateText = reservation
+        ? (room.adminStatus === "use" ? ("~ " + formatAdminShortDate(reservation.checkOutDate) + " 체크아웃") : (formatAdminShortDate(reservation.checkInDate) + " 체크인 예정"))
+        : "";
+    const price = Number(room.discountedRoomPrice || room.roomPrice || 0);
+    const toggleText = room.adminAvailable ? "예약 불가" : "예약 가능";
+    const actionIcon = room.adminAvailable ? "fa-ban" : "fa-check";
+    const sizeText = room.roomSize || room.size ? escapeHtml(room.roomSize || room.size) + "㎡" : "-";
+
+    return `<article class="admin-room-card ${escapeHtml(room.adminStatus)}">
+        <div class="room-card-head">
+            <div><span class="room-dot"></span><strong>${escapeHtml(room.roomNumber || room.roomName || "-")}호</strong></div>
+            <span class="room-status-chip">${escapeHtml(room.adminStatusLabel)}</span>
+        </div>
+        <div class="room-type-line"><i class="fa-solid fa-bed"></i>${escapeHtml(room.roomTypeTitle || room.roomName || "객실")}</div>
+        ${reservation ? `<div class="room-guest-box">
+            <span class="guest-avatar">${escapeHtml((guestName || "예").slice(0, 1))}</span>
+            <div><strong>${escapeHtml(guestName)}</strong><small>${escapeHtml(dateText)}</small></div>
+        </div>` : `<div class="room-empty-box"><i class="fa-regular fa-moon"></i><span>${room.adminStatus === "blocked" ? "예약 판매 중지" : "현재 공실"}</span></div>`}
+        <div class="room-card-meta">
+            <span><i class="fa-solid fa-arrow-up-right-dots"></i>${sizeText}</span>
+            <span><i class="fa-solid fa-layer-group"></i>${escapeHtml(floor)}층</span>
+            <strong><i class="fa-solid fa-tag"></i>${price ? formatAdminWon(price) : "-"}</strong>
+        </div>
+        <div class="room-card-actions">
+            ${canToggle ? `<button type="button" data-room-availability="${escapeHtml(room.sid)}" data-available="${!room.adminAvailable}">
+                <i class="fa-solid ${actionIcon}"></i>${escapeHtml(toggleText)}
+            </button><button type="button" class="soft" data-room-edit="${escapeHtml(room.sid)}">
+                <i class="fa-solid fa-pen"></i>수정
+            </button>` : `<span class="room-action-lock">예약 진행 중인 객실은 변경할 수 없습니다</span>`}
+        </div>
+    </article>`;
+}
+
+function renderRoomTypeSummaryPanel(rooms) {
+    const grouped = {};
+    rooms.forEach(function (room) {
+        const key = room.roomTypeTitle || room.roomName || "기타 객실";
+        if (!grouped[key]) grouped[key] = { total: 0, available: 0, sum: 0, count: 0, revenue: 0 };
+        grouped[key].total += 1;
+        if (room.adminStatus === "available") grouped[key].available += 1;
+        if (Number(room.roomPrice || 0) > 0) {
+            grouped[key].sum += Number(room.roomPrice);
+            grouped[key].count += 1;
+        }
+        if (room.adminStatus === "use" || room.adminStatus === "done") grouped[key].revenue += Number(room.discountedRoomPrice || room.roomPrice || 0);
+    });
+    const rows = Object.keys(grouped).map(function (name) {
+        const item = grouped[name];
+        const occupancy = item.total ? Math.round(((item.total - item.available) / item.total) * 100) : 0;
+        const avg = item.count ? Math.round(item.sum / item.count) : 0;
+        return `<tr>
+            <td><span class="room-type-icon"><i class="fa-solid fa-star"></i></span><strong>${escapeHtml(name)}</strong></td>
+            <td>${item.total}실</td>
+            <td><span class="mini-progress"><i style="width:${occupancy}%"></i></span> ${occupancy}%</td>
+            <td>${avg ? formatAdminWon(avg) : "-"}</td>
+            <td>${item.revenue ? formatAdminCompactWon(item.revenue) : "-"}</td>
+        </tr>`;
+    }).join("");
+    $("#roomTypeSummaryPanel").html(panelHead("객실 유형별 현황", "선택 호텔 객실 기준") + `
+        <div class="admin-table-wrap compact">
+            <table class="admin-table room-type-table">
+                <thead><tr><th>객실 유형</th><th>총 객실</th><th>점유율</th><th>평균 단가</th><th>예상 매출</th></tr></thead>
+                <tbody>${rows || `<tr><td colspan="5">${emptyAdminState("객실 데이터가 없습니다.")}</td></tr>`}</tbody>
+            </table>
+        </div>
+    `);
+}
+
+function countRoomsByStatus(rooms) {
+    return {
+        use: rooms.filter(function (room) { return room.adminStatus === "use"; }).length,
+        done: rooms.filter(function (room) { return room.adminStatus === "done"; }).length,
+        available: rooms.filter(function (room) { return room.adminStatus === "available"; }).length,
+        blocked: rooms.filter(function (room) { return room.adminStatus === "blocked"; }).length
+    };
+}
+
+function openRoomModal(room) {
+    const isEdit = Boolean(room);
+    const state = ADMIN_ROOM_STATE || {};
+    const selectedHotel = state.selectedHotel || {};
+    const roomTypes = state.roomTypes || [];
+    if (!selectedHotel.sid) {
+        alert("호텔을 먼저 선택해주세요.");
+        return;
+    }
+
+    const typeOptions = roomTypes.map(function (type) {
+        const selected = String(type.sid) === String(room && room.roomTypeId) ? " selected" : "";
+        return `<option value="${escapeHtml(type.sid)}"${selected}>${escapeHtml(type.title || ("타입 " + type.sid))}</option>`;
+    }).join("");
+
+    $("#roomModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <form id="roomForm" class="admin-modal room-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>${isEdit ? "객실 수정" : "객실 추가"}</h2>
+                        <p>${escapeHtml(selectedHotel.hotelName || "선택 호텔")}의 객실 정보를 관리합니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-room-modal-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-form-grid room-form-grid">
+                    <label class="room-type-field admin-form-full"><span>객실 타입</span><div class="room-type-select-row"><select id="roomTypeInput" required>${typeOptions}</select><button type="button" class="admin-btn" data-room-type-manage><i class="fa-solid fa-gear"></i> 타입 관리</button></div></label>
+                    <label><span>객실 이름</span><input id="roomNameInput" type="text" maxlength="30" value="${escapeHtml(room ? room.roomName || "" : "")}" required></label>
+                    <label><span>객실 가격</span><input id="roomPriceInput" type="number" min="0" step="1000" value="${escapeHtml(room ? room.roomPrice || "" : "")}" required></label>
+                    <label><span>예약 가능 여부</span><select id="roomAvailableInput"><option value="true"${!room || room.adminAvailable !== false ? " selected" : ""}>예약 가능</option><option value="false"${room && room.adminAvailable === false ? " selected" : ""}>예약 불가</option></select></label>
+                    <label><span>객실 번호</span><input id="roomNumberInput" type="number" min="1" value="${escapeHtml(room ? room.roomNumber || "" : "")}" required></label>
+                    <label><span>층</span><input id="roomFloorInput" type="number" min="1" value="${escapeHtml(room ? room.floor || "" : "")}" required></label>
+                    <label><span>넓이(m²)</span><input id="roomAreaInput" type="number" min="1" value="${escapeHtml(room ? room.area || "" : "")}" required></label>
+                    <label><span>최대 인원 수</span><input id="roomMaximumPeopleInput" type="number" min="1" value="${escapeHtml(room ? room.maximumPeople || "" : "")}" required></label>
+                    <label><span>체크인 시간</span><input id="roomCheckInInput" type="number" min="0" max="23" value="${escapeHtml(room && room.checkInTime != null ? room.checkInTime : 15)}"></label>
+                    <label><span>체크아웃 시간</span><input id="roomCheckOutInput" type="number" min="0" max="23" value="${escapeHtml(room && room.checkOutTime != null ? room.checkOutTime : 11)}"></label>
+                    <label><span>주차 가능 여부</span><select id="roomParkingInput">${roomOption("AVAILABLE", "주차 가능", room && room.parking)}${roomOption("UNAVAILABLE", "주차 불가", room && room.parking)}</select></label>
+                    <label><span>반려동물 동반</span><select id="roomPetInput">${petSmokeOptions(room && room.pet)}</select></label>
+                    <label><span>흡연 가능 여부</span><select id="roomSmokeInput">${petSmokeOptions(room && room.smoke)}</select></label>
+                    <label><span>신분증 검사</span><select id="roomIdCardInput">${roomOption("ESSENTIAL", "필수", room && room.idCard)}${roomOption("OPTIONAL", "선택", room && room.idCard)}</select></label>
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="admin-btn" data-room-modal-close>취소</button>
+                    <button type="submit" class="admin-btn primary">${isEdit ? "수정 저장" : "객실 추가"}</button>
+                </div>
+            </form>
+        </div>
+    `);
+
+    $("[data-room-modal-close]").on("click", closeRoomModal);
+    $("[data-room-type-manage]").on("click", openRoomTypeManager);
+    $("#roomForm").on("submit", function (event) {
+        event.preventDefault();
+        saveRoom(room);
+    });
+}
+
+function closeRoomModal() {
+    $("#roomModalRoot").empty();
+}
+
+function openRoomTypeManager() {
+    closeRoomTypeManager();
+    renderRoomTypeManager();
+}
+
+function renderRoomTypeManager() {
+    const roomTypes = ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.roomTypes || [] : [];
+    const rows = roomTypes.map(function (type) {
+        return `<tr>
+            <td><strong>${escapeHtml(type.title || "-")}</strong><small>ID ${escapeHtml(type.sid)}</small></td>
+            <td>
+                <div class="row-actions">
+                    <button class="icon-btn" type="button" title="수정" data-room-type-edit="${escapeHtml(type.sid)}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="icon-btn danger" type="button" title="삭제" data-room-type-delete="${escapeHtml(type.sid)}"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join("");
+
+    $("#roomModalRoot").append(`
+        <div class="admin-modal-backdrop nested room-type-manager-backdrop">
+            <div class="admin-modal room-type-manager-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>객실 타입 관리</h2>
+                        <p>객실 생성과 수정에서 사용할 타입을 관리합니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-room-type-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form id="roomTypeForm" class="room-type-create-row">
+                    <input id="roomTypeTitleInput" type="text" maxlength="40" placeholder="새 객실 타입 이름" required>
+                    <input id="roomTypeSidInput" type="hidden">
+                    <button type="submit" class="admin-btn primary"><i class="fa-solid fa-plus"></i> 저장</button>
+                    <button type="button" class="admin-btn" data-room-type-reset>초기화</button>
+                </form>
+                <div class="admin-table-wrap room-type-manager-table">
+                    <table class="admin-table">
+                        <thead><tr><th>객실 타입</th><th>액션</th></tr></thead>
+                        <tbody>${rows || `<tr><td colspan="2">${emptyAdminState("등록된 객실 타입이 없습니다.")}</td></tr>`}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `);
+
+    $("[data-room-type-close]").off("click.roomType").on("click.roomType", closeRoomTypeManager);
+    $("[data-room-type-reset]").off("click.roomType").on("click.roomType", resetRoomTypeForm);
+    $("#roomTypeForm").off("submit.roomType").on("submit.roomType", function (event) {
+        event.preventDefault();
+        saveRoomType();
+    });
+    $(".room-type-manager-table")
+        .off("click.roomType")
+        .on("click.roomType", "[data-room-type-edit]", function () {
+            const type = findRoomType($(this).attr("data-room-type-edit"));
+            if (!type) return;
+            $("#roomTypeSidInput").val(type.sid);
+            $("#roomTypeTitleInput").val(type.title || "").trigger("focus");
+            $("#roomTypeForm .primary").html('<i class="fa-solid fa-check"></i> 수정 저장');
+        })
+        .on("click.roomType", "[data-room-type-delete]", function () {
+            deleteRoomType($(this).attr("data-room-type-delete"));
+        });
+}
+
+function closeRoomTypeManager() {
+    $(".room-type-manager-backdrop").remove();
+}
+
+function resetRoomTypeForm() {
+    $("#roomTypeSidInput").val("");
+    $("#roomTypeTitleInput").val("").trigger("focus");
+    $("#roomTypeForm .primary").html('<i class="fa-solid fa-plus"></i> 저장');
+}
+
+function findRoomType(id) {
+    return (ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.roomTypes || [] : []).find(function (type) {
+        return String(type.sid) === String(id);
+    });
+}
+
+function saveRoomType() {
+    const sid = $("#roomTypeSidInput").val();
+    const title = $("#roomTypeTitleInput").val().trim();
+    if (!title) {
+        alert("객실 타입 이름을 입력해주세요.");
+        return;
+    }
+    const payload = sid ? { sid: Number(sid), title } : { title };
+    const request = sid ? adminPatch("/roomtype", payload) : adminPost("/roomtype", payload);
+    request.then(function () {
+        reloadRoomTypesForRoomModal(function () {
+            closeRoomTypeManager();
+            renderRoomTypeManager();
+        });
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "객실 타입 저장에 실패했습니다."));
+    });
+}
+
+function deleteRoomType(id) {
+    if (!id || !confirm("이 객실 타입을 삭제할까요? 연결된 객실이나 프로모션이 있으면 삭제되지 않습니다.")) return;
+    $.ajax({
+        url: window.StayNowConfig.apiUrl("/roomtype/" + id),
+        type: "DELETE",
+        headers: adminAuthHeaders()
+    }).done(function () {
+        reloadRoomTypesForRoomModal(function () {
+            closeRoomTypeManager();
+            renderRoomTypeManager();
+        });
+    }).fail(function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "객실 타입 삭제에 실패했습니다. 연결된 객실 또는 프로모션이 있으면 삭제할 수 없습니다."));
+    });
+}
+
+function reloadRoomTypesForRoomModal(callback) {
+    adminGet("/roomtype").then(function (roomTypes) {
+        const list = asArray(roomTypes);
+        if (ADMIN_ROOM_STATE) {
+            ADMIN_ROOM_STATE.roomTypes = list;
+        }
+        renderRoomFilters(ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.rooms : [], list);
+        updateRoomTypeSelectOptions(list);
+        if (typeof callback === "function") callback();
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "객실 타입을 다시 불러오지 못했습니다."));
+    });
+}
+
+function updateRoomTypeSelectOptions(roomTypes) {
+    const current = $("#roomTypeInput").val();
+    const options = roomTypes.map(function (type) {
+        const selected = String(type.sid) === String(current) ? " selected" : "";
+        return `<option value="${escapeHtml(type.sid)}"${selected}>${escapeHtml(type.title || ("타입 " + type.sid))}</option>`;
+    }).join("");
+    $("#roomTypeInput").html(options);
+    if (current && !roomTypes.some(function (type) { return String(type.sid) === String(current); })) {
+        $("#roomTypeInput").prop("selectedIndex", 0);
+    }
+}
+
+function roomOption(value, label, current) {
+    return `<option value="${value}"${String(current || "").toUpperCase() === value ? " selected" : ""}>${label}</option>`;
+}
+
+function petSmokeOptions(current) {
+    return [
+        roomOption("POSSIBLE", "가능", current),
+        roomOption("LIMITED", "제한", current),
+        roomOption("BAN", "불가", current || "BAN")
+    ].join("");
+}
+
+function readRoomPayload(original) {
+    const state = ADMIN_ROOM_STATE || {};
+    const hotel = state.selectedHotel || {};
+    return {
+        sid: original ? original.sid : undefined,
+        hotelId: hotel.sid,
+        roomTypeId: Number($("#roomTypeInput").val()),
+        roomName: $("#roomNameInput").val().trim(),
+        roomPrice: Number($("#roomPriceInput").val()),
+        roomAvailable: $("#roomAvailableInput").val() === "true",
+        roomNumber: Number($("#roomNumberInput").val()),
+        floor: Number($("#roomFloorInput").val()),
+        area: Number($("#roomAreaInput").val()),
+        maximumPeople: Number($("#roomMaximumPeopleInput").val()),
+        checkInTime: Number($("#roomCheckInInput").val()),
+        checkOutTime: Number($("#roomCheckOutInput").val()),
+        parking: $("#roomParkingInput").val(),
+        pet: $("#roomPetInput").val(),
+        smoke: $("#roomSmokeInput").val(),
+        idCard: $("#roomIdCardInput").val()
+    };
+}
+
+function saveRoom(original) {
+    const payload = readRoomPayload(original);
+    if (!payload.hotelId || !payload.roomTypeId || !payload.roomName || !payload.roomPrice || !payload.roomNumber || !payload.floor || !payload.area || !payload.maximumPeople) {
+        alert("필수 객실 정보를 모두 입력해주세요.");
+        return;
+    }
+
+    const request = original ? adminPatch("/room", payload) : adminPost("/room", payload);
+    request.then(function () {
+        closeRoomModal();
+        loadAdminRoomData();
+    }, function (xhr) {
+        console.error("Room save failed", { payload, response: xhr && (xhr.responseJSON || xhr.responseText) });
+        alert(getAdminAjaxMessage(xhr, "객실 저장에 실패했습니다."));
+    });
+}
+
+function updateRoomAvailability(roomId, available, button) {
+    const $button = $(button);
+    const originalHtml = $button.html();
+    const loadingHtml = $button.hasClass("icon-btn")
+        ? '<i class="fa-solid fa-spinner fa-spin"></i>'
+        : '<i class="fa-solid fa-spinner fa-spin"></i>처리 중';
+    $button.prop("disabled", true).html(loadingHtml);
+    adminPatch("/room/" + roomId + "/availability", { roomAvailable: available })
+        .then(function () {
+            loadAdminRoomData();
+        }, function (xhr) {
+            $button.prop("disabled", false).html(originalHtml);
+            console.error("Room availability update failed", { roomId, available, response: xhr && (xhr.responseJSON || xhr.responseText) });
+            alert(getAdminAjaxMessage(xhr, "객실 상태 변경에 실패했습니다."));
+        });
+}
+
+function renderRoomFailure(message) {
+    $("#roomMetrics").html("");
+    $("#roomFloorPanel").html(emptyAdminState(message));
+    $("#roomTypeSummaryPanel").html(emptyAdminState(message));
+}
+
+function formatAdminRoomStatus(status) {
+    return {
+        use: "사용중",
+        done: "예약완료",
+        available: "공실",
+        blocked: "예약 불가"
+    }[status] || "공실";
+}
+
+function roomStatusTone(status) {
+    if (status === "use") return "blue";
+    if (status === "done") return "";
+    if (status === "blocked") return "red";
+    return "green";
 }
 
 function loadAdminSalesData() {
@@ -2557,6 +3266,10 @@ function reloadCurrentAdminPage() {
         loadAdminGuestData();
         return;
     }
+    if (ADMIN_CURRENT_PAGE === "rooms") {
+        loadAdminRoomData();
+        return;
+    }
     if (ADMIN_CURRENT_PAGE === "sales") {
         loadAdminSalesData();
         return;
@@ -2836,6 +3549,39 @@ function makeAdminHotelSearchRequest() {
 function renderDashboardFailure(message) {
     $("#dashboardError").prop("hidden", false).text(message);
     $(".admin-loading").text("데이터를 불러오지 못했습니다.");
+}
+
+function downloadRoomReport() {
+    if (!ADMIN_ROOM_STATE) {
+        alert("아직 다운로드할 객실 데이터가 없습니다.");
+        return;
+    }
+
+    const state = ADMIN_ROOM_STATE;
+    const rows = [
+        ["호텔", state.selectedHotel ? state.selectedHotel.hotelName : ""],
+        ["다운로드 시각", getAdminNowLabel()],
+        [],
+        ["객실번호", "객실명", "객실 유형", "층", "상태", "예약자", "체크인", "체크아웃", "예약 가능", "기본 가격"],
+        ...state.rooms.map(function (room) {
+            const reservation = room.adminReservation || {};
+            return [
+                room.roomNumber || "",
+                room.roomName || "",
+                room.roomTypeTitle || "",
+                room.floor || Math.floor(Number(room.roomNumber || 0) / 100) || "",
+                room.adminStatusLabel || "",
+                reservation.memberName || reservation.guestName || "",
+                reservation.checkInDate || "",
+                reservation.checkOutDate || "",
+                room.adminAvailable ? "가능" : "불가",
+                room.roomPrice || 0
+            ];
+        })
+    ];
+
+    const today = new Date();
+    downloadAdminCsv(rows, "staynow-rooms-" + today.getFullYear() + String(today.getMonth() + 1).padStart(2, "0") + String(today.getDate()).padStart(2, "0") + ".csv");
 }
 
 function downloadDashboardReport() {

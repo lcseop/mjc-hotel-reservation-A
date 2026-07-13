@@ -171,9 +171,11 @@ public class HotelService {
                     RoomResponseNoHotelDto dto = RoomResponseNoHotelDto
                                 .builder()
                                 .sid(r.getSid())
+                                .roomTypeId(r.getRoomTypeId().getSid())
                                 .roomTypeTitle(r.getRoomTypeId().getTitle())
                                 .roomName(r.getRoomName())
                                 .roomPrice(r.getRoomPrice())
+                                .roomAvailable(r.getRoomAvailable() != null ? r.getRoomAvailable() : true)
                                 .roomNumber(r.getRoomNumber())
                                 .floor(r.getFloor())
                                 .area(r.getArea())
