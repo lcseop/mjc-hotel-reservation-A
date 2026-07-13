@@ -40,6 +40,8 @@ public class PromotionService {
                 .sid(promotionDto.getSid())
                 .roomType(roomType)
                 .promotionName(promotionDto.getPromotionName())
+                .discountContent(promotionDto.getDiscountContent())
+                .conditionType(resolveConditionType(promotionDto.getStatus()))
                 .startDate(promotionDto.getStartDate())
                 .endDate(promotionDto.getEndDate())
                 .build();
@@ -50,8 +52,10 @@ public class PromotionService {
                 .sid(saved.getSid())
                 .roomTypeId(saved.getRoomType().getSid())
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
@@ -69,8 +73,10 @@ public class PromotionService {
                 .sid(promotionDto.getSid())
                 .roomType(roomType)
                 .promotionName(promotionDto.getPromotionName())
-                .startDate(promotionDto.getStartDate())
-                .endDate(promotionDto.getEndDate())
+                .discountContent(promotionDto.getDiscountContent() != null ? promotionDto.getDiscountContent() : promotion.getDiscountContent())
+                .conditionType(resolveConditionType(promotionDto.getStatus(), promotion.getConditionType()))
+                .startDate(promotionDto.getStartDate() != null ? promotionDto.getStartDate() : promotion.getStartDate())
+                .endDate(promotionDto.getEndDate() != null ? promotionDto.getEndDate() : promotion.getEndDate())
                 .build();
 
         updated.setCreatedAt(promotion.getCreatedAt());
@@ -81,8 +87,10 @@ public class PromotionService {
                 .sid(saved.getSid())
                 .roomTypeId(saved.getRoomType().getSid())
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
@@ -104,8 +112,10 @@ public class PromotionService {
                 .sid(saved.getSid())
                 .roomTypeId(saved.getRoomType().getSid())
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
@@ -140,5 +150,27 @@ public class PromotionService {
         Double conversionRate = (totalReservations > 0) ? 34.7 : 0.0;
 
         return new PromotionDashboardDto(activeCount, totalReservations, totalDiscountAmount, conversionRate);
+    }
+
+    private ConditionType resolveConditionType(String status) {
+        return resolveConditionType(status, ConditionType.ACTIVE);
+    }
+
+    private ConditionType resolveConditionType(String status, ConditionType fallback) {
+        if (status == null || status.isBlank()) {
+            return fallback != null ? fallback : ConditionType.ACTIVE;
+        }
+
+        try {
+            return ConditionType.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return switch (status.trim()) {
+                case "예정" -> ConditionType.EXPECTED;
+                case "진행중" -> ConditionType.ACTIVE;
+                case "일시정지", "중지" -> ConditionType.STOP;
+                case "종료" -> ConditionType.END;
+                default -> fallback != null ? fallback : ConditionType.ACTIVE;
+            };
+        }
     }
 }
