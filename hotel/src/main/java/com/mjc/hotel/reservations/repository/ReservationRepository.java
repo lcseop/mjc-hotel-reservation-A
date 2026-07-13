@@ -50,6 +50,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Optional<Reservation> findByReservationNumber(String reservationNumber);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Reservation r
+            WHERE r.room.sid = :roomId
+              AND r.sid <> :reservationId
+              AND r.reservationStatus = com.mjc.hotel.reservations.entity.ReservationStatus.CHECKED_IN
+            """)
+    boolean existsCheckedInReservationForRoom(
+            @Param("roomId") Long roomId,
+            @Param("reservationId") Long reservationId
+    );
+
     @EntityGraph(attributePaths = {"member", "room", "room.hotelId", "room.roomTypeId"})
     Page<Reservation> findAll(Pageable pageable);
 
