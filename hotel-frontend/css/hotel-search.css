@@ -353,11 +353,24 @@ body{
 .hotel-price small{
     color:#8994a8;
     font-size:12px;
+    font-weight:800;
+    text-align:right;
 }
 
 .hotel-price strong{
-    margin:4px 0 14px;
+    margin:4px 0 4px;
     font-size:22px;
+}
+
+.price-room-name{
+    max-width:150px;
+    margin-bottom:14px;
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.35;
+    text-align:right;
+    word-break:keep-all;
 }
 
 .reserve-btn{
@@ -476,6 +489,11 @@ body{
         align-items:flex-start;
     }
 
+    .hotel-price small,
+    .price-room-name{
+        text-align:left;
+    }
+
     .filter-panel{
         padding:14px;
     }
@@ -556,6 +574,11 @@ body{
     .hotel-price strong{
         margin:2px 0 8px;
         font-size:17px;
+    }
+
+    .price-room-name{
+        max-width:100%;
+        margin-bottom:8px;
     }
 
     .reserve-btn{

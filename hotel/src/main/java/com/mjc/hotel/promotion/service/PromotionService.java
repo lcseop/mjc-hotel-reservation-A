@@ -31,7 +31,9 @@ public class PromotionService {
     @Autowired
     private RoomTypeRepository roomTypeRepository;
     @Autowired
-    private ConditionRepository conditionRepository;
+    private DiscountRateRepository discountRateRepository;
+    @Autowired
+    private FlatRepository flatRepository;
 
     @Transactional
     public PromotionDto insert(PromotionDto promotionDto) {
@@ -41,18 +43,23 @@ public class PromotionService {
                 .sid(promotionDto.getSid())
                 .roomType(roomType)
                 .promotionName(promotionDto.getPromotionName())
+                .discountContent(promotionDto.getDiscountContent())
+                .conditionType(resolveConditionType(promotionDto.getStatus()))
                 .startDate(promotionDto.getStartDate())
                 .endDate(promotionDto.getEndDate())
                 .build();
 
         Promotion saved =  promotionRepository.save(promotion);
+        syncDiscountRate(saved);
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
@@ -60,30 +67,43 @@ public class PromotionService {
     public PromotionDto update(PromotionDto promotionDto) {
         Promotion promotion = promotionRepository.findById(promotionDto.getSid())
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로모션이 없습니다."));
-        RoomType roomType = roomTypeRepository.findById(promotionDto.getRoomTypeId()).orElseThrow();
+        Long roomTypeId = promotionDto.getRoomTypeId() != null
+                ? promotionDto.getRoomTypeId()
+                : promotion.getRoomType().getSid();
+        RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow();
 
         if (promotion.getDeleted() != null && promotion.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, promotion.getPromotionName() + " is not found");
+        }
+        if (promotion.getRoomType() == null && promotionDto.getRoomTypeId() == null) {
+            throw new IllegalArgumentException("객실 타입이 없는 프로모션은 수정할 수 없습니다. 삭제 후 다시 생성해주세요.");
         }
 
         Promotion updated = Promotion.builder()
                 .sid(promotionDto.getSid())
                 .roomType(roomType)
                 .promotionName(promotionDto.getPromotionName())
-                .startDate(promotionDto.getStartDate())
-                .endDate(promotionDto.getEndDate())
+                .discountContent(promotionDto.getDiscountContent() != null ? promotionDto.getDiscountContent() : promotion.getDiscountContent())
+                .conditionType(resolveConditionType(promotionDto.getStatus(), promotion.getConditionType()))
+                .startDate(promotionDto.getStartDate() != null ? promotionDto.getStartDate() : promotion.getStartDate())
+                .endDate(promotionDto.getEndDate() != null ? promotionDto.getEndDate() : promotion.getEndDate())
                 .build();
 
         updated.setCreatedAt(promotion.getCreatedAt());
+        updated.setDeleted(promotion.getDeleted());
+        updated.setDeletedAt(promotion.getDeletedAt());
 
         Promotion saved = promotionRepository.save(updated);
+        syncDiscountRate(saved);
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
@@ -103,19 +123,21 @@ public class PromotionService {
 
         return PromotionDto.builder()
                 .sid(saved.getSid())
-                .roomTypeId(saved.getRoomType().getSid())
+                .roomTypeId(saved.getRoomType() != null ? saved.getRoomType().getSid() : null)
                 .promotionName(saved.getPromotionName())
+                .discountContent(saved.getDiscountContent())
                 .startDate(saved.getStartDate())
                 .endDate(saved.getEndDate())
+                .status(saved.getConditionType() != null ? saved.getConditionType().name() : null)
                 .build();
     }
 
     @Transactional(readOnly = true)
     public List<PromotionDto> getPromotionByStatus(ConditionType type) {
-        List<Condition> conditions = conditionRepository.findByConditiontype(type);
+        List<Promotion> promotions = promotionRepository.findByConditionType(type);
 
-        return conditions.stream()
-                .map(c -> PromotionMapper.toDto(c.getPromotion(), c))
+        return promotions.stream()
+                .map(PromotionMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -127,13 +149,10 @@ public class PromotionService {
     public PromotionDashboardDto getDashboardStats() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. 진행 중 프로모션
         Long activeCount = promotionRepository.countByStartDateBeforeAndEndDateAfterAndDeletedFalse(now, now);
 
-        // 2. 통계 데이터 조회 (위에서 만든 쿼리 활용)
         List<PromotionStatsDto> stats = promotionRepository.getPromotionStatistics();
 
-        // 3. 리스트를 순회하며 총합 계산
         Long totalReservations = stats.stream()
                 .mapToLong(PromotionStatsDto::getReservationCount)
                 .sum();
@@ -141,9 +160,58 @@ public class PromotionService {
                 .mapToLong(PromotionStatsDto::getTotalDiscountAmount)
                 .sum();
 
-        // 4. 전환율 계산 (전체 예약 / 총 프로모션 수 등 비즈니스 로직에 맞춰 설정)
         Double conversionRate = (totalReservations > 0) ? 34.7 : 0.0;
 
         return new PromotionDashboardDto(activeCount, totalReservations, totalDiscountAmount, conversionRate);
+    }
+
+    private ConditionType resolveConditionType(String status) {
+        return resolveConditionType(status, ConditionType.ACTIVE);
+    }
+
+    private ConditionType resolveConditionType(String status, ConditionType fallback) {
+        if (status == null || status.isBlank()) {
+            return fallback != null ? fallback : ConditionType.ACTIVE;
+        }
+
+        try {
+            return ConditionType.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return switch (status.trim()) {
+                case "예정" -> ConditionType.EXPECTED;
+                case "진행중" -> ConditionType.ACTIVE;
+                case "일시정지", "중지" -> ConditionType.STOP;
+                case "종료" -> ConditionType.END;
+                default -> fallback != null ? fallback : ConditionType.ACTIVE;
+            };
+        }
+    }
+
+    private void syncDiscountRate(Promotion promotion) {
+        discountRateRepository.deleteByPromotion_Sid(promotion.getSid());
+        flatRepository.deleteByPromotion_Sid(promotion.getSid());
+
+        if (PromotionDiscountCalculator.isFlatDiscount(promotion.getDiscountContent())) {
+            Integer sale = PromotionDiscountCalculator.extractDiscountValue(promotion.getDiscountContent());
+            if (sale != null && sale > 0) {
+                flatRepository.save(Flat.builder()
+                        .promotion(promotion)
+                        .type("FLAT")
+                        .sale(sale)
+                        .build());
+            }
+            return;
+        }
+
+        Integer sale = PromotionDiscountCalculator.extractDiscountRate(promotion.getDiscountContent());
+        if (sale == null || sale <= 0) {
+            return;
+        }
+
+        discountRateRepository.save(DiscountRate.builder()
+                .promotion(promotion)
+                .type("RATE")
+                .sale(sale)
+                .build());
     }
 }

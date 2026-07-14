@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/hoteltype")
 @RequiredArgsConstructor
@@ -64,6 +66,18 @@ public class HotelTypeRestController {
         HotelTypeDto dto = hotelTypeService.findById(id);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel type get success", dto)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 타입 목록 조회",
+            description = "등록된 호텔 타입 전체 목록을 가져옵니다."
+    )
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<HotelTypeDto>>> findAll() {
+        List<HotelTypeDto> dto = hotelTypeService.findAll();
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel type list success", dto)
         );
     }
 }

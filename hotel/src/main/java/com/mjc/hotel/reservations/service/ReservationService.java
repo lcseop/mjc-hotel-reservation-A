@@ -5,6 +5,10 @@ import com.mjc.hotel.coupon.entity.CouponIssue;
 import com.mjc.hotel.coupon.repository.CouponIssueRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.promotion.entity.ConditionType;
+import com.mjc.hotel.promotion.entity.Promotion;
+import com.mjc.hotel.promotion.repository.PromotionRepository;
+import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
 import com.mjc.hotel.reservations.dto.*;
 import com.mjc.hotel.reservations.entity.*;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
@@ -36,6 +40,7 @@ public class ReservationService {
     private final PointHistoryRepository pointHistoryRepository;
     private final ReservationCancelRepository reservationCancelRepository;
     private final EmailLogService emailLogService;
+    private final PromotionRepository promotionRepository;
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
@@ -52,7 +57,8 @@ public class ReservationService {
         }
 
         Integer originalAmount = room.getRoomPrice() * (int) totalNights;
-        Integer totalAmount = originalAmount;
+        Integer promotionDiscount = calculatePromotionDiscount(room) * (int) totalNights;
+        Integer totalAmount = Math.max(0, originalAmount - promotionDiscount);
         Integer couponDiscount = 0;
         Integer pointDiscount = 0;
         Integer memberPoint = member.getPoint() != null ? member.getPoint() : 0;
@@ -82,7 +88,7 @@ public class ReservationService {
             member.setPoint(memberPoint);
         }
 
-        Integer discountAmount = couponDiscount + pointDiscount;
+        Integer discountAmount = promotionDiscount + couponDiscount + pointDiscount;
         String reservationNumber = generateReservationNumber();
 
         Reservation reservation = Reservation.builder()
@@ -95,7 +101,6 @@ public class ReservationService {
                 .adults(requestDto.getAdults())
                 .children(requestDto.getChildren() != null ? requestDto.getChildren() : 0)
                 .reservationStatus(ReservationStatus.CONFIRMED)
-                .reservationChannel(requestDto.getReservationChannel() != null ? requestDto.getReservationChannel() : ReservationChannel.DIRECT)
                 .totalAmount(totalAmount)
                 .specialRequests(requestDto.getSpecialRequests())
                 .originalAmount(originalAmount)
@@ -150,18 +155,36 @@ public class ReservationService {
         return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
     }
 
-    public Page<ReservationResponseDto> searchReservations(ReservationStatus status, Long memberId, Pageable pageable){
-        Page<Reservation> page;
-        if(memberId != null && status != null) {
-            page = reservationRepository.findByMember_SidAndReservationStatus(memberId, status, pageable);
-        } else if(memberId != null) {
-            page = reservationRepository.findByMember_Sid(memberId, pageable);
-        } else if(status != null) {
-            page = reservationRepository.findByReservationStatus(status, pageable);
-        } else {
-            page = reservationRepository.findAll(pageable);
-        }
+    public Page<ReservationResponseDto> searchReservations(
+            ReservationStatus status,
+            Long memberId,
+            Long hotelId,
+            String keyword,
+            String roomKeyword,
+            Long roomTypeId,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo,
+            Pageable pageable
+    ){
+        Page<Reservation> page = reservationRepository.searchAdminReservations(
+                status,
+                memberId,
+                hotelId,
+                normalizeKeyword(keyword),
+                normalizeKeyword(roomKeyword),
+                roomTypeId,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         return page.map(this::convertToResponseDto);
+    }
+
+    private String normalizeKeyword(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 
     @Transactional
@@ -215,8 +238,16 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
 
-        if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED) {
+        if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED
+                && reservation.getReservationStatus() != ReservationStatus.UPCOMING) {
             throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
+        }
+
+        if (reservationRepository.existsCheckedInReservationForRoom(
+                reservation.getRoom().getSid(),
+                reservation.getSid()
+        )) {
+            throw new IllegalArgumentException("현재 사용 중인 객실입니다. 기존 투숙객 체크아웃 후 체크인할 수 있습니다.");
         }
 
         reservation.setReservationStatus(ReservationStatus.CHECKED_IN);
@@ -333,6 +364,25 @@ public class ReservationService {
         }
     }
 
+    private Integer calculatePromotionDiscount(Room room) {
+        if (room == null || room.getRoomTypeId() == null || room.getRoomTypeId().getSid() == null) {
+            return 0;
+        }
+
+        Promotion promotion = PromotionDiscountCalculator.findBestPromotion(
+                promotionRepository.findActivePromotionsByRoomType(
+                        room.getRoomTypeId().getSid(),
+                        ConditionType.ACTIVE,
+                        LocalDateTime.now()
+                ),
+                room.getRoomPrice()
+        );
+
+        return promotion == null
+                ? 0
+                : PromotionDiscountCalculator.calculateDiscountAmount(room.getRoomPrice(), promotion.getDiscountContent());
+    }
+
     private String generateReservationNumber() {
         return "RSV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
@@ -373,7 +423,6 @@ public class ReservationService {
                 .totalAmount(reservation.getTotalAmount())
                 .earnedPoint(reservation.getEarnedPoint())
                 .reservationStatus(reservation.getReservationStatus())
-                .reservationChannel(reservation.getReservationChannel())
                 .specialRequests(reservation.getSpecialRequests())
                 .checkInQr(reservation.getCheckInQr())
                 .cancellationPolicyDto(buildCancellationPolicies(reservation))

@@ -4,6 +4,10 @@ import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.hotels.repository.HotelRepository;
+import com.mjc.hotel.promotion.entity.ConditionType;
+import com.mjc.hotel.promotion.entity.Promotion;
+import com.mjc.hotel.promotion.repository.PromotionRepository;
+import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
 import com.mjc.hotel.room.dto.*;
 import com.mjc.hotel.room.entity.*;
 import com.mjc.hotel.room.mapper.RoomMapper;
@@ -32,6 +36,8 @@ public class RoomService {
     private RoomTypeRepository roomTypeRepository;
     @Autowired
     private RoomInTagRepository roomInTagRepository;
+    @Autowired
+    private PromotionRepository promotionRepository;
 
     @Transactional
     public RoomResponseDto insert(RoomRequestDto room) {
@@ -123,13 +129,15 @@ public class RoomService {
                 .filter(r -> !r.getDeleted())
                 .map(r -> {
                     HotelInPhotoResponseDto hotel = HotelMapper.photoResponse(r.getHotelId());
-                    return RoomResponseDto
+                    RoomResponseDto dto = RoomResponseDto
                             .builder()
                             .sid(r.getSid())
                             .hotel(hotel)
+                            .roomTypeId(r.getRoomTypeId().getSid())
                             .roomTypeTitle(r.getRoomTypeId().getTitle())
                             .roomName(r.getRoomName())
                             .roomPrice(r.getRoomPrice())
+                            .roomAvailable(r.getRoomAvailable() != null ? r.getRoomAvailable() : true)
                             .roomNumber(r.getRoomNumber())
                             .floor(r.getFloor())
                             .area(r.getArea())
@@ -141,6 +149,8 @@ public class RoomService {
                             .smoke(r.getSmoke())
                             .idCard(r.getIdCard())
                             .build();
+                    applyPromotion(dto, r);
+                    return dto;
                 })
                 .toList();
     }
@@ -150,9 +160,11 @@ public class RoomService {
                 .builder()
                 .sid(saved.getSid())
                 .hotel(HotelMapper.photoResponse(saved.getHotelId()))
+                .roomTypeId(saved.getRoomTypeId().getSid())
                 .roomTypeTitle(saved.getRoomTypeId().getTitle())
                 .roomName(saved.getRoomName())
                 .roomPrice(saved.getRoomPrice())
+                .roomAvailable(saved.getRoomAvailable() != null ? saved.getRoomAvailable() : true)
                 .roomNumber(saved.getRoomNumber())
                 .floor(saved.getFloor())
                 .area(saved.getArea())
@@ -164,6 +176,41 @@ public class RoomService {
                 .smoke(saved.getSmoke())
                 .idCard(saved.getIdCard())
                 .build();
+        applyPromotion(dto, saved);
         return dto;
+    }
+
+    @Transactional
+    public RoomResponseDto updateAvailability(Long id, Boolean available) {
+        Room room = roomRepository.findById(id).orElseThrow();
+        if (room.getDeleted() != null && room.getDeleted()) {
+            throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
+        }
+        room.setRoomAvailable(available != null ? available : true);
+        return response(roomRepository.save(room));
+    }
+
+    private void applyPromotion(RoomResponseDto dto, Room room) {
+        Promotion promotion = findBestPromotion(room);
+        String discountContent = promotion != null ? promotion.getDiscountContent() : null;
+        dto.setPromotionDiscountContent(discountContent);
+        dto.setPromotionDiscountRate(PromotionDiscountCalculator.extractDiscountRate(discountContent));
+        dto.setPromotionDiscountAmount(PromotionDiscountCalculator.calculateDiscountAmount(room.getRoomPrice(), discountContent));
+        dto.setDiscountedRoomPrice(PromotionDiscountCalculator.calculateDiscountedPrice(room.getRoomPrice(), discountContent));
+    }
+
+    private Promotion findBestPromotion(Room room) {
+        if (room.getRoomTypeId() == null || room.getRoomTypeId().getSid() == null) {
+            return null;
+        }
+
+        return PromotionDiscountCalculator.findBestPromotion(
+                promotionRepository.findActivePromotionsByRoomType(
+                        room.getRoomTypeId().getSid(),
+                        ConditionType.ACTIVE,
+                        LocalDateTime.now()
+                ),
+                room.getRoomPrice()
+        );
     }
 }

@@ -3,74 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="component/search-header.css">
-    <link rel="stylesheet" href="css/staff-checkin.css">
+    <meta http-equiv="refresh" content="0; url=admin-checkin.html">
     <title>직원 QR 체크인</title>
 </head>
 <body>
-    <navbar><div id="header"></div></navbar>
-    <div id="searchHeader"></div>
-
-    <main class="staff-page">
-        <section class="staff-hero">
-            <div>
-                <p>ADMIN CHECK-IN</p>
-                <h1>QR 체크인</h1>
-                <span id="adminName">관리자 권한 확인 중</span>
-            </div>
-            <i class="fa-solid fa-qrcode"></i>
-        </section>
-
-        <section class="scan-layout">
-            <article class="scanner-card">
-                <div class="section-title">
-                    <h2>카메라 스캔</h2>
-                    <span id="scannerSupport">확인 중</span>
-                </div>
-
-                <div class="camera-box">
-                    <video id="scannerVideo" playsinline muted></video>
-                    <div id="cameraPlaceholder" class="camera-placeholder">
-                        <i class="fa-solid fa-camera"></i>
-                        <p>카메라를 시작하면 QR을 자동으로 인식합니다.</p>
-                    </div>
-                    <div class="scan-frame" aria-hidden="true"></div>
-                </div>
-
-                <div class="scanner-actions">
-                    <button type="button" id="startScanBtn"><i class="fa-solid fa-play"></i> 스캔 시작</button>
-                    <button type="button" id="stopScanBtn"><i class="fa-solid fa-stop"></i> 중지</button>
-                </div>
-            </article>
-
-            <article class="manual-card">
-                <div class="section-title">
-                    <h2>수동 체크인</h2>
-                    <span>QR 문자열 입력</span>
-                </div>
-
-                <label>
-                    <span>QR 값 또는 예약번호</span>
-                    <textarea id="qrValueInput" placeholder="QR-RSV-... 또는 예약번호를 입력하세요"></textarea>
-                </label>
-
-                <button type="button" id="submitQrBtn" class="submit-btn">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    체크인 처리
-                </button>
-
-                <div id="checkinResult" class="result-box empty">
-                    체크인 결과가 여기에 표시됩니다.
-                </div>
-            </article>
-        </section>
-    </main>
-
-    <footer><div id="footer"></div></footer>
-    <script src="js/jquery.min.js"></script>
-    <script src="js/include.js"></script>
-    <script src="component/search-header.js"></script>
-    <script src="js/staff-checkin.js"></script>
-    <script src="component/header.js"></script>
+    <script>location.replace("admin-checkin.html");</script>
 </body>
 </html>

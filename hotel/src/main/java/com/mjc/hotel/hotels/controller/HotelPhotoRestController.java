@@ -8,8 +8,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/hotelphoto")
@@ -64,6 +68,21 @@ public class HotelPhotoRestController {
         HotelPhotoDto dto = hotelPhotoService.findById(id);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel photo get success", dto)
+        );
+    }
+
+    @Operation(
+            summary = "호텔 이미지 파일 업로드",
+            description = "호텔 이미지를 파일로 업로드합니다."
+    )
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<List<HotelPhotoDto>>> upload(
+            @RequestParam Long hotelId,
+            @RequestPart("photos") List<MultipartFile> photos
+    ) {
+        List<HotelPhotoDto> dto = hotelPhotoService.upload(hotelId, photos);
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel photo upload success", dto)
         );
     }
 }

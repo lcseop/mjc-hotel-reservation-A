@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import com.mjc.hotel.promotion.entity.QPromotion;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,38 +28,40 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
     @Override
     public Page<PromotionDto> search(PromotionSearchRequestDto req, Pageable pageable) {
         QPromotion p = QPromotion.promotion;
-        QCondition c = QCondition.condition;
 
+        // 1. content 쿼리 수정 (조인 제거)
         List<PromotionDto> content = queryFactory
-                .select(Projections.constructor(
-                        PromotionDto.class,
+                .select(Projections.constructor(PromotionDto.class,
                         p.sid,
                         p.roomType.sid,
                         p.promotionName,
+                        p.discountContent,
                         p.startDate,
                         p.endDate,
-                        Expressions.asString("Active")
+                        p.conditionType.stringValue()
                 ))
                 .from(p)
-                .leftJoin(c).on(c.promotion.eq(p))
                 .where(
+                        notDeletedPromotion(p),
+                        validPromotion(p),
                         nameCond(p, req.getPromotionName()),
-                        typeCond(c, req.getConditionType()),
+                        typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
                 )
-                .distinct()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(p.createdAt.desc())
                 .fetch();
 
+        // 2. total 쿼리 수정 (조인 제거)
         Long total = queryFactory
                 .select(p.count())
                 .from(p)
-                .leftJoin(c).on(c.promotion.eq(p))
                 .where(
+                        notDeletedPromotion(p),
+                        validPromotion(p),
                         nameCond(p, req.getPromotionName()),
-                        typeCond(c, req.getConditionType()),
+                        typeCond(p, req.getConditionType()),
                         dateCond(p, req.getStartDate(), req.getEndDate())
                 )
                 .fetchOne();
@@ -70,8 +73,22 @@ public class PromotionRepositoryImpl implements PromotionRepositoryCustom {
         return (name != null && !name.isEmpty()) ? p.promotionName.contains(name) : null;
     }
 
-    private BooleanExpression typeCond(QCondition c, ConditionType type) {
-        return type != null ? c.conditiontype.eq(type) : null;
+    private BooleanExpression notDeletedPromotion(QPromotion p) {
+        return p.deleted.isFalse().or(p.deleted.isNull());
+    }
+
+    private BooleanExpression validPromotion(QPromotion p) {
+        return p.roomType.isNotNull()
+                .and(p.discountContent.isNotNull())
+                .and(p.discountContent.isNotEmpty())
+                .and(p.conditionType.isNotNull());
+    }
+
+    private BooleanExpression typeCond(QPromotion p, ConditionType type) {
+        if (type == null) {
+            return null;
+        }
+        return p.conditionType.eq(type);
     }
 
     private BooleanExpression dateCond(QPromotion p, LocalDateTime start, LocalDateTime end) {

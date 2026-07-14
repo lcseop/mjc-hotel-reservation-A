@@ -1,4 +1,4 @@
-const STAFF_API_BASE = "http://localhost:33000/api";
+const STAFF_API_BASE = window.StayNowConfig.apiBase;
 let scannerStream = null;
 let scannerTimer = null;
 let barcodeDetector = null;

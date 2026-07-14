@@ -1,4 +1,4 @@
-const GLOBAL_HOTEL_SEARCH_API = "http://localhost:33000/api/hotel/search";
+const GLOBAL_HOTEL_SEARCH_API = window.StayNowConfig.apiUrl("/hotel/search");
 const GLOBAL_SEARCH_COOKIE = "staynowSearchRequest";
 let globalSearchInitialized = false;
 

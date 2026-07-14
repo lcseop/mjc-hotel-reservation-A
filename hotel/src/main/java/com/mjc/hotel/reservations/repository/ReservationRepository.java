@@ -2,12 +2,12 @@ package com.mjc.hotel.reservations.repository;
 
 import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,8 +50,53 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Optional<Reservation> findByReservationNumber(String reservationNumber);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Reservation r
+            WHERE r.room.sid = :roomId
+              AND r.sid <> :reservationId
+              AND r.reservationStatus = com.mjc.hotel.reservations.entity.ReservationStatus.CHECKED_IN
+            """)
+    boolean existsCheckedInReservationForRoom(
+            @Param("roomId") Long roomId,
+            @Param("reservationId") Long reservationId
+    );
+
     @EntityGraph(attributePaths = {"member", "room", "room.hotelId", "room.roomTypeId"})
     Page<Reservation> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"member", "room", "room.hotelId", "room.roomTypeId"})
+    @Query("""
+            SELECT r FROM Reservation r
+            JOIN r.member m
+            JOIN r.room room
+            JOIN room.hotelId hotel
+            LEFT JOIN room.roomTypeId roomType
+            WHERE (:status IS NULL OR r.reservationStatus = :status)
+              AND (:memberId IS NULL OR m.sid = :memberId)
+              AND (:hotelId IS NULL OR hotel.sid = :hotelId)
+              AND (:roomTypeId IS NULL OR roomType.sid = :roomTypeId)
+              AND (:keyword IS NULL
+                   OR r.reservationNumber LIKE CONCAT('%', :keyword, '%')
+                   OR m.name LIKE CONCAT('%', :keyword, '%')
+                   OR r.guestName LIKE CONCAT('%', :keyword, '%'))
+              AND (:roomKeyword IS NULL
+                   OR room.roomName LIKE CONCAT('%', :roomKeyword, '%')
+                   OR str(room.roomNumber) LIKE CONCAT('%', :roomKeyword, '%')
+                   OR roomType.title LIKE CONCAT('%', :roomKeyword, '%'))
+              AND (:dateFrom IS NULL OR r.checkInDate >= :dateFrom)
+              AND (:dateTo IS NULL OR r.checkInDate < :dateTo)
+            """)
+    Page<Reservation> searchAdminReservations(
+            @Param("status") ReservationStatus status,
+            @Param("memberId") Long memberId,
+            @Param("hotelId") Long hotelId,
+            @Param("keyword") String keyword,
+            @Param("roomKeyword") String roomKeyword,
+            @Param("roomTypeId") Long roomTypeId,
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            Pageable pageable
+    );
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     long countByCheckInDateBetween(LocalDateTime start, LocalDateTime end);

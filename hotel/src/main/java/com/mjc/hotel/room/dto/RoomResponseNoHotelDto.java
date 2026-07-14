@@ -15,9 +15,15 @@ public class RoomResponseNoHotelDto {
     private Long sid;
     private String roomTagTitle;
     private String roomPhotoPath;
+    private Long roomTypeId;
     private String roomTypeTitle;
     private String roomName;
     private Integer roomPrice;
+    private Integer discountedRoomPrice;
+    private Integer promotionDiscountAmount;
+    private Integer promotionDiscountRate;
+    private String promotionDiscountContent;
+    private Boolean roomAvailable;
     private Integer roomNumber;
     private Integer floor;
     private Integer area;

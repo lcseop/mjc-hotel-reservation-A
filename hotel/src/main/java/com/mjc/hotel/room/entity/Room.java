@@ -34,6 +34,9 @@ public class Room extends BaseEntity {
     @Column(name = "room_price", nullable = false)
     private Integer roomPrice;
 
+    @Column(name = "room_available")
+    private Boolean roomAvailable;
+
     @Column(name = "room_number", nullable = false)
     private Integer roomNumber;
 

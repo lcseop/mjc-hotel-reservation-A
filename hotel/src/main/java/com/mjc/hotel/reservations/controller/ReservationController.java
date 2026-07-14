@@ -6,6 +6,8 @@ import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationStatsDto;
 import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.reservations.service.ReservationService;
+import com.mjc.hotel.util.ApiResponse;
+import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,15 +15,17 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.service.GenericResponseService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/reservation")
+@RequestMapping("/api/reservation")
 @RequiredArgsConstructor
 @Tag(name = "예약", description = "예약 관리 API")
 public class ReservationController {
@@ -57,8 +61,16 @@ public class ReservationController {
     public ResponseEntity<Page<ReservationResponseDto>> searchReservations(
             @RequestParam(required = false) ReservationStatus status,
             @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) Long hotelId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String roomKeyword,
+            @RequestParam(required = false) Long roomTypeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
             Pageable pageable) {
-        Page<ReservationResponseDto> response = reservationService.searchReservations(status, memberId, pageable);
+        Page<ReservationResponseDto> response = reservationService.searchReservations(
+                status, memberId, hotelId, keyword, roomKeyword, roomTypeId, dateFrom, dateTo, pageable
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -99,5 +111,12 @@ public class ReservationController {
             @PathVariable Long reservationId) {
         ReservationResponseDto response = reservationService.checkOut(reservationId);
         return ResponseEntity.ok(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleReservationBadRequest(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation request failed", ex.getMessage())
+        );
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -73,6 +74,13 @@ public class HotelInAmenitiesService {
         HotelInAmenities ame = hotelInAmenitiesRepository.findById(id).orElseThrow();
         if (ame.getDeleted() != null && ame.getDeleted()) throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         return toDto(ame, true);
+    }
+
+    public List<HotelInAmenitiesDto> findByHotelId(Long hotelId) {
+        return hotelInAmenitiesRepository.findByHotelSid(hotelId).stream()
+                .filter(ame -> !Boolean.TRUE.equals(ame.getDeleted()))
+                .map(ame -> toDto(ame, true))
+                .toList();
     }
 
     private HotelInAmenitiesDto toDto(HotelInAmenities ame, boolean sid) {

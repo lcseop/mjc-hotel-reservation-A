@@ -15,6 +15,7 @@ public class PromotionDto {
     private Long sid;
     private Long roomTypeId ;
     private String promotionName;
+    private String discountContent;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String status;

@@ -9,10 +9,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class ReviewPhotoConfig implements WebMvcConfigurer {
     @Value("${review.images}")
     public String imagePath;
+    @Value("${room.images}")
+    public String roomImagePath;
+    @Value("${hotel.images}")
+    public String hotelImagePath;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/reviews/**").addResourceLocations(imagePath)
                 .addResourceLocations("file:" + imagePath);
+        registry.addResourceHandler("/images/rooms/**").addResourceLocations(roomImagePath)
+                .addResourceLocations("file:" + roomImagePath);
+        registry.addResourceHandler("/images/hotels/**").addResourceLocations(hotelImagePath)
+                .addResourceLocations("file:" + hotelImagePath);
     }
 }

@@ -4,8 +4,8 @@ $(function () {
 
 });
 
-const SIGNUP_API = "http://localhost:33000/api/member/signup";
-const TERMS_API = "http://localhost:33000/api/term";
+const SIGNUP_API = window.StayNowConfig.apiUrl("/member/signup");
+const TERMS_API = window.StayNowConfig.apiUrl("/term");
 
 function init() {
 

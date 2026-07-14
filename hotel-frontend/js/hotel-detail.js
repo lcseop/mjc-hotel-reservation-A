@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:33000/api";
+const API_BASE = window.StayNowConfig.apiBase;
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
 const KAKAO_MAP_APP_KEY = "4b9798cdfdfbd7e08b433eacafb45cfc";
 
@@ -494,7 +494,10 @@ function loadRooms(hotelId) {
 function drawRooms(rooms) {
     const list = $("#roomList");
 
-    currentRooms = rooms || [];
+    rooms = (rooms || []).filter(function (room) {
+        return room.roomAvailable !== false;
+    });
+    currentRooms = rooms;
     list.empty();
     $("#roomCount").text(rooms.length + "개 객실");
 
@@ -506,6 +509,13 @@ function drawRooms(rooms) {
     $.each(rooms, function (index, room) {
         const image = room.roomPhotoPath ? normalizeImagePath(room.roomPhotoPath) : FALLBACK_IMAGE;
         const price = room.roomPrice || 0;
+        const discountedPrice = Number(room.discountedRoomPrice || price);
+        const hasPromotion = room.promotionDiscountAmount && discountedPrice < price;
+        const priceHtml = hasPromotion
+            ? `<small>${escapeHtml(room.promotionDiscountContent || "프로모션 할인")}</small>
+               <span class="room-original-price">₩${price.toLocaleString()}</span>
+               <strong>₩${discountedPrice.toLocaleString()}</strong>`
+            : `<small>1박 기준</small><strong>₩${price.toLocaleString()}</strong>`;
 
         list.append(`
             <article class="room-card" data-room-id="${room.sid}">
@@ -526,8 +536,7 @@ function drawRooms(rooms) {
                 </div>
 
                 <div class="room-price">
-                    <small>1박 기준</small>
-                    <strong>₩${price.toLocaleString()}</strong>
+                    ${priceHtml}
                     <a href="#" data-room-id="${room.sid}">이 객실 선택</a>
                 </div>
             </article>
@@ -991,6 +1000,7 @@ function submitReviewWrite(event) {
         url: API_BASE + "/review",
         type: "POST",
         contentType: "application/json",
+        headers: reviewAuthHeaders(auth),
         data: JSON.stringify(payload),
         success: function (result) {
             const reviewId = result?.data?.sid;
@@ -1180,6 +1190,7 @@ function uploadReviewPhotos(reviewId, done) {
     $.ajax({
         url: API_BASE + "/review-photo",
         type: "POST",
+        headers: reviewAuthHeaders(),
         data: formData,
         processData: false,
         contentType: false,
@@ -1199,6 +1210,7 @@ function sendReviewReaction(reviewId, reactionType) {
         url: API_BASE + "/review-reaction",
         type: "POST",
         contentType: "application/json",
+        headers: reviewAuthHeaders(auth),
         data: JSON.stringify({
             reviewId: Number(reviewId),
             memberId: Number(auth.memberSid),
@@ -1212,6 +1224,7 @@ function sendReviewReaction(reviewId, reactionType) {
                 url: API_BASE + "/review-reaction",
                 type: "PATCH",
                 contentType: "application/json",
+                headers: reviewAuthHeaders(auth),
                 data: JSON.stringify({
                     reviewId: Number(reviewId),
                     memberId: Number(auth.memberSid),
@@ -1311,10 +1324,15 @@ function formatDistance(meters) {
 }
 
 function escapeHtml(value) {
-    return String(value)
+    return String(value == null ? "" : value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function reviewAuthHeaders(auth) {
+    const currentAuth = auth || readJson("staynowAuth");
+    return currentAuth && currentAuth.token ? { Authorization: currentAuth.token } : {};
 }

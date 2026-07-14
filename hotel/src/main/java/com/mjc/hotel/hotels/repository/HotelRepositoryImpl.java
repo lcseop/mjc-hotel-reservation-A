@@ -3,6 +3,7 @@ package com.mjc.hotel.hotels.repository;
 import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.hotels.dto.HotelSearchRequestDto;
 import com.mjc.hotel.hotels.entity.QHotel;
+import com.mjc.hotel.promotion.entity.ConditionType;
 import com.mjc.hotel.promotion.entity.QDiscountRate;
 import com.mjc.hotel.promotion.entity.QPromotion;
 import com.mjc.hotel.reservations.entity.QReservation;
@@ -64,6 +65,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                                                         )
                                         ),
                                         notDeletedPromotion(p),
+                                        p.conditionType.eq(ConditionType.ACTIVE),
                                         p.startDate.loe(now),
                                         p.endDate.goe(now)
                                 )
@@ -131,6 +133,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                 .where(
                         r.hotelId.eq(h),
                         notDeletedRoom(r),
+                        availableRoom(r),
 
                         capacityCond(r, req.getTotalPeople()),
                         priceCond(r, req.getMinPrice(), req.getMaxPrice()),
@@ -143,6 +146,10 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
 
     private BooleanExpression notDeletedRoom(QRoom r) {
         return r.deleted.isFalse().or(r.deleted.isNull());
+    }
+
+    private BooleanExpression availableRoom(QRoom r) {
+        return r.roomAvailable.isTrue().or(r.roomAvailable.isNull());
     }
 
     private BooleanExpression notDeletedPromotion(QPromotion p) {
