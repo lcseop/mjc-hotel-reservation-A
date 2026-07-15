@@ -84,10 +84,22 @@ public class HotelRestController {
     )
     @PostMapping("/search")
     public ResponseEntity<ApiResponse<Page<HotelResponseDto>>> search(@RequestBody HotelSearchRequestDto dto,
-                                                           @PageableDefault(size = 5) Pageable pageable) {
+                                                                      @PageableDefault(size = 5) Pageable pageable) {
         Page<HotelResponseDto> search = hotelService.search(dto, pageable);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "hotel search success", search)
+        );
+    }
+
+    @Operation(
+            summary = "관리자 호텔 전체 목록",
+            description = "객실 등록 여부와 상관없이 삭제되지 않은 호텔 전체를 가져옵니다."
+    )
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<HotelResponseDto>>> findAllForAdmin() {
+        List<HotelResponseDto> hotels = hotelService.findAllForAdmin();
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "hotel all search success", hotels)
         );
     }
 
