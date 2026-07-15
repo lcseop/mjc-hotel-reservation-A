@@ -204,6 +204,17 @@ body{
     cursor:pointer;
 }
 
+.summary-actions .wishlist-btn.active {
+    border-color: #fecdd3;
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+.summary-actions .wishlist-btn:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
 .score-strip{
     display:grid;
     grid-template-columns:110px 1fr 110px;

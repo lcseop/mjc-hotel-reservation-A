@@ -123,7 +123,7 @@ public class ReservationService {
             pointHistoryRepository.save(pointHistory);
         }
 
-        Integer earnPoint = (int) (totalAmount * 0.05);
+        Integer earnPoint = (int) (totalAmount * 0.005);
         if (earnPoint > 0) {
             member.setPoint(memberPoint + earnPoint);
             savedReservation.setEarnedPoint(earnPoint);

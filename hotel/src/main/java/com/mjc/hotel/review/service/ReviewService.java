@@ -101,7 +101,7 @@ public class ReviewService {
         List<ReviewCategory> categories = this.insertReviewCategories(request.getCategories(), save);
         List<ReviewTag> tags = this.insertReviewTags(request.getTags(), save);
 
-        int accumulationPoint = save.getContent().length() < 50 ? 200 : 400;
+        int accumulationPoint = save.getContent().length() < 50 ? 100 : 200;
         member.setPoint(member.getPoint() + accumulationPoint);
         Member updatedMember = memberRepository.save(member);
 

@@ -2,6 +2,10 @@ const API_BASE = window.StayNowConfig.apiBase;
 const FALLBACK_IMAGE = "https://gunsancci.korcham.net/images/no-image01.gif";
 
 let reservationState = null;
+let availableCoupons = [];
+let selectedCouponIssueId = null;
+let availablePoint = 0;
+let couponDragMoved = false;
 
 $(function () {
     reservationState = loadReservationState();
@@ -43,6 +47,74 @@ function bindReservationEvents() {
     $(".required-agreement").on("change", syncAgreementAll);
 
     $("#payBtn").on("click", submitReservation);
+
+    $("#clearCouponBtn").on("click", function () {
+        selectedCouponIssueId = null;
+        renderCoupons();
+        renderPriceSummary();
+    });
+
+    $(document).on("click", ".coupon-card:not(.disabled)", function (event) {
+        if (couponDragMoved) {
+            event.preventDefault();
+            couponDragMoved = false;
+            return;
+        }
+        selectedCouponIssueId = Number($(this).data("couponIssueId")) || null;
+        renderCoupons();
+        renderPriceSummary();
+    });
+
+    $("#usePointInput").on("input", function () {
+        const price = getPriceInfo();
+        const maxPoint = getMaxUsablePoint(price);
+        const value = Math.min(maxPoint, Math.max(0, Number($(this).val()) || 0));
+        $(this).val(value);
+        renderPriceSummary();
+    });
+
+    $("#useAllPointBtn").on("click", function () {
+        if ($(this).prop("disabled")) return;
+        const price = getPriceInfo();
+        $("#usePointInput").val(getMaxUsablePoint(price));
+        renderPriceSummary();
+    });
+
+    bindCouponDragScroll();
+}
+
+function bindCouponDragScroll() {
+    let dragging = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    $(document).on("mousedown", ".coupon-list", function (event) {
+        dragging = true;
+        couponDragMoved = false;
+        startX = event.pageX;
+        startScrollLeft = this.scrollLeft;
+        $(this).addClass("dragging");
+    });
+
+    $(document).on("mousemove", function (event) {
+        if (!dragging) return;
+        const $list = $(".coupon-list.dragging");
+        if (!$list.length) return;
+        const distance = event.pageX - startX;
+        if (Math.abs(distance) > 5) {
+            couponDragMoved = true;
+        }
+        $list[0].scrollLeft = startScrollLeft - distance;
+    });
+
+    $(document).on("mouseup mouseleave", function () {
+        if (!dragging) return;
+        dragging = false;
+        $(".coupon-list.dragging").removeClass("dragging");
+        setTimeout(function () {
+            couponDragMoved = false;
+        }, 0);
+    });
 }
 
 function loadReservationState() {
@@ -85,17 +157,12 @@ function renderReservationPage() {
 
     $("#summaryHotel").text(hotel.hotelName || "호텔명 없음");
     $("#summaryLocation").text(hotel.location || "위치 정보 없음");
-    $("#originalAmount").text(formatWon(price.originalAmount));
-    if (price.promotionDiscountAmount > 0) {
-        $("#promotionDiscountRow").show();
-        $("#promotionDiscountAmount").text("-" + formatWon(price.promotionDiscountAmount));
-    } else {
-        $("#promotionDiscountRow").hide();
-    }
-    $("#taxAmount").text(formatWon(price.taxAmount));
-    $("#totalAmount").text(formatWon(price.totalAmount));
+    $("#availablePoint").text("조회 중");
+    $("#usePointInput, #useAllPointBtn").prop("disabled", true);
+    renderPriceSummary();
 
     fillMemberInfo();
+    loadAvailableCoupons();
 }
 
 function fillMemberInfo() {
@@ -103,10 +170,7 @@ function fillMemberInfo() {
     $("#guestName").val(auth.name || "");
     $("#guestEmail").val(auth.email || "");
 
-    if (auth.phone) {
-        $("#guestPhone").val(formatPhoneNumber(auth.phone));
-        return;
-    }
+    if (auth.phone) $("#guestPhone").val(formatPhoneNumber(auth.phone));
 
     if (auth.memberSid) {
         $.ajax({
@@ -123,10 +187,104 @@ function fillMemberInfo() {
                 $("#guestName").val($("#guestName").val() || data.name || "");
                 $("#guestEmail").val($("#guestEmail").val() || data.email || "");
                 $("#guestPhone").val(formatPhoneNumber(data.phone || ""));
+                availablePoint = Number(data.point || 0);
+                $("#availablePoint").text(formatNumber(availablePoint) + "P");
+                $("#usePointInput, #useAllPointBtn").prop("disabled", false);
                 updateStoredAuthPhone(data.phone);
+                renderPriceSummary();
+            },
+            error: function (xhr) {
+                $("#availablePoint").text("조회 실패");
+                availablePoint = 0;
+                $("#usePointInput").val(0);
+                $("#usePointInput, #useAllPointBtn").prop("disabled", true);
+                renderPriceSummary();
+                console.warn("Member point load failed", xhr && (xhr.responseJSON || xhr.responseText || xhr.statusText));
             }
         });
     }
+}
+
+function loadAvailableCoupons() {
+    const auth = reservationState.auth || {};
+    if (!auth.memberSid) {
+        availableCoupons = [];
+        renderCoupons();
+        return;
+    }
+
+    $.ajax({
+        url: API_BASE + "/cou/member/" + auth.memberSid,
+        type: "GET",
+        headers: authHeaders(),
+        success: function (result) {
+            availableCoupons = Array.isArray(result && result.data) ? result.data : [];
+            renderCoupons();
+            renderPriceSummary();
+        },
+        error: function (xhr) {
+            availableCoupons = [];
+            $("#couponList").html('<div class="coupon-empty">' + escapeHtml(getErrorMessage(xhr, "쿠폰을 불러오지 못했습니다.")) + '</div>');
+        }
+    });
+}
+
+function renderCoupons() {
+    const price = getPriceInfo();
+
+    if (!availableCoupons.length) {
+        $("#couponList").html('<div class="coupon-empty">사용 가능한 쿠폰이 없습니다.</div>');
+        $("#clearCouponBtn").prop("disabled", true);
+        return;
+    }
+
+    $("#clearCouponBtn").prop("disabled", !selectedCouponIssueId);
+    $("#couponList").html(availableCoupons.map(function (coupon) {
+        const discount = calculateCouponDiscount(coupon, price.beforeCouponAmount);
+        const minOrder = Number(coupon.minOrderAmount || 0);
+        const disabled = minOrder > price.beforeCouponAmount;
+        const selected = String(selectedCouponIssueId) === String(coupon.sid);
+        return `<button type="button" class="coupon-card ${selected ? "active" : ""} ${disabled ? "disabled" : ""}" data-coupon-issue-id="${coupon.sid}">
+            <strong>${escapeHtml(coupon.couponName || "쿠폰")}</strong>
+            <span>${formatCouponDiscount(coupon)} 할인</span>
+            <small>${disabled ? formatWon(minOrder) + " 이상 사용 가능" : "예상 할인 " + formatWon(discount)}</small>
+        </button>`;
+    }).join(""));
+}
+
+function renderPriceSummary() {
+    const price = getPriceInfo();
+    const maxPoint = getMaxUsablePoint(price);
+    const pointValue = Math.min(maxPoint, Math.max(0, Number($("#usePointInput").val()) || 0));
+
+    if (String($("#usePointInput").val()) !== String(pointValue)) {
+        $("#usePointInput").val(pointValue);
+    }
+
+    $("#originalAmount").text(formatWon(price.originalAmount));
+    if (price.promotionDiscountAmount > 0) {
+        $("#promotionDiscountRow").show();
+        $("#promotionDiscountAmount").text("-" + formatWon(price.promotionDiscountAmount));
+    } else {
+        $("#promotionDiscountRow").hide();
+    }
+
+    if (price.couponDiscountAmount > 0) {
+        $("#couponDiscountRow").show();
+        $("#couponDiscountAmount").text("-" + formatWon(price.couponDiscountAmount));
+    } else {
+        $("#couponDiscountRow").hide();
+    }
+
+    if (pointValue > 0) {
+        $("#pointDiscountRow").show();
+        $("#pointDiscountAmount").text("-" + formatWon(pointValue));
+    } else {
+        $("#pointDiscountRow").hide();
+    }
+
+    $("#taxAmount").text(formatWon(price.taxAmount));
+    $("#totalAmount").text(formatWon(Math.max(0, price.totalAmount - pointValue)));
 }
 
 function drawRoomPills(room) {
@@ -179,14 +337,14 @@ function submitReservation() {
         sid: Date.now(),
         memberId: Number(auth.memberSid),
         roomId: Number(reservationState.roomId),
-        couponIssueId: null,
+        couponIssueId: selectedCouponIssueId,
         checkInDate: stay.checkIn,
         checkOutDate: stay.checkOut,
         adults: stay.adults,
         children: stay.children,
         specialRequests: $("#specialRequests").val().trim(),
         guestName: $("#guestName").val().trim(),
-        usePoint: 0,
+        usePoint: Math.min(getMaxUsablePoint(price), Math.max(0, Number($("#usePointInput").val()) || 0)),
         reservationChannel: "DIRECT"
     };
 
@@ -242,7 +400,9 @@ function createReservation(payload) {
             contentType: "application/json",
             headers: authHeaders(),
             data: JSON.stringify(payload),
-            success: resolve,
+            success: function (result) {
+                resolve(result && Object.prototype.hasOwnProperty.call(result, "data") ? result.data : result);
+            },
             error: reject
         });
     });
@@ -258,7 +418,7 @@ function createPayment(reservation, totalAmount) {
         paymentStatus: "COMPLETED",
         transactionNo: "MOCK-" + Date.now(),
         paidAt: new Date().toISOString().slice(0, 19),
-        point: Math.floor(totalAmount * 0.01)
+        point: Math.floor(totalAmount * 0.005)
     };
 
     return new Promise(function (resolve, reject) {
@@ -376,15 +536,47 @@ function getPriceInfo() {
     const originalAmount = roomPrice * stay.nights;
     const subtotalAmount = Math.max(0, originalAmount - promotionDiscountAmount);
     const taxAmount = Math.round(subtotalAmount * 0.1);
+    const beforeCouponAmount = subtotalAmount + taxAmount;
+    const selectedCoupon = availableCoupons.find(function (coupon) {
+        return String(coupon.sid) === String(selectedCouponIssueId);
+    });
+    const couponDiscountAmount = selectedCoupon ? calculateCouponDiscount(selectedCoupon, beforeCouponAmount) : 0;
 
     return {
         roomPrice,
         discountedRoomPrice,
         promotionDiscountAmount,
         originalAmount,
+        subtotalAmount,
+        beforeCouponAmount,
+        couponDiscountAmount,
         taxAmount,
-        totalAmount: subtotalAmount + taxAmount
+        totalAmount: Math.max(0, beforeCouponAmount - couponDiscountAmount)
     };
+}
+
+function getMaxUsablePoint(price) {
+    return Math.min(availablePoint, Math.max(0, price.totalAmount));
+}
+
+function calculateCouponDiscount(coupon, amount) {
+    const minOrder = Number(coupon.minOrderAmount || 0);
+    if (minOrder > amount) return 0;
+
+    const value = Number(coupon.discountValue || 0);
+    if (String(coupon.discountType || "").toUpperCase() === "PERCENT") {
+        return Math.min(amount, Math.floor(amount * (value / 100)));
+    }
+
+    return Math.min(amount, Math.floor(value));
+}
+
+function formatCouponDiscount(coupon) {
+    const value = Number(coupon.discountValue || 0);
+    if (String(coupon.discountType || "").toUpperCase() === "PERCENT") {
+        return value + "%";
+    }
+    return formatWon(value);
 }
 
 function makeDefaultDateTime(offset, time) {
@@ -481,6 +673,19 @@ function formatWon(value) {
     return "₩" + Number(value || 0).toLocaleString();
 }
 
+function formatNumber(value) {
+    return Number(value || 0).toLocaleString("ko-KR");
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 function pad(value) {
     return String(value).padStart(2, "0");
 }
@@ -504,12 +709,25 @@ function readJson(key) {
 }
 
 function getErrorMessage(xhr, fallback) {
+    if (xhr && xhr.status === 0) {
+        return fallback + " 서버 연결 또는 CORS 설정을 확인해주세요.";
+    }
+
     if (xhr && xhr.responseJSON) {
-        return xhr.responseJSON.message || xhr.responseJSON.data || fallback;
+        const json = xhr.responseJSON;
+        if (typeof json.data === "string") return json.data;
+        if (json.message) return json.message;
+        if (json.error) return json.error;
+        if (json.detail) return json.detail;
     }
 
     if (xhr && xhr.responseText) {
-        return xhr.responseText;
+        try {
+            const parsed = JSON.parse(xhr.responseText);
+            return parsed.message || parsed.data || parsed.error || parsed.detail || xhr.responseText;
+        } catch (e) {
+            return xhr.responseText;
+        }
     }
 
     return fallback;
