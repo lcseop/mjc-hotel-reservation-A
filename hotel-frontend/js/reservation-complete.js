@@ -8,6 +8,7 @@ $(function () {
     }
 
     renderComplete(data);
+    loadCompleteReservation(data);
     launchConfetti();
 
     $("#printBtn").on("click", function () {
@@ -19,6 +20,33 @@ $(function () {
     });
 });
 
+function loadCompleteReservation(data) {
+    const reservationId = data && data.reservation && data.reservation.sid;
+
+    if (!reservationId) {
+        return;
+    }
+
+    $.ajax({
+        url: window.StayNowConfig.apiBase + "/reservation/" + reservationId,
+        type: "GET",
+        headers: completeAuthHeaders(),
+        success: function (reservation) {
+            const freshReservation = reservation && Object.prototype.hasOwnProperty.call(reservation, "data")
+                ? reservation.data
+                : reservation;
+            const freshData = Object.assign({}, data, {
+                reservation: freshReservation || data.reservation
+            });
+            sessionStorage.setItem("completedReservation", JSON.stringify(freshData));
+            renderComplete(freshData);
+        },
+        error: function () {
+            renderComplete(data);
+        }
+    });
+}
+
 function renderComplete(data) {
     const hotel = data.hotel || {};
     const room = data.room || {};
@@ -26,20 +54,30 @@ function renderComplete(data) {
     const guest = data.guest || {};
     const stay = data.stay || {};
     const reservationNumber = reservation.reservationNumber || "예약번호 확인 중";
-    const totalAmount = reservation.totalAmount || (data.price && data.price.totalAmount) || 0;
+    const totalAmount = firstValidAmount(
+        reservation.totalAmount,
+        reservation.paymentAmount,
+        data.payment && data.payment.paymentAmount,
+        data.price && data.price.totalAmount
+    );
+    const hotelName = reservation.hotelName || hotel.hotelName || "선택하신 호텔";
+    const hotelLocation = reservation.hotelLocation || hotel.location || "위치 정보 없음";
+    const hotelStarRating = reservation.hotelStarRating ?? hotel.starRating ?? 0;
+    const roomName = reservation.roomName || room.roomName || "객실명 없음";
+    const roomParking = reservation.roomParking || room.parking;
 
     $("#completeMessage").text(
         (guest.name || reservation.guestName || "고객") + "님, " +
-        (hotel.hotelName || "선택하신 호텔") + " 예약이 성공적으로 완료되었습니다."
+        hotelName + " 예약이 성공적으로 완료되었습니다."
     );
     $("#completeReservationNumber, #detailReservationNumber").text(reservationNumber);
     const qrValue = reservation.checkInQr || reservationNumber;
     $("#qrNumber").text(qrValue);
     renderQrCode(qrValue);
 
-    $("#completeStars").text(drawStars(hotel.starRating) + " " + (hotel.starRating || 0) + "성급");
-    $("#completeHotel").text(hotel.hotelName || "호텔명 없음");
-    $("#completeLocation, #guideAddress").text(hotel.location || "위치 정보 없음");
+    $("#completeStars").text(drawStars(hotelStarRating) + " " + hotelStarRating + "성급");
+    $("#completeHotel").text(hotelName);
+    $("#completeLocation, #guideAddress").text(hotelLocation);
 
     const checkIn = reservation.checkInDate || stay.checkIn;
     const checkOut = reservation.checkOutDate || stay.checkOut;
@@ -50,7 +88,7 @@ function renderComplete(data) {
     $("#detailCheckOutTime").text(formatTime(checkOut, "오전 11:00 이전"));
     $("#guideTime").text(formatTime(checkIn, "오후 3:00") + " / " + formatTime(checkOut, "오전 11:00"));
     $("#detailNights").text((reservation.totalNights || stay.nights || 1) + "박");
-    $("#detailRoom").text(room.roomName || "객실명 없음");
+    $("#detailRoom").text(roomName);
     $("#detailGuest").text(
         (guest.name || reservation.guestName || "투숙객") +
         " · 성인 " + (reservation.adults || stay.adults || 1) +
@@ -63,7 +101,22 @@ function renderComplete(data) {
         $("#detailPayment").text("카드 테스트 결제 · " + data.payment.transactionNo);
     }
 
-    $("#guideParking").text(formatParking(room.parking));
+    $("#guideParking").text(formatParking(roomParking));
+}
+
+function firstValidAmount() {
+    for (let i = 0; i < arguments.length; i++) {
+        const value = arguments[i];
+        if (value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value))) {
+            return Number(value);
+        }
+    }
+    return 0;
+}
+
+function completeAuthHeaders() {
+    const auth = readJson("staynowAuth");
+    return auth && auth.token ? { Authorization: auth.token } : {};
 }
 
 function launchConfetti() {

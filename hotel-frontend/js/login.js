@@ -83,8 +83,6 @@ function requestLogin(payload) {
             }
 
             saveLoginData(loginData);
-
-            alert(loginData.name + "님, 환영합니다.");
             const redirectUrl = sessionStorage.getItem("afterLoginRedirect");
             sessionStorage.removeItem("afterLoginRedirect");
             location.href = redirectUrl || "index.html";

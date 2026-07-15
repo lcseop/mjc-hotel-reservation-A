@@ -81,15 +81,30 @@ function renderReservationDetail(reservation) {
     $("#infoRequest").text(reservation.specialRequests || "요청 사항 없음");
     $("#guideParking").text(formatParking(reservation.roomParking));
 
+    const pointDiscount = Number(reservation.pointDiscount || 0);
+    const nonPointDiscount = getDetailNonPointDiscount(reservation);
+
     $("#payOriginal").text(formatDetailWon(reservation.originalAmount));
-    $("#payDiscount").text("-" + formatDetailWon(reservation.discountAmount || reservation.couponDiscount || 0));
-    $("#payPoint").text("-" + formatDetailWon(reservation.pointDiscount || 0));
+    $("#payDiscount").text("-" + formatDetailWon(nonPointDiscount));
+    $("#payPoint").text("-" + formatDetailWon(pointDiscount));
     $("#payTotal").text(formatDetailWon(reservation.totalAmount));
 
     $("#detailQrText").text(reservation.checkInQr || reservationNumber);
     renderDetailQr(reservation.checkInQr || reservationNumber);
     renderPolicies(reservation);
     $("#cancelReservationBtn").toggle(status.key === "upcoming");
+}
+
+function getDetailNonPointDiscount(reservation) {
+    const originalAmount = Number(reservation.originalAmount || 0);
+    const totalAmount = Number(reservation.totalAmount || 0);
+    const pointDiscount = Number(reservation.pointDiscount || 0);
+
+    if (originalAmount > 0 && Number.isFinite(totalAmount)) {
+        return Math.max(0, originalAmount - pointDiscount - totalAmount);
+    }
+
+    return Math.max(0, Number(reservation.discountAmount || 0) - pointDiscount);
 }
 
 function loadHotelExtras(hotelId) {

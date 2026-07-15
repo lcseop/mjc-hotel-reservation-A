@@ -283,7 +283,7 @@ function renderPriceSummary() {
         $("#pointDiscountRow").hide();
     }
 
-    $("#taxAmount").text(formatWon(price.taxAmount));
+    $("#taxAmount").text(price.taxAmount > 0 ? formatWon(price.taxAmount) : "포함");
     $("#totalAmount").text(formatWon(Math.max(0, price.totalAmount - pointValue)));
 }
 
@@ -353,7 +353,7 @@ function submitReservation() {
     setTimeout(function () {
         createReservation(reservationPayload)
             .then(function (reservation) {
-                return createPayment(reservation, reservation.totalAmount || price.totalAmount)
+                return createPayment(reservation, firstReservationAmount(reservation.totalAmount, price.totalAmount))
                     .then(function (payment) {
                         return {
                             reservation,
@@ -390,6 +390,16 @@ function submitReservation() {
                 alert(getErrorMessage(xhr, "예약 처리 중 오류가 발생했습니다."));
             });
     }, 900);
+}
+
+function firstReservationAmount() {
+    for (let i = 0; i < arguments.length; i++) {
+        const value = arguments[i];
+        if (value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value))) {
+            return Number(value);
+        }
+    }
+    return 0;
 }
 
 function createReservation(payload) {
@@ -535,8 +545,8 @@ function getPriceInfo() {
     const promotionDiscountAmount = Math.max(0, roomPrice - discountedRoomPrice) * stay.nights;
     const originalAmount = roomPrice * stay.nights;
     const subtotalAmount = Math.max(0, originalAmount - promotionDiscountAmount);
-    const taxAmount = Math.round(subtotalAmount * 0.1);
-    const beforeCouponAmount = subtotalAmount + taxAmount;
+    const taxAmount = 0;
+    const beforeCouponAmount = subtotalAmount;
     const selectedCoupon = availableCoupons.find(function (coupon) {
         return String(coupon.sid) === String(selectedCouponIssueId);
     });
