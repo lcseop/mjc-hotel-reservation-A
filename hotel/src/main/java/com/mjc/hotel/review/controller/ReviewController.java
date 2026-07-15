@@ -77,6 +77,19 @@ public class ReviewController {
         );
     }
 
+    @Operation(
+            summary = "회원 리뷰 정렬 조회",
+            description = "회원이 작성한 리뷰를 최신순 등 정렬 조건에 맞춰 조회합니다."
+    )
+    @GetMapping("/member")
+    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> memberSearch(
+            @RequestParam Long memberId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ReviewResponse> responses = reviewService.reviewsByMember(memberId, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "member review search ok", responses)
+        );
+    }
 
     @Operation(
             summary = "호텔 리뷰 정렬 조회",

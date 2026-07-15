@@ -597,24 +597,27 @@ function pageSubtitle(id) {
 
 function adminPageNote(id) {
     if (id === "dashboard") {
-        return "대시보드는 왼쪽에서 선택한 호텔 기준으로 예약, 객실, 결제, 리뷰 데이터를 조합해 표시합니다.";
+        return "대시보드에서 여러 정보들을 한 눈에 쉽고 빠르게 파악할 수 있습니다.";
     }
     if (id === "sales") {
-        return "매출 분석은 왼쪽에서 선택한 호텔과 상단 기준 월에 따라 결제 완료 및 부분 환불 데이터를 집계합니다.";
+        return "월별 매출 상황을 볼 수 있습니다.";
     }
-    if (id === "reservations" || id === "guests") {
-        return "현재 화면은 선택한 호텔 기준의 실제 예약 및 회원 데이터를 활용합니다.";
+    if (id === "reservations") {
+        return "현재 선택된 호텔의 예약에 대해 관리할 수 있습니다.";
+    }
+    if (id === "guests") {
+        return "모든 회원에 대한 관리를 합니다. 선택된 호텔이 있다면 그 호텔의 예약 건수를 볼 수 있습니다.";
     }
     if (id === "promotions") {
-        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용되며, 할인 내용은 discountContent 기준으로 관리합니다.";
+        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용됩니다.";
     }
     if (id === "reviews") {
-        return "리뷰 관리는 왼쪽에서 선택한 호텔 기준으로 리뷰와 관리자 답변을 표시합니다.";
+        return "현재 선택된 호텔의 리뷰에 대해 관리할 수 있습니다.";
     }
     if (id === "settings") {
-        return "호텔 관리는 Hotel 관련 API만 사용해 선택 호텔의 기본 정보, 편의시설, 타입, 사진을 관리합니다.";
+        return "현재 선택된 호텔에 대해 정보를 수정할 수 있습니다.";
     }
-    return "현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다.";
+    return "현재 화면은 관리자 UI 입니다.";
 }
 
 function headActions(id) {
@@ -3859,7 +3862,23 @@ function formatAdminCouponOption(coupon) {
     const type = String(coupon.discountType || "").toUpperCase() === "PERCENT"
         ? Number(coupon.discountValue || 0) + "%"
         : formatAdminWon(coupon.discountValue || 0);
-    return (coupon.couponName || "쿠폰") + " · " + type;
+    return (coupon.couponName || "쿠폰") + " · " + type + " · " + formatAdminCouponPeriod(coupon);
+}
+
+function formatAdminCouponPeriod(coupon) {
+    const start = formatAdminFullDate(coupon.startDate);
+    const end = formatAdminFullDate(coupon.endDate);
+    if (start === "-" && end === "-") return "상시";
+    if (start === "-") return end + "까지";
+    if (end === "-") return start + "부터";
+    return start + " ~ " + end;
+}
+
+function formatAdminFullDate(value) {
+    if (!value) return "-";
+    const text = String(value).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return "-";
+    return text.replaceAll("-", ".");
 }
 
 function formatAdminMemberOption(member) {
