@@ -129,4 +129,11 @@ public class ReservationController {
                 new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation request failed", ex.getMessage())
         );
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<String>> handleReservationStateError(IllegalStateException ex) {
+        return ResponseEntity.internalServerError().body(
+                new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation process failed", ex.getMessage())
+        );
+    }
 }

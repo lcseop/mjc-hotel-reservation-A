@@ -6,6 +6,9 @@ let availableCoupons = [];
 let selectedCouponIssueId = null;
 let availablePoint = 0;
 let couponDragMoved = false;
+let tossWidgets = null;
+let tossWidgetAmount = null;
+let tossWidgetRenderPromise = null;
 
 $(function () {
     reservationState = loadReservationState();
@@ -283,8 +286,9 @@ function renderPriceSummary() {
         $("#pointDiscountRow").hide();
     }
 
-    $("#taxAmount").text(formatWon(price.taxAmount));
+    $("#taxAmount").text(price.taxAmount > 0 ? formatWon(price.taxAmount) : "포함");
     $("#totalAmount").text(formatWon(Math.max(0, price.totalAmount - pointValue)));
+    syncTossWidgetAmount(Math.max(0, price.totalAmount - pointValue));
 }
 
 function drawRoomPills(room) {
@@ -353,21 +357,8 @@ function submitReservation() {
     setTimeout(function () {
         createReservation(reservationPayload)
             .then(function (reservation) {
-                return createPayment(reservation, reservation.totalAmount || price.totalAmount)
-                    .then(function (payment) {
-                        return {
-                            reservation,
-                            payment
-                        };
-                    })
-                    .catch(function () {
-                        return {
-                            reservation,
-                            payment: null
-                        };
-                    });
-            })
-            .then(function (result) {
+                const paymentAmount = firstReservationAmount(reservation.totalAmount, price.totalAmount);
+                const orderName = makeOrderName(reservationState.hotel, reservationState.room);
                 const completeData = {
                     hotel: reservationState.hotel,
                     room: reservationState.room,
@@ -376,20 +367,34 @@ function submitReservation() {
                         phone: $("#guestPhone").val().trim(),
                         email: $("#guestEmail").val().trim()
                     },
-                    reservation: result.reservation,
-                    payment: result.payment,
+                    reservation,
+                    payment: null,
                     price,
                     stay
                 };
 
-                sessionStorage.setItem("completedReservation", JSON.stringify(completeData));
-                location.href = "reservation-complete.html";
+                return createTossPaymentReady(reservation, paymentAmount, orderName)
+                    .then(function (paymentReady) {
+                        completeData.paymentReady = paymentReady;
+                        sessionStorage.setItem("pendingTossReservation", JSON.stringify(completeData));
+                        return requestTossPayment(paymentReady, completeData);
+                    });
             })
             .catch(function (xhr) {
                 setPaymentLoading(false);
                 alert(getErrorMessage(xhr, "예약 처리 중 오류가 발생했습니다."));
             });
     }, 900);
+}
+
+function firstReservationAmount() {
+    for (let i = 0; i < arguments.length; i++) {
+        const value = arguments[i];
+        if (value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value))) {
+            return Number(value);
+        }
+    }
+    return 0;
 }
 
 function createReservation(payload) {
@@ -408,22 +413,18 @@ function createReservation(payload) {
     });
 }
 
-function createPayment(reservation, totalAmount) {
+function createTossPaymentReady(reservation, totalAmount, orderName) {
     const auth = reservationState.auth;
     const payload = {
-        sid: Number(auth.memberSid),
+        memberId: Number(auth.memberSid),
         reservationId: reservation.sid,
-        paymentAmount: totalAmount,
-        paymentMethod: "CARD",
-        paymentStatus: "COMPLETED",
-        transactionNo: "MOCK-" + Date.now(),
-        paidAt: new Date().toISOString().slice(0, 19),
-        point: Math.floor(totalAmount * 0.005)
+        amount: totalAmount,
+        orderName
     };
 
     return new Promise(function (resolve, reject) {
         $.ajax({
-            url: API_BASE + "/payments/add",
+            url: API_BASE + "/payments/toss/ready",
             type: "POST",
             contentType: "application/json",
             headers: authHeaders(),
@@ -434,6 +435,100 @@ function createPayment(reservation, totalAmount) {
             error: reject
         });
     });
+}
+
+function requestTossPayment(paymentReady, completeData) {
+    const amount = Number(paymentReady.amount || 0);
+    const successUrl = makePageUrl("payment-success.html") + "?reservationId=" + encodeURIComponent(completeData.reservation.sid);
+    const failUrl = makePageUrl("payment-fail.html");
+
+    return ensureTossWidgets(amount).then(function (widgets) {
+        return widgets.requestPayment({
+            orderId: paymentReady.orderId,
+            orderName: paymentReady.orderName || makeOrderName(completeData.hotel, completeData.room),
+            successUrl,
+            failUrl,
+            customerEmail: completeData.guest.email,
+            customerName: completeData.guest.name
+        });
+    });
+}
+
+function ensureTossWidgets(amount) {
+    if (!window.TossPayments) {
+        return Promise.reject(new Error("토스페이먼츠 SDK를 불러오지 못했습니다."));
+    }
+
+    const clientKey = window.StayNowConfig.tossClientKey;
+    if (!clientKey) {
+        return Promise.reject(new Error("토스 클라이언트 키가 설정되지 않았습니다."));
+    }
+
+    if (!tossWidgets) {
+        const auth = reservationState.auth || {};
+        const tossPayments = window.TossPayments(clientKey);
+        tossWidgets = tossPayments.widgets({
+            customerKey: "staynow-" + String(auth.memberSid || "guest")
+        });
+    }
+
+    const nextAmount = Math.max(0, Number(amount || 0));
+    const setAmountPromise = tossWidgets.setAmount({
+        currency: "KRW",
+        value: nextAmount
+    }).then(function () {
+        tossWidgetAmount = nextAmount;
+        return tossWidgets;
+    });
+
+    if (!tossWidgetRenderPromise) {
+        tossWidgetRenderPromise = setAmountPromise.then(function () {
+            return Promise.all([
+                tossWidgets.renderPaymentMethods({
+                    selector: "#tossPaymentMethods",
+                    variantKey: "DEFAULT"
+                }),
+                tossWidgets.renderAgreement({
+                    selector: "#tossPaymentAgreement",
+                    variantKey: "AGREEMENT"
+                })
+            ]).then(function () {
+                return tossWidgets;
+            });
+        });
+    }
+
+    return tossWidgetRenderPromise.then(function () {
+        if (tossWidgetAmount === nextAmount) {
+            return tossWidgets;
+        }
+
+        return tossWidgets.setAmount({
+            currency: "KRW",
+            value: nextAmount
+        }).then(function () {
+            tossWidgetAmount = nextAmount;
+            return tossWidgets;
+        });
+    });
+}
+
+function syncTossWidgetAmount(amount) {
+    if (!window.TossPayments || !$("#tossPaymentMethods").length) {
+        return;
+    }
+
+    ensureTossWidgets(amount).catch(function (error) {
+        console.warn("Toss widget sync failed", error);
+    });
+}
+
+function makeOrderName(hotel, room) {
+    return [hotel && hotel.hotelName, room && room.roomName].filter(Boolean).join(" ") || "StayNow 호텔 예약";
+}
+
+function makePageUrl(pageName) {
+    return location.href.replace(/[^/]*$/, pageName);
 }
 
 function validateReservationForm() {
@@ -535,8 +630,8 @@ function getPriceInfo() {
     const promotionDiscountAmount = Math.max(0, roomPrice - discountedRoomPrice) * stay.nights;
     const originalAmount = roomPrice * stay.nights;
     const subtotalAmount = Math.max(0, originalAmount - promotionDiscountAmount);
-    const taxAmount = Math.round(subtotalAmount * 0.1);
-    const beforeCouponAmount = subtotalAmount + taxAmount;
+    const taxAmount = 0;
+    const beforeCouponAmount = subtotalAmount;
     const selectedCoupon = availableCoupons.find(function (coupon) {
         return String(coupon.sid) === String(selectedCouponIssueId);
     });
@@ -709,6 +804,10 @@ function readJson(key) {
 }
 
 function getErrorMessage(xhr, fallback) {
+    if (xhr instanceof Error && xhr.message) {
+        return xhr.message;
+    }
+
     if (xhr && xhr.status === 0) {
         return fallback + " 서버 연결 또는 CORS 설정을 확인해주세요.";
     }

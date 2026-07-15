@@ -52,3 +52,7 @@ tour-api:
   base-url: https://apis.data.go.kr/B551011/KorService2
   mobile-os: ETC
   mobile-app: StayNow
+
+toss:
+  payments:
+    secret-key: ${TOSS_SECRET_KEY:test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6}

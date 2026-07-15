@@ -6,12 +6,16 @@ import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
 import com.mjc.hotel.refunds.converter.RefundsDtoMapper;
 import com.mjc.hotel.refunds.dto.RefundsRequestDto;
+import com.mjc.hotel.refunds.entity.RefundStatus;
 import com.mjc.hotel.refunds.entity.Refunds;
 import com.mjc.hotel.refunds.repository.RefundsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -62,6 +66,38 @@ public class RefundsService {
     public void deleteRefund(Long sid) {
         Refunds refund = getRefund(sid);
         refund.markDeleted();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Long createReservationCancelRefund(Long paymentSid, Long memberSid, BigDecimal refundAmount, String reason, String idempotencyKey) {
+        Refunds refund = Refunds.builder()
+                .payment(getPayment(paymentSid))
+                .member(getMember(memberSid))
+                .idempotencyKey(idempotencyKey)
+                .refundAmount(refundAmount)
+                .reason(reason)
+                .status(RefundStatus.REQUESTED)
+                .requestedAt(LocalDateTime.now())
+                .build();
+        return refundsRepository.save(refund).getSid();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void completeRefund(Long refundSid, String pgTransactionKey) {
+        Refunds refund = getRefund(refundSid);
+        refund.setPgTransactionKey(pgTransactionKey);
+        refund.setStatus(RefundStatus.COMPLETED);
+        refund.setCompletedAt(LocalDateTime.now());
+        refund.setFailedAt(null);
+        refund.setFailureReason(null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void failRefund(Long refundSid, String failureReason) {
+        Refunds refund = getRefund(refundSid);
+        refund.setStatus(RefundStatus.FAILED);
+        refund.setFailedAt(LocalDateTime.now());
+        refund.setFailureReason(failureReason);
     }
 
     private Payments getPayment(Long sid) {
