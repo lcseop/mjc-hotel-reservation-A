@@ -168,6 +168,17 @@ public class ReviewService {
 
         return result;
     }
+
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> reviewsByMember(Long memberId, Pageable pageable) {
+        return reviewRepository.findByMemberSidAndDeletedFalse(memberId, pageable)
+                .map(review -> {
+                    List<ReviewCategory> categories = reviewCategoryRepository.findByReviewSid(review.getSid());
+                    List<ReviewTag> tags = reviewTagRepository.findByReviewSid(review.getSid());
+                    return this.toReviewResponse(review, categories, tags);
+                });
+    }
+
     @Transactional
     public ReviewResponse deleteReviewId(Long sid) {
         Review find = reviewRepository.findBySidAndDeletedFalse(sid);
@@ -202,6 +213,9 @@ public class ReviewService {
         return  ReviewResponse.builder()
                 .sid(review.getSid())
                 .hotelId(review.getHotel().getSid())
+                .hotelName(review.getHotel().getHotelName())
+                .hotelLocation(review.getHotel().getLocation())
+                .hotelStarRating(review.getHotel().getStarRating())
                 .memberId(review.getMember().getSid())
                 .reservationId(review.getReservation().getSid())
                 .rating(review.getRating())

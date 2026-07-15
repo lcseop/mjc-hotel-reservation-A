@@ -15,6 +15,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Page<Review> findByHotelSid(Long hotelId, Pageable pageable);
     Page<Review> findByMemberSid(Long memberId, Pageable pageable);
+    Page<Review> findByMemberSidAndDeletedFalse(Long memberId, Pageable pageable);
 
     Boolean existsByReservationSid(Long reservationId);
 

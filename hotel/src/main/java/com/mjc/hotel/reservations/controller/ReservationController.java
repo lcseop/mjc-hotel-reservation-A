@@ -1,6 +1,7 @@
 package com.mjc.hotel.reservations.controller;
 
 import com.mjc.hotel.reservations.dto.ReservationCancelDto;
+import com.mjc.hotel.reservations.dto.PointHistoryResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationRequestDto;
 import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationStatsDto;
@@ -71,6 +72,15 @@ public class ReservationController {
         Page<ReservationResponseDto> response = reservationService.searchReservations(
                 status, memberId, hotelId, keyword, roomKeyword, roomTypeId, dateFrom, dateTo, pageable
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/point-history")
+    @Operation(summary = "포인트 이력 조회", description = "회원 기준으로 포인트 적립/사용 이력을 페이징 조회합니다")
+    public ResponseEntity<Page<PointHistoryResponseDto>> getPointHistories(
+            @RequestParam Long memberId,
+            Pageable pageable) {
+        Page<PointHistoryResponseDto> response = reservationService.getPointHistories(memberId, pageable);
         return ResponseEntity.ok(response);
     }
 
