@@ -141,6 +141,13 @@ public class HotelService {
         return page;
     }
 
+    public List<HotelResponseDto> findAllForAdmin() {
+        return hotelRepository.findAll().stream()
+                .filter(hotel -> !Boolean.TRUE.equals(hotel.getDeleted()))
+                .map(hotel -> HotelMapper.response(hotel, null))
+                .toList();
+    }
+
     public HotelResponseDto findById(Long id) {
         Hotel hotel = hotelRepository.findById(id).orElseThrow();
 

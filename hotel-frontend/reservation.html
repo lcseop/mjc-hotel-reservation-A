@@ -140,6 +140,33 @@
                         <div><span>세금 및 봉사료</span><strong id="taxAmount">₩0</strong></div>
                     </div>
 
+                    <div class="benefit-box">
+                        <div class="benefit-head">
+                            <h3>쿠폰</h3>
+                            <button type="button" id="clearCouponBtn">선택 해제</button>
+                        </div>
+                        <div id="couponList" class="coupon-list">
+                            <div class="coupon-empty">보유 쿠폰을 확인하는 중입니다.</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-box point-box">
+                        <div class="benefit-head">
+                            <h3>포인트</h3>
+                            <span>보유 <b id="availablePoint">0P</b></span>
+                        </div>
+                        <div class="point-control">
+                            <input type="number" id="usePointInput" min="0" step="100" value="0" placeholder="사용할 포인트">
+                            <button type="button" id="useAllPointBtn">전액 사용</button>
+                        </div>
+                        <p>1P는 1원으로 사용할 수 있습니다.</p>
+                    </div>
+
+                    <div class="price-list discount-list">
+                        <div id="couponDiscountRow" style="display:none;"><span>쿠폰 할인</span><strong id="couponDiscountAmount">-₩0</strong></div>
+                        <div id="pointDiscountRow" style="display:none;"><span>포인트 사용</span><strong id="pointDiscountAmount">-₩0</strong></div>
+                    </div>
+
                     <div class="total-price">
                         <span>최종 결제금액</span>
                         <strong id="totalAmount">₩0</strong>

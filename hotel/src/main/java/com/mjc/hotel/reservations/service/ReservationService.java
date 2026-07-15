@@ -123,7 +123,7 @@ public class ReservationService {
             pointHistoryRepository.save(pointHistory);
         }
 
-        Integer earnPoint = (int) (totalAmount * 0.05);
+        Integer earnPoint = (int) (totalAmount * 0.005);
         if (earnPoint > 0) {
             member.setPoint(memberPoint + earnPoint);
             savedReservation.setEarnedPoint(earnPoint);
@@ -180,6 +180,15 @@ public class ReservationService {
         return page.map(this::convertToResponseDto);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Page<PointHistoryResponseDto> getPointHistories(Long memberId, Pageable pageable) {
+        if (!memberRepository.existsById(memberId)) {
+            throw new IllegalArgumentException("회원을 찾을 수 없습니다. ID: " + memberId);
+        }
+        return pointHistoryRepository.findByMemberSidOrderByCreatedAtDesc(memberId, pageable)
+                .map(this::convertToPointHistoryResponseDto);
+    }
+
     private String normalizeKeyword(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -203,18 +212,28 @@ public class ReservationService {
         Integer refundAmount = calculateRefundAmount(reservation);
 
         Member member = reservation.getMember();
-        List<PointHistory> useHistories = pointHistoryRepository.findAll().stream()
-                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.USE)
-                .toList();
+        List<PointHistory> useHistories = pointHistoryRepository.findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.USE);
         for (PointHistory history : useHistories) {
-            member.setPoint(member.getPoint() - history.getAmount());
+            int refundPoint = Math.abs(history.getAmount());
+            member.setPoint(member.getPoint() + refundPoint);
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(refundPoint)
+                    .pointStatus(PointStatus.USE_CANCEL_REFUND)
+                    .build());
         }
 
-        List<PointHistory> earnHistories = pointHistoryRepository.findAll().stream()
-                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.ACCUMULATION)
-                .toList();
+        List<PointHistory> earnHistories = pointHistoryRepository.findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.ACCUMULATION);
         for (PointHistory history : earnHistories) {
-            member.setPoint(Math.max(0, member.getPoint() - history.getAmount()));
+            int revokePoint = Math.abs(history.getAmount());
+            member.setPoint(Math.max(0, member.getPoint() - revokePoint));
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(-revokePoint)
+                    .pointStatus(PointStatus.ACCUMULATION_CANCEL_REVOKE)
+                    .build());
         }
 
         if (reservation.getCouponIssue() != null) {
@@ -428,6 +447,24 @@ public class ReservationService {
                 .cancellationPolicyDto(buildCancellationPolicies(reservation))
                 .createdAt(reservation.getCreatedAt())
                 .updatedAt(reservation.getUpdatedAt())
+                .build();
+    }
+
+    private PointHistoryResponseDto convertToPointHistoryResponseDto(PointHistory pointHistory) {
+        Reservation reservation = pointHistory.getReservation();
+        Room room = reservation != null ? reservation.getRoom() : null;
+        var hotel = room != null ? room.getHotelId() : null;
+
+        return PointHistoryResponseDto.builder()
+                .sid(pointHistory.getSid())
+                .reservationId(reservation != null ? reservation.getSid() : null)
+                .reservationNumber(reservation != null ? reservation.getReservationNumber() : null)
+                .hotelId(hotel != null ? hotel.getSid() : null)
+                .hotelName(hotel != null ? hotel.getHotelName() : null)
+                .roomName(room != null ? room.getRoomName() : null)
+                .amount(pointHistory.getAmount())
+                .pointStatus(pointHistory.getPointStatus())
+                .createdAt(pointHistory.getCreatedAt())
                 .build();
     }
 

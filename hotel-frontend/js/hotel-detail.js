@@ -37,6 +37,7 @@ $(function () {
     loadReviews(hotelId);
     loadReviewWriteEligibility(hotelId);
     loadReviewTagMasters();
+    loadWishlistStatus(hotelId);
 });
 
 function bindEvent() {
@@ -145,6 +146,8 @@ function bindEvent() {
     $(document).on("click", ".review-reaction-btn", function () {
         sendReviewReaction($(this).data("review-id"), $(this).data("reaction"));
     });
+
+    $("#wishlistBtn").on("click", toggleWishlist);
 }
 
 function loadReviewTagMasters() {
@@ -172,6 +175,76 @@ function readJson(key) {
 
 function getAuthData() {
     return readJson("staynowAuth");
+}
+
+function loadWishlistStatus(hotelId) {
+    const auth = getAuthData();
+    if (!auth || !auth.memberSid || !hotelId) {
+        paintWishlistButton(false);
+        return;
+    }
+
+    $.ajax({
+        url: API_BASE + "/wish/status",
+        type: "GET",
+        data: {
+            memberId: auth.memberSid,
+            hotelId: hotelId
+        },
+        success: function (result) {
+            paintWishlistButton(Boolean(result && result.data && result.data.wished));
+        },
+        error: function () {
+            paintWishlistButton(false);
+        }
+    });
+}
+
+function toggleWishlist() {
+    const auth = getAuthData();
+    const hotelId = currentHotelId || new URLSearchParams(location.search).get("id");
+
+    if (!auth || !auth.memberSid) {
+        alert("위시리스트를 사용하려면 로그인이 필요합니다.");
+        sessionStorage.setItem("afterLoginRedirect", location.href);
+        location.href = "login.html";
+        return;
+    }
+
+    if (!hotelId) return;
+
+    const wished = $("#wishlistBtn").hasClass("active");
+    $("#wishlistBtn").prop("disabled", true);
+
+    $.ajax({
+        url: wished
+            ? API_BASE + "/wish?memberId=" + encodeURIComponent(auth.memberSid) + "&hotelId=" + encodeURIComponent(hotelId)
+            : API_BASE + "/wish",
+        type: wished ? "DELETE" : "POST",
+        contentType: "application/json",
+        data: wished ? undefined : JSON.stringify({
+            memberId: Number(auth.memberSid),
+            hotelId: Number(hotelId)
+        }),
+        success: function () {
+            paintWishlistButton(!wished);
+        },
+        error: function () {
+            alert(wished ? "찜 해제에 실패했습니다." : "찜하기에 실패했습니다.");
+        },
+        complete: function () {
+            $("#wishlistBtn").prop("disabled", false);
+        }
+    });
+}
+
+function paintWishlistButton(wished) {
+    const $button = $("#wishlistBtn");
+    if (!$button.length) return;
+    $button.toggleClass("active", wished);
+    $button.attr("aria-pressed", wished ? "true" : "false");
+    $button.find("i").toggleClass("fa-regular", !wished).toggleClass("fa-solid", wished);
+    $button.find("span").text(wished ? "찜한 호텔" : "찜하기");
 }
 
 function loadHotelDetail(hotelId) {

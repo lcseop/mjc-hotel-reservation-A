@@ -7,7 +7,7 @@ const ADMIN_PAGES = [
     { id: "promotions", label: "프로모션", file: "admin-promotions.html", icon: "fa-percent", group: "객실 · 요금" },
     { id: "sales", label: "매출 분석", file: "admin-sales.html", icon: "fa-chart-bar", group: "분석 · 리포트" },
     { id: "reviews", label: "리뷰 관리", file: "admin-reviews.html", icon: "fa-star", group: "분석 · 리포트" },
-    { id: "settings", label: "호텔 관리", file: "admin-settings.html", icon: "fa-hotel", group: "설정" }
+    { id: "settings", label: "호텔 관리", file: "admin-hotel.html", icon: "fa-hotel", group: "설정" }
 ];
 
 const ADMIN_TOP_NAV = ["dashboard", "reservations", "guests", "rooms", "sales", "reviews", "settings"];
@@ -201,6 +201,18 @@ function renderAdminShell(pageId, auth) {
     });
     $(document).off("click.adminHotelCreate").on("click.adminHotelCreate", "[data-admin-action='open-hotel-create']", function () {
         openHotelManageModal();
+    });
+    $(document).off("click.adminHotelTypeManage").on("click.adminHotelTypeManage", "[data-admin-action='open-hotel-type-manage']", function () {
+        openHotelTypeManager();
+    });
+    $(document).off("click.adminHotelAmenityManage").on("click.adminHotelAmenityManage", "[data-admin-action='open-hotel-amenity-manage']", function () {
+        openHotelAmenityManager();
+    });
+    $(document).off("click.adminGuestCoupon").on("click.adminGuestCoupon", "[data-admin-action='open-guest-coupon']", function () {
+        openGuestCouponModal();
+    });
+    $(document).off("click.adminGuestCouponIssue").on("click.adminGuestCouponIssue", "[data-admin-action='open-guest-coupon-issue']", function () {
+        openGuestCouponIssueModal();
     });
 }
 
@@ -585,37 +597,40 @@ function pageSubtitle(id) {
 
 function adminPageNote(id) {
     if (id === "dashboard") {
-        return "대시보드는 왼쪽에서 선택한 호텔 기준으로 예약, 객실, 결제, 리뷰 데이터를 조합해 표시합니다.";
+        return "대시보드에서 여러 정보들을 한 눈에 쉽고 빠르게 파악할 수 있습니다.";
     }
     if (id === "sales") {
-        return "매출 분석은 왼쪽에서 선택한 호텔과 상단 기준 월에 따라 결제 완료 및 부분 환불 데이터를 집계합니다.";
+        return "월별 매출 상황을 볼 수 있습니다.";
     }
-    if (id === "reservations" || id === "guests") {
-        return "현재 화면은 선택한 호텔 기준의 실제 예약 및 회원 데이터를 활용합니다.";
+    if (id === "reservations") {
+        return "현재 선택된 호텔의 예약에 대해 관리할 수 있습니다.";
+    }
+    if (id === "guests") {
+        return "모든 회원에 대한 관리를 합니다. 선택된 호텔이 있다면 그 호텔의 예약 건수를 볼 수 있습니다.";
     }
     if (id === "promotions") {
-        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용되며, 할인 내용은 discountContent 기준으로 관리합니다.";
+        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용됩니다.";
     }
     if (id === "reviews") {
-        return "리뷰 관리는 왼쪽에서 선택한 호텔 기준으로 리뷰와 관리자 답변을 표시합니다.";
+        return "현재 선택된 호텔의 리뷰에 대해 관리할 수 있습니다.";
     }
     if (id === "settings") {
-        return "호텔 관리는 Hotel 관련 API만 사용해 선택 호텔의 기본 정보, 편의시설, 타입, 사진을 관리합니다.";
+        return "현재 선택된 호텔에 대해 정보를 수정할 수 있습니다.";
     }
-    return "현재 화면은 기능 연결 전 임시 관리자 UI입니다. 버튼, 필터, 차트는 다음 단계에서 백엔드 API와 연결할 수 있도록 고정 데이터로 구성했습니다.";
+    return "현재 화면은 관리자 UI 입니다.";
 }
 
 function headActions(id) {
     const byPage = {
         dashboard: [["리포트 다운로드", "fa-download", "", "download-dashboard-report"], ["새로고침", "fa-rotate-right", "", "refresh-dashboard"]],
         reservations: [["리포트 다운로드", "fa-download", "", "download-reservation-report"]],
-        guests: [],
+        guests: [["쿠폰 생성", "fa-ticket", "", "open-guest-coupon"], ["쿠폰 발급", "fa-paper-plane", "primary", "open-guest-coupon-issue"]],
         rooms: [["리포트 다운로드", "fa-download", "", "download-rooms-report"], ["객실 추가", "fa-plus", "primary", "open-room-create"]],
         promotions: [["프로모션 생성", "fa-plus", "primary", "create-promotion"]],
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
         checkin: [["QR 체크인", "fa-qrcode", "primary", "open-qr-checkin"], ["캘린더 보기", "fa-calendar", "", "open-checkin-calendar"], ["리포트 다운로드", "fa-download", "", "download-checkin-report"]],
         reviews: [],
-        settings: [["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
+        settings: [["호텔 타입 관리", "fa-layer-group", "", "open-hotel-type-manage"], ["편의시설 관리", "fa-wand-magic-sparkles", "", "open-hotel-amenity-manage"], ["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
     };
     const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
     const actionButtons = buttons.map(([text, icon, type, action]) => `<button class="admin-btn ${type || ""}" type="button"${action ? ` data-admin-action="${action}"` : ""}><i class="fa-solid ${icon}"></i> ${text}</button>`).join("");
@@ -774,6 +789,7 @@ function renderGuests() {
         <div id="guestReservationPanel" class="panel guest-reservation-panel" hidden>
             <div class="admin-loading">예약 내역을 준비하는 중입니다.</div>
         </div>
+        <div id="guestCouponModalRoot"></div>
     `;
 }
 
@@ -919,20 +935,6 @@ function renderSettings() {
                 <div class="panel-head"><div><h2>호텔 기본 정보</h2><span>선택한 호텔의 검색/예약 노출 정보를 수정합니다.</span></div></div>
                 <div id="hotelManageFields" class="admin-loading">호텔 정보를 불러오는 중입니다.</div>
             </form>
-            <aside class="hotel-manage-side">
-                <div class="panel">
-                    <div class="panel-head"><div><h2>호텔 사진</h2><span>대표 및 서브 이미지로 사용됩니다.</span></div></div>
-                    <div id="hotelPhotoGrid" class="room-photo-grid"></div>
-                    <input id="hotelPhotoFilesInput" class="room-photo-native-input" type="file" accept="image/*" multiple>
-                </div>
-                <div class="panel">
-                    <div class="panel-head"><div><h2>분류 관리</h2><span>호텔 타입과 편의시설 마스터를 관리합니다.</span></div></div>
-                    <div class="hotel-master-actions">
-                        <button class="admin-btn" type="button" data-hotel-type-manage><i class="fa-solid fa-layer-group"></i> 호텔 타입 관리</button>
-                        <button class="admin-btn" type="button" data-hotel-amenity-manage><i class="fa-solid fa-wand-magic-sparkles"></i> 편의시설 관리</button>
-                    </div>
-                </div>
-            </aside>
         </div>
         <div id="hotelManageModalRoot"></div>
     `;
@@ -1095,7 +1097,7 @@ function dashboardMetricSkeleton(label, icon) {
 function loadAdminReviewData(filter) {
     const activeFilter = filter || (ADMIN_REVIEW_STATE && ADMIN_REVIEW_STATE.filter) || "all";
     const requests = {
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", [])
     };
 
@@ -1449,7 +1451,7 @@ function isNegativeReviewTag(tag) {
 
 function loadAdminHotelManageData() {
     const requests = {
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", []),
         types: adminGetSafe("/hoteltype", []),
         amenities: adminGetSafe("/hotelame", [])
@@ -1504,7 +1506,7 @@ function renderHotelManagePage() {
         return;
     }
 
-    $("#hotelManageFields").html(renderHotelManageFields(state.selectedHotel, state, false));
+    $("#hotelManageFields").removeClass("admin-loading").html(renderHotelManageFields(state.selectedHotel, state, false));
     initHotelPhotoManager(state.selectedHotel);
     bindHotelManageControls();
 }
@@ -1522,20 +1524,38 @@ function renderHotelManageFields(hotel, state, isCreate) {
         </label>`;
     }).join("");
 
+    const selectedAmenityCount = state.selectedAmenities.length;
+
     return `
         <input type="hidden" id="hotelSidInput" value="${escapeHtml(hotel.sid || "")}">
-        <div class="admin-form-grid hotel-form-grid">
-            <label><span>호텔 타입</span><div class="room-type-select-row"><select id="hotelTypeInput">${typeOptions}</select><button class="admin-btn" type="button" data-hotel-type-manage><i class="fa-solid fa-gear"></i></button></div></label>
-            <label><span>호텔 이름</span><input id="hotelNameInput" value="${escapeHtml(hotel.hotelName || "")}" placeholder="호텔 이름"></label>
-            <label><span>호텔 가격</span><input id="hotelPriceInput" type="number" min="0" value="${escapeHtml(hotel.hotelPrice || "")}" placeholder="대표 가격"></label>
-            <label><span>장소</span><input id="hotelLocationInput" value="${escapeHtml(hotel.location || "")}" placeholder="주소"></label>
-            <label><span>성급</span><input id="hotelStarInput" type="number" min="1" max="5" value="${escapeHtml(hotel.starRating || "")}" placeholder="1~5"></label>
-            <label><span>위도</span><input id="hotelLatitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.latitude || "")}" placeholder="37.000000"></label>
-            <label><span>경도</span><input id="hotelLongitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.longitude || "")}" placeholder="127.000000"></label>
-            <label class="full"><span>설명</span><textarea id="hotelDescriptionInput" placeholder="호텔 소개">${escapeHtml(hotel.description || "")}</textarea></label>
-            <div class="full hotel-amenities-field">
-                <div class="hotel-field-head"><span>편의시설</span><button class="admin-btn small" type="button" data-hotel-amenity-manage><i class="fa-solid fa-gear"></i> 관리</button></div>
-                <div class="hotel-amenity-grid">${amenities || '<div class="empty-admin-state">등록된 편의시설이 없습니다.</div>'}</div>
+        <div class="hotel-info-surface">
+            <div class="hotel-info-layout${isCreate ? " single" : ""}">
+                <div class="admin-form-grid hotel-form-grid">
+                    <label class="hotel-type-field">
+                        <span class="hotel-field-label-row"><span class="hotel-field-title"><i class="fa-solid fa-layer-group"></i>호텔 타입</span></span>
+                        <select id="hotelTypeInput">${typeOptions}</select>
+                    </label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-hotel"></i>호텔 이름</span><input id="hotelNameInput" value="${escapeHtml(hotel.hotelName || "")}" placeholder="호텔 이름"></label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-won-sign"></i>호텔 가격</span><input id="hotelPriceInput" type="number" min="0" value="${escapeHtml(hotel.hotelPrice || "")}" placeholder="대표 가격"></label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-location-dot"></i>장소</span><input id="hotelLocationInput" value="${escapeHtml(hotel.location || "")}" placeholder="주소"></label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-star"></i>성급</span><input id="hotelStarInput" type="number" min="1" max="5" value="${escapeHtml(hotel.starRating || "")}" placeholder="1~5"></label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-map-pin"></i>위도</span><input id="hotelLatitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.latitude || "")}" placeholder="37.000000"></label>
+                    <label><span class="hotel-field-title"><i class="fa-solid fa-map-location-dot"></i>경도</span><input id="hotelLongitudeInput" type="number" step="0.000001" value="${escapeHtml(hotel.longitude || "")}" placeholder="127.000000"></label>
+                    <label class="full"><span class="hotel-field-title"><i class="fa-solid fa-align-left"></i>설명</span><textarea id="hotelDescriptionInput" placeholder="호텔 소개">${escapeHtml(hotel.description || "")}</textarea></label>
+                </div>
+                ${isCreate ? "" : `<section class="hotel-photo-inline" aria-label="호텔 사진">
+                    <div class="hotel-field-head"><div><span>호텔 사진</span><small>대표 및 서브 이미지로 사용됩니다.</small></div></div>
+                    <div id="hotelPhotoGrid" class="room-photo-grid hotel-photo-grid"></div>
+                    <input id="hotelPhotoFilesInput" class="room-photo-native-input" type="file" accept="image/*" multiple>
+                </section>`}
+            </div>
+            <div class="hotel-amenities-field">
+                <div class="hotel-field-head"><div><span>편의시설</span><small>검색해서 필요한 편의시설만 선택하세요.</small></div></div>
+                <div class="hotel-amenity-tools">
+                    <label class="hotel-amenity-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" data-hotel-amenity-search placeholder="편의시설명 또는 설명 검색"></label>
+                    <span class="hotel-amenity-count" data-hotel-amenity-count>선택 ${selectedAmenityCount}개</span>
+                </div>
+                <div class="hotel-amenity-grid" data-hotel-amenity-list>${amenities || '<div class="empty-admin-state">등록된 편의시설이 없습니다.</div>'}</div>
             </div>
         </div>
         <div class="admin-modal-actions inline">
@@ -1555,6 +1575,39 @@ function bindHotelManageControls() {
     });
     $("[data-hotel-type-manage]").off("click.hotelManage").on("click.hotelManage", openHotelTypeManager);
     $("[data-hotel-amenity-manage]").off("click.hotelManage").on("click.hotelManage", openHotelAmenityManager);
+    bindHotelAmenitySearch($("#hotelManageForm"));
+}
+
+function bindHotelAmenitySearch(root) {
+    const $root = $(root || document);
+    $root.find("[data-hotel-amenity-search]").off("input.hotelAmenitySearch").on("input.hotelAmenitySearch", function () {
+        filterHotelAmenityList($(this).closest(".hotel-amenities-field"));
+    });
+    $root.find(".hotel-amenity-check input").off("change.hotelAmenitySearch").on("change.hotelAmenitySearch", function () {
+        const field = $(this).closest(".hotel-amenities-field");
+        const list = field.find("[data-hotel-amenity-list]");
+        const scrollTop = list.scrollTop();
+        updateHotelAmenityCount(field);
+        requestAnimationFrame(function () {
+            list.scrollTop(scrollTop);
+        });
+    });
+    $root.find(".hotel-amenities-field").each(function () {
+        filterHotelAmenityList($(this));
+        updateHotelAmenityCount($(this));
+    });
+}
+
+function filterHotelAmenityList(field) {
+    const keyword = String(field.find("[data-hotel-amenity-search]").val() || "").trim().toLowerCase();
+    field.find(".hotel-amenity-check").each(function () {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(!keyword || text.includes(keyword));
+    });
+}
+
+function updateHotelAmenityCount(field) {
+    field.find("[data-hotel-amenity-count]").text("선택 " + field.find(".hotel-amenity-check input:checked").length + "개");
 }
 
 function readHotelPayload() {
@@ -1635,6 +1688,7 @@ function openHotelManageModal() {
     $("[data-hotel-modal-close]").on("click", closeHotelManageModal);
     $("#hotelCreateForm [data-hotel-type-manage]").on("click", openHotelTypeManager);
     $("#hotelCreateForm [data-hotel-amenity-manage]").on("click", openHotelAmenityManager);
+    bindHotelAmenitySearch($("#hotelCreateForm"));
     bindHotelCreatePhotoManager();
     renderHotelCreatePhotoGrid();
     $("#hotelCreateForm").on("submit", function (event) {
@@ -1748,31 +1802,33 @@ function openHotelAmenityManager() {
 }
 
 function openHotelMasterManager(config) {
+    const showDescription = config.fields.includes("description");
     const rows = config.items.map(function (item) {
-        return `<tr>
-            <td><strong>${escapeHtml(item.title || "-")}</strong><small>${escapeHtml(item.description || ("ID " + item.sid))}</small></td>
-            <td><div class="row-actions">
+        return `<article class="hotel-master-card">
+            <div class="hotel-master-card-main">
+                <div class="hotel-master-item-title"><strong>${escapeHtml(item.title || "-")}</strong><span>ID ${escapeHtml(item.sid)}</span></div>
+                ${showDescription && item.description ? `<small>${escapeHtml(item.description)}</small>` : ""}
+            </div>
+            <div class="row-actions">
                 <button class="icon-btn" type="button" data-hotel-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
                 <button class="icon-btn danger" type="button" data-hotel-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
-            </div></td>
-        </tr>`;
+            </div>
+        </article>`;
     }).join("");
     $("body").append(`
         <div class="admin-modal-backdrop nested hotel-master-backdrop">
-            <div class="admin-modal room-type-manager">
+            <div class="admin-modal hotel-master-modal">
                 <div class="admin-modal-head">
                     <div><h2>${escapeHtml(config.title)}</h2><p>추가, 수정, 삭제 후 호텔 관리 화면에 반영됩니다.</p></div>
                     <button type="button" class="modal-close" data-hotel-master-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <form id="hotelMasterForm" class="room-type-form">
+                <form id="hotelMasterForm" class="hotel-master-form">
                     <input id="hotelMasterSidInput" type="hidden">
                     <input id="hotelMasterTitleInput" class="admin-input" placeholder="${escapeHtml(config.placeholder)}">
                     ${config.fields.includes("description") ? '<input id="hotelMasterDescriptionInput" class="admin-input" placeholder="설명">' : ""}
                     <button class="admin-btn primary" type="submit"><i class="fa-solid fa-plus"></i> 저장</button>
                 </form>
-                <div class="admin-table-wrap room-type-manager-table">
-                    <table class="admin-table"><thead><tr><th>이름</th><th>액션</th></tr></thead><tbody>${rows || '<tr><td colspan="2">등록된 항목이 없습니다.</td></tr>'}</tbody></table>
-                </div>
+                <div class="hotel-master-list">${rows || '<div class="empty-admin-state">등록된 항목이 없습니다.</div>'}</div>
             </div>
         </div>
     `);
@@ -1781,7 +1837,7 @@ function openHotelMasterManager(config) {
         event.preventDefault();
         saveHotelMasterItem(config);
     });
-    $(".room-type-manager-table")
+    $(".hotel-master-list")
         .on("click", "[data-hotel-master-edit]", function () {
             const item = config.items.find((target) => String(target.sid) === String($(this).data("hotelMasterEdit")));
             if (!item) return;
@@ -1955,7 +2011,7 @@ function loadAdminDashboardData() {
         stats: adminGetSafe("/reservation/status", {}),
         reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
         payments: adminGetSafe("/payments", []),
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", [])
     };
 
@@ -1994,7 +2050,7 @@ function loadAdminDashboardData() {
 function loadAdminReservationData(page) {
     const currentPage = Number(page || 0);
     const requests = {
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", []),
         roomTypes: adminGetSafe("/roomtype", [])
     };
@@ -2115,15 +2171,16 @@ function loadAdminGuestData() {
     const requests = {
         members: adminGetSafe("/member", []),
         reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
-        popularHotels: adminGetSafe("/hotel/pop4", [])
+        hotels: adminGetSafe("/hotel/all", []),
+        popularHotels: adminGetSafe("/hotel/pop4", []),
+        coupons: adminGetSafe("/cou", [])
     };
 
-    $.when(requests.members, requests.reservations, requests.hotels, requests.popularHotels)
-        .done(function (membersResult, reservationsResult, hotelsResult, popularHotelsResult) {
+    $.when(requests.members, requests.reservations, requests.hotels, requests.popularHotels, requests.coupons)
+        .done(function (membersResult, reservationsResult, hotelsResult, popularHotelsResult, couponsResult) {
             const members = asArray(normalizeAjaxResult(membersResult))
                 .filter(function (member) {
-                    return member && member.role !== "ADMIN" && !member.deleted;
+                    return member && !member.deleted && member.status !== "DELETED";
                 });
             const reservationPage = normalizeAjaxResult(reservationsResult);
             const hotelPage = normalizeAjaxResult(hotelsResult);
@@ -2136,6 +2193,7 @@ function loadAdminGuestData() {
             ADMIN_GUEST_STATE = {
                 members,
                 reservations,
+                coupons: asArray(normalizeAjaxResult(couponsResult)),
                 selectedHotel,
                 reservationsByMember: groupReservationsByMember(reservations)
             };
@@ -2152,7 +2210,7 @@ function loadAdminGuestData() {
 
 function loadAdminRoomData() {
     const requests = {
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", []),
         reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
         roomTypes: adminGetSafe("/roomtype", [])
@@ -2449,16 +2507,21 @@ function renderRoomCard(room) {
     const actionIcon = room.adminAvailable ? "fa-ban" : "fa-check";
     const sizeText = room.roomSize || room.size ? escapeHtml(room.roomSize || room.size) + "㎡" : "-";
 
+    const roomTitle = room.roomName || room.roomTypeTitle || "객실";
+
     return `<article class="admin-room-card ${escapeHtml(room.adminStatus)}">
         <div class="room-card-head">
-            <div><span class="room-dot"></span><strong>${escapeHtml(room.roomNumber || room.roomName || "-")}호</strong></div>
+            <div class="room-card-title-stack">
+                <small>${escapeHtml(roomTitle)}</small>
+                <span><span class="room-dot"></span><strong>${escapeHtml(room.roomNumber || "-")}호</strong></span>
+            </div>
             <span class="room-status-chip">${escapeHtml(room.adminStatusLabel)}</span>
         </div>
         <div class="room-type-line"><i class="fa-solid fa-bed"></i>${escapeHtml(room.roomTypeTitle || room.roomName || "객실")}</div>
         ${reservation ? `<div class="room-guest-box">
             <span class="guest-avatar">${escapeHtml((guestName || "예").slice(0, 1))}</span>
             <div><strong>${escapeHtml(guestName)}</strong><small>${escapeHtml(dateText)}</small></div>
-        </div>` : `<div class="room-empty-box"><i class="fa-regular fa-moon"></i><span>${room.adminStatus === "blocked" ? "예약 판매 중지" : "현재 공실"}</span></div>`}
+        </div>` : `<div class="room-empty-box"><i class="fa-regular fa-moon"></i><span>${room.adminStatus === "blocked" ? "예약 불가" : "공실"}</span></div>`}
         <div class="room-card-meta">
             <span><i class="fa-solid fa-arrow-up-right-dots"></i>${sizeText}</span>
             <span><i class="fa-solid fa-layer-group"></i>${escapeHtml(floor)}층</span>
@@ -2977,7 +3040,7 @@ function loadAdminSalesData() {
     const requests = {
         reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=createdAt,desc", { content: [] }),
         payments: adminGetSafe("/payments", []),
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", [])
     };
 
@@ -3457,6 +3520,372 @@ function renderGuestReservationPanel(memberId) {
         </div>` : emptyAdminState("예약 내역이 없습니다."))
     );
     panel[0].scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function openGuestCouponModal() {
+    $("#guestCouponModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <div class="admin-modal guest-coupon-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>쿠폰 추가</h2>
+                        <p>예약 결제에서 사용할 수 있는 쿠폰 정책을 만듭니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-guest-coupon-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form id="guestCouponForm">
+                    <div class="admin-form-grid">
+                        <label class="admin-form-full">
+                            쿠폰 이름
+                            <input id="guestCouponName" type="text" maxlength="100" placeholder="예: 신규회원 1만원 쿠폰" required>
+                        </label>
+                        <label>
+                            할인 타입
+                            <select id="guestCouponDiscountType" required>
+                                <option value="PERCENT">퍼센트 할인</option>
+                                <option value="FIXED">금액 할인</option>
+                            </select>
+                        </label>
+                        <label>
+                            할인값
+                            <input id="guestCouponDiscountValue" type="number" min="0" step="1" placeholder="예: 10 또는 10000" required>
+                        </label>
+                        <label>
+                            최소 주문 금액
+                            <input id="guestCouponMinOrder" type="number" min="0" step="1000" placeholder="0">
+                        </label>
+                        <label>
+                            총 수량
+                            <input id="guestCouponTotalQuantity" type="number" min="1" step="1" placeholder="제한 없음">
+                        </label>
+                        <label>
+                            시작일
+                            <input id="guestCouponStartDate" type="date">
+                        </label>
+                        <label>
+                            종료일
+                            <input id="guestCouponEndDate" type="date">
+                        </label>
+                        <div class="admin-form-full guest-coupon-help">
+                            <i class="fa-solid fa-circle-info"></i>
+                            여기서는 쿠폰 정책만 생성합니다. 생성한 쿠폰은 상단의 쿠폰 발급 버튼에서 특정 회원 또는 조건 대상에게 발급할 수 있습니다.
+                        </div>
+                    </div>
+                    <div class="admin-modal-actions">
+                        <button class="admin-btn" type="button" data-guest-coupon-close>취소</button>
+                        <button class="admin-btn primary" type="submit"><i class="fa-solid fa-ticket"></i> 저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `);
+
+    $("#guestCouponForm").off("submit.guestCoupon").on("submit.guestCoupon", function (event) {
+        event.preventDefault();
+        saveGuestCoupon();
+    });
+    $("[data-guest-coupon-close]").off("click.guestCoupon").on("click.guestCoupon", closeGuestCouponModal);
+}
+
+function closeGuestCouponModal() {
+    $("#guestCouponModalRoot").empty();
+}
+
+function saveGuestCoupon() {
+    const startDate = $("#guestCouponStartDate").val();
+    const endDate = $("#guestCouponEndDate").val();
+    const totalQuantity = Number($("#guestCouponTotalQuantity").val() || 0);
+    const payload = {
+        couponName: ($("#guestCouponName").val() || "").trim(),
+        discountType: $("#guestCouponDiscountType").val(),
+        discountValue: Number($("#guestCouponDiscountValue").val() || 0),
+        minOrderAmount: Number($("#guestCouponMinOrder").val() || 0),
+        startDate: startDate ? startDate + "T00:00:00" : null,
+        endDate: endDate ? endDate + "T23:59:59" : null,
+        totalQuantity: totalQuantity > 0 ? totalQuantity : null
+    };
+
+    if (!payload.couponName) {
+        alert("쿠폰 이름을 입력해주세요.");
+        return;
+    }
+    if (!payload.discountValue || payload.discountValue <= 0) {
+        alert("할인값을 입력해주세요.");
+        return;
+    }
+    if (payload.discountType === "PERCENT" && payload.discountValue > 100) {
+        alert("퍼센트 할인은 100 이하로 입력해주세요.");
+        return;
+    }
+    if (payload.startDate && payload.endDate && payload.startDate > payload.endDate) {
+        alert("종료일은 시작일 이후로 선택해주세요.");
+        return;
+    }
+
+    const button = $("#guestCouponForm .admin-btn.primary");
+    button.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 저장 중');
+
+    adminPost("/cou", payload).then(function (coupon) {
+        if (ADMIN_GUEST_STATE && coupon && coupon.sid) {
+            ADMIN_GUEST_STATE.coupons = asArray(ADMIN_GUEST_STATE.coupons)
+                .filter(function (item) { return String(item.sid) !== String(coupon.sid); })
+                .concat([coupon]);
+        }
+        closeGuestCouponModal();
+        alert("쿠폰 생성이 완료되었습니다.");
+        loadAdminGuestData();
+    }, function (xhr) {
+        console.error("Coupon save failed", { payload, response: xhr && (xhr.responseJSON || xhr.responseText) });
+        alert(getAdminAjaxMessage(xhr, "쿠폰 처리에 실패했습니다."));
+        button.prop("disabled", false).html('<i class="fa-solid fa-ticket"></i> 저장');
+    });
+}
+
+function openGuestCouponIssueModal() {
+    $("#guestCouponModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <div class="admin-modal guest-coupon-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>쿠폰 발급</h2>
+                        <p>생성된 쿠폰 목록을 불러오는 중입니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-guest-coupon-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-loading">쿠폰 데이터를 불러오고 있습니다.</div>
+            </div>
+        </div>
+    `);
+    $("[data-guest-coupon-close]").off("click.guestCoupon").on("click.guestCoupon", closeGuestCouponModal);
+
+    adminGet("/cou").then(function (coupons) {
+        if (!ADMIN_GUEST_STATE) {
+            ADMIN_GUEST_STATE = { members: [], coupons: [], reservationsByMember: new Map() };
+        }
+        ADMIN_GUEST_STATE.coupons = asArray(coupons);
+        renderGuestCouponIssueModal();
+    }, function (xhr) {
+        $("#guestCouponModalRoot .admin-modal").html(`
+            <div class="admin-modal-head">
+                <div>
+                    <h2>쿠폰 발급</h2>
+                    <p>쿠폰 목록을 불러오지 못했습니다.</p>
+                </div>
+                <button type="button" class="modal-close" data-guest-coupon-close><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="admin-form-grid">
+                <div class="admin-form-full guest-coupon-help">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    ${escapeHtml(getAdminAjaxMessage(xhr, "쿠폰 목록을 불러오지 못했습니다."))}
+                </div>
+            </div>
+        `);
+        $("[data-guest-coupon-close]").off("click.guestCoupon").on("click.guestCoupon", closeGuestCouponModal);
+    });
+}
+
+function renderGuestCouponIssueModal() {
+    const state = ADMIN_GUEST_STATE || { members: [], coupons: [], reservationsByMember: new Map() };
+    const couponOptions = asArray(state.coupons).map(function (coupon) {
+        return `<option value="${escapeHtml(coupon.sid)}">${escapeHtml(formatAdminCouponOption(coupon))}</option>`;
+    });
+    const memberOptions = asArray(state.members).map(function (member) {
+        return `<option value="${escapeHtml(member.sid)}">${escapeHtml(formatAdminMemberOption(member))}</option>`;
+    });
+
+    $("#guestCouponModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <div class="admin-modal guest-coupon-modal">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>쿠폰 발급</h2>
+                        <p>생성된 쿠폰을 특정 회원 또는 조건에 맞는 회원에게 발급합니다.</p>
+                    </div>
+                    <button type="button" class="modal-close" data-guest-coupon-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form id="guestCouponIssueForm">
+                    <div class="admin-form-grid">
+                        <label class="admin-form-full">
+                            발급할 쿠폰
+                            <select id="guestCouponIssueCoupon" required>
+                                ${couponOptions.length ? couponOptions.join("") : '<option value="">생성된 쿠폰이 없습니다</option>'}
+                            </select>
+                        </label>
+                        <label>
+                            발급 방식
+                            <select id="guestCouponIssueMode">
+                                <option value="member">특정 대상</option>
+                                <option value="condition">조건 대상 전체</option>
+                            </select>
+                        </label>
+                        <label id="guestCouponMemberField">
+                            특정 대상
+                            <select id="guestCouponIssueMember">
+                                ${memberOptions.length ? memberOptions.join("") : '<option value="">회원이 없습니다</option>'}
+                            </select>
+                        </label>
+                        <label class="guest-coupon-condition-field" hidden>
+                            회원 상태
+                            <select id="guestCouponIssueStatus">
+                                <option value="">전체 상태</option>
+                                <option value="ACTIVE">활성</option>
+                                <option value="INACTIVE">비활성</option>
+                                <option value="STOP">정지</option>
+                            </select>
+                        </label>
+                        <label class="guest-coupon-condition-field" hidden>
+                            권한
+                            <select id="guestCouponIssueRole">
+                                <option value="">전체 권한</option>
+                                <option value="USER">사용자</option>
+                                <option value="ADMIN">관리자</option>
+                            </select>
+                        </label>
+                        <label class="guest-coupon-condition-field" hidden>
+                            예약 이력
+                            <select id="guestCouponIssueReservation">
+                                <option value="">전체</option>
+                                <option value="HAS">예약 있음</option>
+                                <option value="NONE">예약 없음</option>
+                            </select>
+                        </label>
+                        <label class="guest-coupon-condition-field" hidden>
+                            최소 포인트
+                            <input id="guestCouponIssueMinPoint" type="number" min="0" step="100" placeholder="제한 없음">
+                        </label>
+                        <div class="admin-form-full guest-coupon-help">
+                            <i class="fa-solid fa-circle-info"></i>
+                            조건 대상 전체 발급은 현재 관리자 화면에서 불러온 회원 목록 기준으로 처리됩니다. 관리자 계정도 대상에 포함할 수 있습니다.
+                        </div>
+                        <div id="guestCouponIssuePreview" class="admin-form-full guest-coupon-preview"></div>
+                    </div>
+                    <div class="admin-modal-actions">
+                        <button class="admin-btn" type="button" data-guest-coupon-close>취소</button>
+                        <button class="admin-btn primary" type="submit"><i class="fa-solid fa-paper-plane"></i> 발급</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `);
+
+    $("#guestCouponIssueForm").off("submit.guestCouponIssue").on("submit.guestCouponIssue", function (event) {
+        event.preventDefault();
+        issueGuestCoupon();
+    });
+    $("#guestCouponIssueMode, #guestCouponIssueMember, #guestCouponIssueStatus, #guestCouponIssueRole, #guestCouponIssueReservation, #guestCouponIssueMinPoint")
+        .off("input.guestCouponIssue change.guestCouponIssue")
+        .on("input.guestCouponIssue change.guestCouponIssue", updateGuestCouponIssuePreview);
+    $("[data-guest-coupon-close]").off("click.guestCoupon").on("click.guestCoupon", closeGuestCouponModal);
+    updateGuestCouponIssuePreview();
+}
+
+function updateGuestCouponIssuePreview() {
+    const mode = $("#guestCouponIssueMode").val();
+    const isCondition = mode === "condition";
+    $("#guestCouponMemberField").prop("hidden", isCondition);
+    $(".guest-coupon-condition-field").prop("hidden", !isCondition);
+
+    const targets = getGuestCouponIssueTargets();
+    $("#guestCouponIssuePreview").html(`
+        <strong>${formatAdminNumber(targets.length)}명에게 발급 예정</strong>
+        <span>${targets.slice(0, 5).map(formatAdminMemberOption).map(escapeHtml).join(" / ") || "대상을 선택해주세요."}${targets.length > 5 ? " 외 " + (targets.length - 5) + "명" : ""}</span>
+    `);
+}
+
+function getGuestCouponIssueTargets() {
+    const state = ADMIN_GUEST_STATE || { members: [], reservationsByMember: new Map() };
+    const members = asArray(state.members);
+    if ($("#guestCouponIssueMode").val() !== "condition") {
+        const memberId = $("#guestCouponIssueMember").val();
+        return members.filter(function (member) {
+            return String(member.sid) === String(memberId);
+        });
+    }
+
+    const status = $("#guestCouponIssueStatus").val();
+    const role = $("#guestCouponIssueRole").val();
+    const reservationFilter = $("#guestCouponIssueReservation").val();
+    const minPoint = Number($("#guestCouponIssueMinPoint").val() || 0);
+    return members.filter(function (member) {
+        const reservationCount = (state.reservationsByMember.get(String(member.sid)) || []).length;
+        if (status && member.status !== status) return false;
+        if (role && member.role !== role) return false;
+        if (reservationFilter === "HAS" && reservationCount <= 0) return false;
+        if (reservationFilter === "NONE" && reservationCount > 0) return false;
+        if (minPoint > 0 && Number(member.point || 0) < minPoint) return false;
+        return true;
+    });
+}
+
+function issueGuestCoupon() {
+    const couponId = Number($("#guestCouponIssueCoupon").val() || 0);
+    const targets = getGuestCouponIssueTargets();
+    if (!couponId) {
+        alert("발급할 쿠폰을 선택해주세요.");
+        return;
+    }
+    if (!targets.length) {
+        alert("발급 대상이 없습니다.");
+        return;
+    }
+    if (targets.length > 1 && !confirm(formatAdminNumber(targets.length) + "명에게 쿠폰을 발급할까요?")) {
+        return;
+    }
+
+    const button = $("#guestCouponIssueForm .admin-btn.primary");
+    button.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 발급 중');
+    issueGuestCouponSequentially(couponId, targets, 0, { success: 0, fail: 0 }, button);
+}
+
+function issueGuestCouponSequentially(couponId, targets, index, result, button) {
+    if (index >= targets.length) {
+        closeGuestCouponModal();
+        alert("쿠폰 발급 완료: 성공 " + result.success + "명 / 실패 " + result.fail + "명");
+        loadAdminGuestData();
+        return;
+    }
+
+    adminPost("/cou/issue", { couponId, memberId: Number(targets[index].sid) })
+        .then(function () {
+            result.success += 1;
+        }, function (xhr) {
+            result.fail += 1;
+            console.warn("Coupon issue failed", targets[index], xhr && (xhr.responseJSON || xhr.responseText));
+        })
+        .always(function () {
+            button.html('<i class="fa-solid fa-spinner fa-spin"></i> ' + (index + 1) + "/" + targets.length);
+            issueGuestCouponSequentially(couponId, targets, index + 1, result, button);
+        });
+}
+
+function formatAdminCouponOption(coupon) {
+    const type = String(coupon.discountType || "").toUpperCase() === "PERCENT"
+        ? Number(coupon.discountValue || 0) + "%"
+        : formatAdminWon(coupon.discountValue || 0);
+    return (coupon.couponName || "쿠폰") + " · " + type + " · " + formatAdminCouponPeriod(coupon);
+}
+
+function formatAdminCouponPeriod(coupon) {
+    const start = formatAdminFullDate(coupon.startDate);
+    const end = formatAdminFullDate(coupon.endDate);
+    if (start === "-" && end === "-") return "상시";
+    if (start === "-") return end + "까지";
+    if (end === "-") return start + "부터";
+    return start + " ~ " + end;
+}
+
+function formatAdminFullDate(value) {
+    if (!value) return "-";
+    const text = String(value).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return "-";
+    return text.replaceAll("-", ".");
+}
+
+function formatAdminMemberOption(member) {
+    const role = member.role === "ADMIN" ? "관리자" : "사용자";
+    return [member.name || "이름 없음", role, member.email || member.phone || ("ID " + member.sid)]
+        .filter(Boolean)
+        .join(" · ");
 }
 
 function groupReservationsByMember(reservations) {
@@ -3971,7 +4400,7 @@ function renderReservationActions(reservation, canCheckIn) {
 
 function loadAdminCheckinData() {
     const requests = {
-        hotels: adminPostSafe("/hotel/search?page=0&size=500", makeAdminHotelSearchRequest(), { content: [] }),
+        hotels: adminGetSafe("/hotel/all", []),
         popularHotels: adminGetSafe("/hotel/pop4", []),
         reservations: adminGetSafe("/reservation/search?page=0&size=500&sort=checkInDate,asc", { content: [] })
     };
@@ -5098,11 +5527,19 @@ function unwrapApiResponse(response) {
 }
 
 function getAdminAjaxMessage(xhr, fallback) {
+    if (xhr && xhr.status === 0) {
+        return fallback + " 서버 연결 또는 CORS 설정을 확인해주세요.";
+    }
     if (xhr && xhr.responseJSON) {
         return xhr.responseJSON.data || xhr.responseJSON.message || fallback;
     }
     if (xhr && xhr.responseText) {
-        return xhr.responseText;
+        try {
+            const parsed = JSON.parse(xhr.responseText);
+            return parsed.data || parsed.message || parsed.error || parsed.detail || xhr.responseText;
+        } catch (e) {
+            return xhr.responseText;
+        }
     }
     return fallback;
 }

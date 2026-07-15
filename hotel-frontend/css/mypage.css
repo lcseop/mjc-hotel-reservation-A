@@ -178,6 +178,447 @@ textarea {
     min-width: 0;
 }
 
+.my-review-list {
+    display: grid;
+    gap: 18px;
+}
+
+.my-review-card {
+    padding: 24px;
+    border: 1px solid #e8eef6;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+}
+
+.my-review-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.my-review-hotel-link {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.my-review-hotel-link .hotel-icon {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #5570f1, #13a8ee);
+    color: #fff;
+    font-size: 22px;
+}
+
+.my-review-hotel-link span span,
+.my-review-hotel-link strong,
+.my-review-hotel-link em {
+    display: block;
+}
+
+.my-review-hotel-link small {
+    color: #f59e0b;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.my-review-hotel-link strong {
+    margin-top: 4px;
+    color: #0f172a;
+    font-size: 22px;
+    font-weight: 950;
+}
+
+.my-review-hotel-link em {
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.my-review-score {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+}
+
+.my-review-score b {
+    min-width: 42px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #eaf3ff;
+    color: #2563eb;
+    text-align: center;
+    font-size: 15px;
+}
+
+.my-review-score span,
+.my-review-hotel-link small {
+    white-space: nowrap;
+}
+
+.my-review-score i {
+    color: #f59e0b;
+    font-size: 13px;
+}
+
+.my-review-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.my-review-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 11px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.my-review-content {
+    margin-top: 18px;
+    color: #334155;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+
+.my-review-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.my-review-tags span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.my-review-tags .good {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.my-review-tags .bad {
+    background: #fff1f2;
+    color: #f43f5e;
+}
+
+.my-review-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.my-review-photo-btn {
+    width: 88px;
+    height: 88px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 12px;
+    background: #e2e8f0;
+    cursor: pointer;
+}
+
+.my-review-photo-btn img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform .18s ease;
+}
+
+.my-review-photo-btn:hover img {
+    transform: scale(1.06);
+}
+
+.my-review-answer {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-left: 4px solid #0ea5e9;
+    border-radius: 14px;
+    background: #f8fbff;
+}
+
+.my-review-answer strong {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0ea5e9;
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.my-review-answer p {
+    margin-top: 8px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+.my-review-answer small {
+    display: block;
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.my-review-foot {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #eef2f7;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.review-photo-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, .72);
+}
+
+.review-photo-viewer.show {
+    display: flex;
+}
+
+.review-photo-viewer img {
+    max-width: min(920px, 100%);
+    max-height: 86vh;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .32);
+}
+
+#myReviewPhotoClose {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: #0f172a;
+    cursor: pointer;
+}
+
+.point-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(180px, .8fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.point-balance-card,
+.point-mini-card {
+    border: 1px solid #e8eef6;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+}
+
+.point-balance-card {
+    padding: 26px;
+    background: linear-gradient(135deg, #5570f1, #13a8ee);
+    color: #fff;
+}
+
+.point-balance-card span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 850;
+    opacity: .9;
+}
+
+.point-balance-card strong {
+    display: block;
+    margin-top: 12px;
+    font-size: 42px;
+    font-weight: 950;
+}
+
+.point-balance-card p {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: .82;
+}
+
+.point-mini-card {
+    display: grid;
+    align-content: center;
+    gap: 10px;
+    padding: 24px;
+}
+
+.point-mini-card span {
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.point-mini-card strong {
+    color: #0f172a;
+    font-size: 28px;
+    font-weight: 950;
+}
+
+.point-mini-card.earn {
+    border-color: #bbf7d0;
+}
+
+.point-mini-card.use {
+    border-color: #fecdd3;
+}
+
+.point-history-list {
+    display: grid;
+    gap: 12px;
+}
+
+.point-history-card {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid #e8eef6;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+}
+
+.point-history-card.earn {
+    border-left: 4px solid #22c55e;
+}
+
+.point-history-card.use {
+    border-left: 4px solid #f43f5e;
+}
+
+.point-history-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: #f1f5f9;
+    color: #0ea5e9;
+    font-size: 18px;
+}
+
+.point-history-card.earn .point-history-icon {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+.point-history-card.use .point-history-icon {
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+.point-history-main {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.point-history-main strong {
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 950;
+}
+
+.point-history-main span {
+    overflow: hidden;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.point-history-main small {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.point-history-amount {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+}
+
+.point-history-amount strong {
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.point-history-card.earn .point-history-amount strong {
+    color: #16a34a;
+}
+
+.point-history-card.use .point-history-amount strong {
+    color: #e11d48;
+}
+
+.point-history-amount span {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+}
+
 .page-head {
     display: flex;
     align-items: flex-end;
@@ -1344,6 +1785,10 @@ textarea {
         grid-template-columns: 1fr 1fr;
     }
 
+    .point-summary {
+        grid-template-columns: 1fr;
+    }
+
     .detail-content {
         grid-template-columns: 1fr;
     }
@@ -1401,6 +1846,15 @@ textarea {
     .info-list strong {
         grid-column: 2;
         text-align: left;
+    }
+
+    .point-history-card {
+        grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .point-history-amount {
+        grid-column: 2;
+        justify-items: start;
     }
 
     .detail-hero {
