@@ -1803,18 +1803,6 @@ function openHotelAmenityManager() {
 
 function openHotelMasterManager(config) {
     const showDescription = config.fields.includes("description");
-    const rows = config.items.map(function (item) {
-        return `<article class="hotel-master-card">
-            <div class="hotel-master-card-main">
-                <div class="hotel-master-item-title"><strong>${escapeHtml(item.title || "-")}</strong><span>ID ${escapeHtml(item.sid)}</span></div>
-                ${showDescription && item.description ? `<small>${escapeHtml(item.description)}</small>` : ""}
-            </div>
-            <div class="row-actions">
-                <button class="icon-btn" type="button" data-hotel-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
-                <button class="icon-btn danger" type="button" data-hotel-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        </article>`;
-    }).join("");
     $("body").append(`
         <div class="admin-modal-backdrop nested hotel-master-backdrop">
             <div class="admin-modal hotel-master-modal">
@@ -1828,7 +1816,7 @@ function openHotelMasterManager(config) {
                     ${config.fields.includes("description") ? '<input id="hotelMasterDescriptionInput" class="admin-input" placeholder="설명">' : ""}
                     <button class="admin-btn primary" type="submit"><i class="fa-solid fa-plus"></i> 저장</button>
                 </form>
-                <div class="hotel-master-list">${rows || '<div class="empty-admin-state">등록된 항목이 없습니다.</div>'}</div>
+                <div class="hotel-master-list">${renderHotelMasterRows(config)}</div>
             </div>
         </div>
     `);
@@ -1850,6 +1838,23 @@ function openHotelMasterManager(config) {
         });
 }
 
+function renderHotelMasterRows(config) {
+    const showDescription = config.fields.includes("description");
+    const rows = config.items.map(function (item) {
+        return `<article class="hotel-master-card">
+            <div class="hotel-master-card-main">
+                <div class="hotel-master-item-title"><strong>${escapeHtml(item.title || "-")}</strong><span>ID ${escapeHtml(item.sid)}</span></div>
+                ${showDescription && item.description ? `<small>${escapeHtml(item.description)}</small>` : ""}
+            </div>
+            <div class="row-actions">
+                <button class="icon-btn" type="button" data-hotel-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn danger" type="button" data-hotel-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </article>`;
+    }).join("");
+    return rows || '<div class="empty-admin-state">등록된 항목이 없습니다.</div>';
+}
+
 function closeHotelMasterManager() {
     $(".hotel-master-backdrop").remove();
 }
@@ -1867,8 +1872,7 @@ function saveHotelMasterItem(config) {
     if (config.fields.includes("description")) payload.description = description;
     const request = sid ? adminPatch(config.endpoint, payload) : adminPost(config.endpoint, payload);
     request.then(function () {
-        closeHotelMasterManager();
-        loadAdminHotelManageData();
+        refreshHotelMasterManager(config, true);
     }, function (xhr) {
         alert(getAdminAjaxMessage(xhr, "저장에 실패했습니다."));
     });
@@ -1881,10 +1885,37 @@ function deleteHotelMasterItem(config, id) {
         type: "DELETE",
         headers: adminAuthHeaders()
     }).done(function () {
-        closeHotelMasterManager();
-        loadAdminHotelManageData();
+        refreshHotelMasterManager(config, true);
     }).fail(function (xhr) {
         alert(getAdminAjaxMessage(xhr, "삭제에 실패했습니다."));
+    });
+}
+
+function refreshHotelMasterManager(config, clearForm) {
+    adminGet(config.endpoint).then(function (result) {
+        const items = asArray(result);
+        config.items = items;
+
+        if (!ADMIN_HOTEL_MANAGE_STATE) {
+            ADMIN_HOTEL_MANAGE_STATE = {};
+        }
+
+        if (config.endpoint === "/hoteltype") {
+            ADMIN_HOTEL_MANAGE_STATE.hotelTypes = items;
+        } else if (config.endpoint === "/hotelame") {
+            ADMIN_HOTEL_MANAGE_STATE.amenities = items;
+        }
+
+        renderHotelManagePage();
+        $(".hotel-master-list").html(renderHotelMasterRows(config));
+
+        if (clearForm) {
+            $("#hotelMasterSidInput").val("");
+            $("#hotelMasterTitleInput").val("").focus();
+            $("#hotelMasterDescriptionInput").val("");
+        }
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "목록을 새로고침하지 못했습니다."));
     });
 }
 

@@ -179,7 +179,7 @@ function cancelDetailReservation() {
         success: function () {
             location.href = "my-reservations.html";
         },
-        error: function () { alert("예약 취소에 실패했습니다."); }
+        error: function (xhr) { alert(getDetailErrorMessage(xhr, "예약 취소에 실패했습니다.")); }
     });
 }
 
@@ -295,6 +295,25 @@ function saveDetailAuth(auth) {
 
 function detailAuthHeaders() {
     return detailAuth && detailAuth.token ? { Authorization: detailAuth.token } : {};
+}
+
+function getDetailErrorMessage(xhr, fallback) {
+    if (xhr && xhr.responseJSON) {
+        const json = xhr.responseJSON;
+        if (typeof json.data === "string") return json.data;
+        return json.message || json.error || json.detail || fallback;
+    }
+
+    if (xhr && xhr.responseText) {
+        try {
+            const parsed = JSON.parse(xhr.responseText);
+            return parsed.message || parsed.data || parsed.error || parsed.detail || fallback;
+        } catch (e) {
+            return xhr.responseText;
+        }
+    }
+
+    return fallback;
 }
 
 function logoutDetail() {

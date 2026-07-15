@@ -56,6 +56,30 @@ public class Payments extends BaseEntity {
     @Column(name = "transaction_no", length = 100)
     private String transactionNo;
 
+    @Column(name = "order_id", length = 100, unique = true)
+    private String orderId;
+
+    @Column(name = "payment_key", length = 200, unique = true)
+    private String paymentKey;
+
+    @Column(name = "provider", length = 30)
+    private String provider;
+
+    @Column(name = "receipt_url", length = 500)
+    private String receiptUrl;
+
+    @Column(name = "fail_code", length = 100)
+    private String failCode;
+
+    @Column(name = "fail_message", length = 500)
+    private String failMessage;
+
+    @Column(name = "requested_at")
+    private LocalDateTime requestedAt;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 

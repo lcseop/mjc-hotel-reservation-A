@@ -21,7 +21,15 @@ public class PaymentsResponseDto {
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
     private String transactionNo;
+    private String orderId;
+    private String paymentKey;
+    private String provider;
+    private String receiptUrl;
+    private String failCode;
+    private String failMessage;
     private LocalDateTime paidAt;
+    private LocalDateTime requestedAt;
+    private LocalDateTime approvedAt;
     private Integer point;
     private Boolean deleted;
     private LocalDateTime deletedAt;
