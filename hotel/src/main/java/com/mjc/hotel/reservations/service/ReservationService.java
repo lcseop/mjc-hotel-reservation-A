@@ -5,10 +5,17 @@ import com.mjc.hotel.coupon.entity.CouponIssue;
 import com.mjc.hotel.coupon.repository.CouponIssueRepository;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.repository.MemberRepository;
+import com.mjc.hotel.payments.entity.PaymentStatus;
+import com.mjc.hotel.payments.entity.Payments;
+import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.payments.service.PaymentsService;
 import com.mjc.hotel.promotion.entity.ConditionType;
 import com.mjc.hotel.promotion.entity.Promotion;
 import com.mjc.hotel.promotion.repository.PromotionRepository;
 import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
+import com.mjc.hotel.refunds.entity.RefundStatus;
+import com.mjc.hotel.refunds.repository.RefundsRepository;
+import com.mjc.hotel.refunds.service.RefundsService;
 import com.mjc.hotel.reservations.dto.*;
 import com.mjc.hotel.reservations.entity.*;
 import com.mjc.hotel.reservations.repository.PointHistoryRepository;
@@ -22,10 +29,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +50,10 @@ public class ReservationService {
     private final ReservationCancelRepository reservationCancelRepository;
     private final EmailLogService emailLogService;
     private final PromotionRepository promotionRepository;
+    private final PaymentsRepository paymentsRepository;
+    private final PaymentsService paymentsService;
+    private final RefundsRepository refundsRepository;
+    private final RefundsService refundsService;
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
@@ -123,7 +136,7 @@ public class ReservationService {
             pointHistoryRepository.save(pointHistory);
         }
 
-        Integer earnPoint = (int) (totalAmount * 0.05);
+        Integer earnPoint = (int) (totalAmount * 0.005);
         if (earnPoint > 0) {
             member.setPoint(memberPoint + earnPoint);
             savedReservation.setEarnedPoint(earnPoint);
@@ -180,6 +193,15 @@ public class ReservationService {
         return page.map(this::convertToResponseDto);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Page<PointHistoryResponseDto> getPointHistories(Long memberId, Pageable pageable) {
+        if (!memberRepository.existsById(memberId)) {
+            throw new IllegalArgumentException("회원을 찾을 수 없습니다. ID: " + memberId);
+        }
+        return pointHistoryRepository.findByMemberSidOrderByCreatedAtDesc(memberId, pageable)
+                .map(this::convertToPointHistoryResponseDto);
+    }
+
     private String normalizeKeyword(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -203,18 +225,28 @@ public class ReservationService {
         Integer refundAmount = calculateRefundAmount(reservation);
 
         Member member = reservation.getMember();
-        List<PointHistory> useHistories = pointHistoryRepository.findAll().stream()
-                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.USE)
-                .toList();
+        List<PointHistory> useHistories = pointHistoryRepository.findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.USE);
         for (PointHistory history : useHistories) {
-            member.setPoint(member.getPoint() - history.getAmount());
+            int refundPoint = Math.abs(history.getAmount());
+            member.setPoint(safeMemberPoint(member) + refundPoint);
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(refundPoint)
+                    .pointStatus(PointStatus.USE_CANCEL_REFUND)
+                    .build());
         }
 
-        List<PointHistory> earnHistories = pointHistoryRepository.findAll().stream()
-                .filter(ph -> ph.getReservation().getSid().equals(reservation.getSid()) && ph.getPointStatus() == PointStatus.ACCUMULATION)
-                .toList();
+        List<PointHistory> earnHistories = pointHistoryRepository.findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.ACCUMULATION);
         for (PointHistory history : earnHistories) {
-            member.setPoint(Math.max(0, member.getPoint() - history.getAmount()));
+            int revokePoint = Math.abs(history.getAmount());
+            member.setPoint(Math.max(0, safeMemberPoint(member) - revokePoint));
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(-revokePoint)
+                    .pointStatus(PointStatus.ACCUMULATION_CANCEL_REVOKE)
+                    .build());
         }
 
         if (reservation.getCouponIssue() != null) {
@@ -222,6 +254,8 @@ public class ReservationService {
             couponIssue.setIsUsed(false);
             couponIssue.setUsedAt(null);
         }
+
+        processReservationRefund(reservation, refundAmount, cancelDto.getCancelReason());
 
         reservation.setReservationStatus(ReservationStatus.CANCELLED);
 
@@ -301,6 +335,58 @@ public class ReservationService {
             return (int) (reservation.getTotalAmount() * 0.5);
         }
         return 0;
+    }
+
+    private void processReservationRefund(Reservation reservation, Integer refundAmount, String reason) {
+        BigDecimal amount = BigDecimal.valueOf(refundAmount != null ? refundAmount : 0);
+        List<Payments> reservationPayments = paymentsRepository.findByReservationSidOrderByCreatedAtDesc(reservation.getSid());
+        Optional<Payments> paymentOptional = reservationPayments.stream()
+                .filter(payment -> payment.getPaymentStatus() == PaymentStatus.COMPLETED
+                        || payment.getPaymentStatus() == PaymentStatus.PARTIALLY_REFUNDED)
+                .findFirst();
+
+        if (paymentOptional.isEmpty()) {
+            if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                String statusText = reservationPayments.stream()
+                        .findFirst()
+                        .map(payment -> String.valueOf(payment.getPaymentStatus()))
+                        .orElse("결제 내역 없음");
+                throw new IllegalStateException("환불 가능한 완료 결제 내역이 없어 예약을 취소할 수 없습니다. 현재 결제 상태: " + statusText);
+            }
+            return;
+        }
+
+        Payments payment = paymentOptional.get();
+        boolean alreadyRefunded = !refundsRepository.findByPaymentSidOrderByCreatedAtDesc(payment.getSid()).isEmpty();
+        if (alreadyRefunded) {
+            throw new IllegalStateException("이미 환불 처리 내역이 있는 예약입니다.");
+        }
+
+        String refundReason = reason != null && !reason.isBlank() ? reason : "예약 취소";
+        Long refundSid = refundsService.createReservationCancelRefund(
+                payment.getSid(),
+                reservation.getMember().getSid(),
+                amount,
+                refundReason,
+                "reservation-cancel-" + reservation.getSid()
+        );
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            refundsService.completeRefund(refundSid, null);
+            return;
+        }
+
+        try {
+            String pgTransactionKey = paymentsService.refundPayment(payment, amount, refundReason);
+            refundsService.completeRefund(refundSid, pgTransactionKey);
+        } catch (RuntimeException e) {
+            refundsService.failRefund(refundSid, e.getMessage());
+            throw e;
+        }
+    }
+
+    private Integer safeMemberPoint(Member member) {
+        return member != null && member.getPoint() != null ? member.getPoint() : 0;
     }
 
     private List<CancellationPolicyDto> buildCancellationPolicies(Reservation reservation) {
@@ -428,6 +514,24 @@ public class ReservationService {
                 .cancellationPolicyDto(buildCancellationPolicies(reservation))
                 .createdAt(reservation.getCreatedAt())
                 .updatedAt(reservation.getUpdatedAt())
+                .build();
+    }
+
+    private PointHistoryResponseDto convertToPointHistoryResponseDto(PointHistory pointHistory) {
+        Reservation reservation = pointHistory.getReservation();
+        Room room = reservation != null ? reservation.getRoom() : null;
+        var hotel = room != null ? room.getHotelId() : null;
+
+        return PointHistoryResponseDto.builder()
+                .sid(pointHistory.getSid())
+                .reservationId(reservation != null ? reservation.getSid() : null)
+                .reservationNumber(reservation != null ? reservation.getReservationNumber() : null)
+                .hotelId(hotel != null ? hotel.getSid() : null)
+                .hotelName(hotel != null ? hotel.getHotelName() : null)
+                .roomName(room != null ? room.getRoomName() : null)
+                .amount(pointHistory.getAmount())
+                .pointStatus(pointHistory.getPointStatus())
+                .createdAt(pointHistory.getCreatedAt())
                 .build();
     }
 

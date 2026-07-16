@@ -73,13 +73,13 @@ public class ReviewPhotoService {
         if(!duplicate) {
             Member member = memberRepository.findById(review.getMember().getSid())
                     .orElseThrow(()-> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "Member Not Found"));
-            member.setPoint(member.getPoint() + 500);
+            member.setPoint(member.getPoint() + 200);
             Member updatedMember = memberRepository.save(member);
 
             PointHistory pointHistory = PointHistory.builder()
                     .reservation(review.getReservation())
                     .member(updatedMember)
-                    .amount(500)
+                    .amount(200)
                     .pointStatus(PointStatus.ACCUMULATION)
                     .createdAt(LocalDateTime.now())
                     .build();

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/mypage.css">
+    <title>포인트</title>
+</head>
+<body>
+    <navbar><div id="header"></div></navbar>
+    <div id="searchHeader"></div>
+
+    <main class="mypage-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="historyCount">0</strong><span>포인트 내역</span></div>
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html"><i class="fa-regular fa-calendar-check"></i> 예약내역</a>
+                <a href="wishlist.html"><i class="fa-regular fa-heart"></i> 위시리스트</a>
+                <a href="my-reviews.html"><i class="fa-regular fa-star"></i> 나의 리뷰</a>
+                <a href="points.html" class="active"><i class="fa-solid fa-coins"></i> 포인트 <b id="navPointCount">0</b></a>
+                <p>내 계정</p>
+                <a href="account-settings.html"><i class="fa-regular fa-user"></i> 내 정보</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>포인트</b></p>
+                    <h1>포인트</h1>
+                </div>
+                <select id="pointFilter" aria-label="포인트 이력 필터">
+                    <option value="ALL">전체</option>
+                    <option value="EARN">적립</option>
+                    <option value="USE">사용</option>
+                </select>
+            </div>
+
+            <section class="point-summary">
+                <div class="point-balance-card">
+                    <span><i class="fa-solid fa-coins"></i> 사용 가능 포인트</span>
+                    <strong id="availablePoint">0P</strong>
+                    <p>예약 결제에서 1P = 1원으로 사용할 수 있습니다.</p>
+                </div>
+                <div class="point-mini-card earn">
+                    <span>누적 적립</span>
+                    <strong id="totalEarnPoint">0P</strong>
+                </div>
+                <div class="point-mini-card use">
+                    <span>누적 사용</span>
+                    <strong id="totalUsePoint">0P</strong>
+                </div>
+            </section>
+
+            <div id="pointHistoryList" class="point-history-list">
+                <div class="empty-state">포인트 내역을 불러오는 중입니다.</div>
+            </div>
+        </section>
+    </main>
+
+    <footer><div id="footer"></div></footer>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/points.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

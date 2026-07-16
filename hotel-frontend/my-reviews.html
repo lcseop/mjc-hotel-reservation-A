@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/mypage.css">
+    <title>나의 리뷰</title>
+</head>
+<body>
+    <navbar><div id="header"></div></navbar>
+    <div id="searchHeader"></div>
+
+    <main class="mypage-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="myReviewCountSide">0</strong><span>작성 리뷰</span></div>
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html"><i class="fa-regular fa-calendar-check"></i> 예약내역</a>
+                <a href="wishlist.html"><i class="fa-regular fa-heart"></i> 위시리스트</a>
+                <a href="my-reviews.html" class="active"><i class="fa-regular fa-star"></i> 나의 리뷰 <b id="navReviewCount">0</b></a>
+                <a href="points.html"><i class="fa-solid fa-coins"></i> 포인트</a>
+                <p>내 계정</p>
+                <a href="account-settings.html"><i class="fa-regular fa-user"></i> 내 정보</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>나의 리뷰</b></p>
+                    <h1>나의 리뷰</h1>
+                </div>
+                <select id="myReviewSort" aria-label="리뷰 정렬">
+                    <option value="latest">최근 등록순</option>
+                    <option value="ratingDesc">평점 높은순</option>
+                    <option value="ratingAsc">평점 낮은순</option>
+                </select>
+            </div>
+
+            <div id="myReviewList" class="my-review-list">
+                <div class="empty-state">리뷰를 불러오는 중입니다.</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="myReviewPhotoViewer" class="review-photo-viewer" aria-hidden="true">
+        <button id="myReviewPhotoClose" type="button" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+        <img id="myReviewPhotoLarge" src="" alt="리뷰 사진 크게 보기">
+    </div>
+
+    <footer><div id="footer"></div></footer>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/my-reviews.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>
