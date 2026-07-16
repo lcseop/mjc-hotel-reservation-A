@@ -4,6 +4,7 @@
     window.StayNowConfig = {
         apiBase: API_BASE,
         assetBase: API_BASE.replace(/\/api$/, ""),
+        tossClientKey: "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm",
         apiUrl: function (path) {
             return API_BASE + "/" + String(path || "").replace(/^\/+/, "");
         },

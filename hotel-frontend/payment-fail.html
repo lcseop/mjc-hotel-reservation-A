@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 실패</title>
+    <link rel="stylesheet" href="css/reservation.css">
+</head>
+<body>
+    <main class="payment-result-page">
+        <section class="payment-result-card fail">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h1>결제가 완료되지 않았습니다</h1>
+            <p id="failMessage">결제 진행 중 문제가 발생했습니다.</p>
+            <div class="payment-result-actions">
+                <a href="reservation.html">다시 결제하기</a>
+                <a href="index.html">홈으로 이동</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://kit.fontawesome.com/1111b8b9b5.js" crossorigin="anonymous"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/payment-fail.js"></script>
+</body>
+</html>

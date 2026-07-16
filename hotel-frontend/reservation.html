@@ -172,6 +172,12 @@
                         <strong id="totalAmount">₩0</strong>
                     </div>
 
+                    <div class="toss-widget-box">
+                        <h3>결제 수단</h3>
+                        <div id="tossPaymentMethods"></div>
+                        <div id="tossPaymentAgreement"></div>
+                    </div>
+
                     <div class="agreement-box">
                         <h3>예약 전 확인사항</h3>
 
@@ -200,7 +206,7 @@
                             <input type="checkbox" class="required-agreement" id="agreePayment">
                             <span>
                                 <strong>테스트 결제 진행 동의</strong>
-                                실제 결제가 아닌 예약 완료 처리를 위한 모의 결제 절차가 진행됩니다.
+                                토스페이먼츠 테스트 결제창을 통해 결제 승인 절차가 진행됩니다.
                             </span>
                         </label>
                     </div>
@@ -229,6 +235,7 @@
     </footer>
 
     <script src="js/jquery.min.js"></script>
+    <script src="https://js.tosspayments.com/v2/standard"></script>
     <script src="js/config.js"></script>
     <script src="js/include.js"></script>
     <script src="component/search-header.js"></script>
