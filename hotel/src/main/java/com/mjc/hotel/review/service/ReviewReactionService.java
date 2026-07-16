@@ -148,7 +148,7 @@ public class ReviewReactionService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Not Found");
         }
         ReactionType reactionType = reactionTypeName.equals("GOOD") ? ReactionType.GOOD : reactionTypeName.equals("BAD") ? ReactionType.BAD : ReactionType.NONE;
-        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionType(find.getSid(),reactionType);
+        List<ReviewReaction> reviewReactions = reviewReactionRepository.findAllByReviewSidAndReactionTypeEquals(find.getSid(),reactionType);
         return Long.valueOf(reviewReactions.size());
     }
 }
