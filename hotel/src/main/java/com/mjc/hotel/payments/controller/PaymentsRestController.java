@@ -3,6 +3,10 @@ package com.mjc.hotel.payments.controller;
 import com.mjc.hotel.payments.converter.PaymentsDtoMapper;
 import com.mjc.hotel.payments.dto.PaymentsRequestDto;
 import com.mjc.hotel.payments.dto.PaymentsResponseDto;
+import com.mjc.hotel.payments.dto.TossPaymentConfirmRequestDto;
+import com.mjc.hotel.payments.dto.TossPaymentFailRequestDto;
+import com.mjc.hotel.payments.dto.TossPaymentReadyRequestDto;
+import com.mjc.hotel.payments.dto.TossPaymentReadyResponseDto;
 import com.mjc.hotel.payments.service.PaymentsService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
@@ -35,6 +39,39 @@ public class PaymentsRestController {
         PaymentsResponseDto insert = paymentsDtoMapper.toResponseDto(paymentsService.savePayment(dto));
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "payments insert success", insert)
+        );
+    }
+
+    @Operation(
+            summary = "토스 결제 요청 생성",
+            description = "토스 결제창 호출 전 결제 요청 정보를 저장합니다."
+    )
+    @PostMapping("/toss/ready")
+    public ResponseEntity<ApiResponse<TossPaymentReadyResponseDto>> readyTossPayment(@RequestBody TossPaymentReadyRequestDto dto) {
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "toss payment ready success", paymentsService.readyTossPayment(dto))
+        );
+    }
+
+    @Operation(
+            summary = "토스 결제 승인",
+            description = "토스 결제 성공 후 paymentKey, orderId, amount를 검증하고 승인합니다."
+    )
+    @PostMapping("/toss/confirm")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> confirmTossPayment(@RequestBody TossPaymentConfirmRequestDto dto) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "toss payment confirm success", paymentsDtoMapper.toResponseDto(paymentsService.confirmTossPayment(dto)))
+        );
+    }
+
+    @Operation(
+            summary = "토스 결제 실패 기록",
+            description = "토스 결제 실패 또는 취소 정보를 저장합니다."
+    )
+    @PostMapping("/toss/fail")
+    public ResponseEntity<ApiResponse<PaymentsResponseDto>> failTossPayment(@RequestBody TossPaymentFailRequestDto dto) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "toss payment fail saved", paymentsDtoMapper.toResponseDto(paymentsService.failTossPayment(dto)))
         );
     }
 

@@ -1,6 +1,7 @@
 package com.mjc.hotel.reservations.controller;
 
 import com.mjc.hotel.reservations.dto.ReservationCancelDto;
+import com.mjc.hotel.reservations.dto.PointHistoryResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationRequestDto;
 import com.mjc.hotel.reservations.dto.ReservationResponseDto;
 import com.mjc.hotel.reservations.dto.ReservationStatsDto;
@@ -74,6 +75,15 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/point-history")
+    @Operation(summary = "포인트 이력 조회", description = "회원 기준으로 포인트 적립/사용 이력을 페이징 조회합니다")
+    public ResponseEntity<Page<PointHistoryResponseDto>> getPointHistories(
+            @RequestParam Long memberId,
+            Pageable pageable) {
+        Page<PointHistoryResponseDto> response = reservationService.getPointHistories(memberId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/status")
     @Operation(summary = "예약 통계", description = "관리자 대시보드용 예약 통계를 조회합니다")
     public ResponseEntity<ReservationStatsDto> getReservationStats() {
@@ -117,6 +127,13 @@ public class ReservationController {
     public ResponseEntity<ApiResponse<String>> handleReservationBadRequest(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(
                 new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation request failed", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<String>> handleReservationStateError(IllegalStateException ex) {
+        return ResponseEntity.internalServerError().body(
+                new ApiResponse<>(ResponseCode.UPDATE_ERROR, "reservation process failed", ex.getMessage())
         );
     }
 }

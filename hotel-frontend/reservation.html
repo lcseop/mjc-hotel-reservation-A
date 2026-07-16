@@ -140,9 +140,42 @@
                         <div><span>세금 및 봉사료</span><strong id="taxAmount">₩0</strong></div>
                     </div>
 
+                    <div class="benefit-box">
+                        <div class="benefit-head">
+                            <h3>쿠폰</h3>
+                            <button type="button" id="clearCouponBtn">선택 해제</button>
+                        </div>
+                        <div id="couponList" class="coupon-list">
+                            <div class="coupon-empty">보유 쿠폰을 확인하는 중입니다.</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-box point-box">
+                        <div class="benefit-head">
+                            <h3>포인트</h3>
+                            <span>보유 <b id="availablePoint">0P</b></span>
+                        </div>
+                        <div class="point-control">
+                            <input type="number" id="usePointInput" min="0" step="100" value="0" placeholder="사용할 포인트">
+                            <button type="button" id="useAllPointBtn">전액 사용</button>
+                        </div>
+                        <p>1P는 1원으로 사용할 수 있습니다.</p>
+                    </div>
+
+                    <div class="price-list discount-list">
+                        <div id="couponDiscountRow" style="display:none;"><span>쿠폰 할인</span><strong id="couponDiscountAmount">-₩0</strong></div>
+                        <div id="pointDiscountRow" style="display:none;"><span>포인트 사용</span><strong id="pointDiscountAmount">-₩0</strong></div>
+                    </div>
+
                     <div class="total-price">
                         <span>최종 결제금액</span>
                         <strong id="totalAmount">₩0</strong>
+                    </div>
+
+                    <div class="toss-widget-box">
+                        <h3>결제 수단</h3>
+                        <div id="tossPaymentMethods"></div>
+                        <div id="tossPaymentAgreement"></div>
                     </div>
 
                     <div class="agreement-box">
@@ -173,7 +206,7 @@
                             <input type="checkbox" class="required-agreement" id="agreePayment">
                             <span>
                                 <strong>테스트 결제 진행 동의</strong>
-                                실제 결제가 아닌 예약 완료 처리를 위한 모의 결제 절차가 진행됩니다.
+                                토스페이먼츠 테스트 결제창을 통해 결제 승인 절차가 진행됩니다.
                             </span>
                         </label>
                     </div>
@@ -202,6 +235,7 @@
     </footer>
 
     <script src="js/jquery.min.js"></script>
+    <script src="https://js.tosspayments.com/v2/standard"></script>
     <script src="js/config.js"></script>
     <script src="js/include.js"></script>
     <script src="component/search-header.js"></script>

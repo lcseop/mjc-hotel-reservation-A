@@ -37,7 +37,7 @@ public class PointHistory extends BaseEntity {
     private Integer amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "point_status", nullable = false, length = 50)
     private PointStatus pointStatus;
 
     @CreationTimestamp

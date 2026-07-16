@@ -16,6 +16,12 @@ public class ReviewResponse {
 
     private Long hotelId;
 
+    private String hotelName;
+
+    private String hotelLocation;
+
+    private Integer hotelStarRating;
+
     private Long memberId;
 
     private Long reservationId;

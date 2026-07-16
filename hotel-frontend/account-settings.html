@@ -5,23 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="component/search-header.css">
     <link rel="stylesheet" href="css/mypage.css">
-    <title>계정 설정</title>
+    <title>내 정보</title>
 </head>
 <body>
     <navbar><div id="header"></div></navbar>
     <div id="searchHeader"></div>
-    <main class="mypage-shell simple-settings">
-        <section class="detail-main-card">
-            <div class="section-heading"><h2>계정 설정</h2></div>
-            <p>프로필 수정과 보안 설정은 추후 연결 예정입니다.</p>
-            <a href="my-reservations.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 예약내역으로 돌아가기</a>
+
+    <main class="mypage-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                    <div><strong id="profileStatus">정상</strong><span>상태</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html"><i class="fa-regular fa-calendar-check"></i> 예약내역</a>
+                <a href="wishlist.html"><i class="fa-regular fa-heart"></i> 위시리스트</a>
+                <a href="my-reviews.html"><i class="fa-regular fa-star"></i> 나의 리뷰</a>
+                <a href="points.html"><i class="fa-solid fa-coins"></i> 포인트</a>
+                <p>내 계정</p>
+                <a href="account-settings.html" class="active"><i class="fa-regular fa-user"></i> 내 정보</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>내 정보</b></p>
+                    <h1>내 정보</h1>
+                </div>
+            </div>
+
+            <form id="accountForm" class="account-card">
+                <section>
+                    <div class="section-heading account-heading">
+                        <i class="fa-regular fa-id-card"></i>
+                        <div>
+                            <h2>기본 정보</h2>
+                            <p>예약자 정보에 사용되는 이름과 연락처를 관리합니다.</p>
+                        </div>
+                    </div>
+                    <div class="account-grid">
+                        <label>
+                            이름
+                            <input id="accountName" type="text" placeholder="이름" required>
+                        </label>
+                        <label>
+                            전화번호
+                            <input id="accountPhone" type="tel" placeholder="010-0000-0000" inputmode="numeric">
+                        </label>
+                        <label class="account-full">
+                            이메일
+                            <input id="accountEmail" type="email" disabled>
+                        </label>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="section-heading account-heading">
+                        <i class="fa-solid fa-lock"></i>
+                        <div>
+                            <h2>비밀번호 변경</h2>
+                            <p>변경하지 않으려면 비밀번호 입력칸을 비워두세요.</p>
+                        </div>
+                    </div>
+                    <div class="account-grid">
+                        <label>
+                            새 비밀번호
+                            <input id="accountPassword" type="password" placeholder="8자 이상 권장" autocomplete="new-password">
+                        </label>
+                        <label>
+                            새 비밀번호 확인
+                            <input id="accountPasswordConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password">
+                        </label>
+                    </div>
+                    <p id="accountPasswordHint" class="account-hint"></p>
+                </section>
+
+                <div class="account-actions">
+                    <a href="my-reservations.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 예약내역으로 돌아가기</a>
+                    <button id="accountSaveBtn" type="submit"><i class="fa-regular fa-floppy-disk"></i> 저장하기</button>
+                </div>
+            </form>
         </section>
     </main>
+
     <footer><div id="footer"></div></footer>
     <script src="js/jquery.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/include.js"></script>
     <script src="component/search-header.js"></script>
+    <script src="js/account-settings.js"></script>
     <script src="component/header.js"></script>
 </body>
 </html>

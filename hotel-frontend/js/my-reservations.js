@@ -216,7 +216,7 @@ function cancelReservation(id) {
         headers: myAuthHeaders(),
         data: JSON.stringify({ sid: id, cancelReason: "고객 직접 취소" }),
         success: loadReservations,
-        error: function () { alert("예약 취소에 실패했습니다."); }
+        error: function (xhr) { alert(getMyErrorMessage(xhr, "예약 취소에 실패했습니다.")); }
     });
 }
 
@@ -376,6 +376,25 @@ function getReservationState(reservation) {
     if (status === "CANCELLED" || status === "NO_SHOW") return { key: "cancelled", group: "CANCELLED", label: "취소됨" };
     if (status === "CHECKED_OUT" || status === "COMPLETED") return { key: "completed", group: "COMPLETED", label: "완료된 여행" };
     return { key: "upcoming", group: "UPCOMING", label: "예정된 여행" };
+}
+
+function getMyErrorMessage(xhr, fallback) {
+    if (xhr && xhr.responseJSON) {
+        const json = xhr.responseJSON;
+        if (typeof json.data === "string") return json.data;
+        return json.message || json.error || json.detail || fallback;
+    }
+
+    if (xhr && xhr.responseText) {
+        try {
+            const parsed = JSON.parse(xhr.responseText);
+            return parsed.message || parsed.data || parsed.error || parsed.detail || fallback;
+        } catch (e) {
+            return xhr.responseText;
+        }
+    }
+
+    return fallback;
 }
 
 function mergeCompletedData(data) {

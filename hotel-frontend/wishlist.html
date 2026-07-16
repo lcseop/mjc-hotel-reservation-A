@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="component/search-header.css">
+    <link rel="stylesheet" href="css/mypage.css">
+    <link rel="stylesheet" href="css/wishlist.css">
+    <title>위시리스트</title>
+</head>
+<body>
+    <navbar><div id="header"></div></navbar>
+    <div id="searchHeader"></div>
+
+    <main class="mypage-shell wishlist-shell">
+        <aside class="mypage-side">
+            <section class="profile-card">
+                <div class="profile-avatar" id="profileInitial">회</div>
+                <h2 id="profileName">회원</h2>
+                <p id="profileEmail">로그인 정보 확인 중</p>
+                <div class="profile-stats">
+                    <div><strong id="wishlistCountSide">0</strong><span>찜한 호텔</span></div>
+                    <div><strong id="profilePoint">0</strong><span>포인트</span></div>
+                </div>
+            </section>
+
+            <nav class="mypage-nav" aria-label="마이페이지 메뉴">
+                <p>마이페이지</p>
+                <a href="my-reservations.html"><i class="fa-regular fa-calendar-check"></i> 예약내역</a>
+                <a href="wishlist.html" class="active"><i class="fa-regular fa-heart"></i> 위시리스트 <b id="navWishlistCount">0</b></a>
+                <a href="my-reviews.html"><i class="fa-regular fa-star"></i> 나의 리뷰</a>
+                <a href="points.html"><i class="fa-solid fa-coins"></i> 포인트</a>
+                <p>내 계정</p>
+                <a href="account-settings.html"><i class="fa-regular fa-user"></i> 내 정보</a>
+                <button type="button" id="sideLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            </nav>
+        </aside>
+
+        <section class="reservation-content wishlist-content">
+            <div class="page-head">
+                <div>
+                    <p class="breadcrumb">홈 <i class="fa-solid fa-chevron-right"></i> 마이페이지 <i class="fa-solid fa-chevron-right"></i> <b>위시리스트</b></p>
+                    <h1>위시리스트</h1>
+                </div>
+                <select id="wishlistSort" aria-label="위시리스트 정렬">
+                    <option value="latest">최근 찜한순</option>
+                    <option value="priceAsc">낮은 가격순</option>
+                    <option value="priceDesc">높은 가격순</option>
+                    <option value="starDesc">성급 높은순</option>
+                </select>
+            </div>
+
+            <div class="wishlist-tools">
+                <label class="wishlist-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="wishlistKeyword" type="search" placeholder="호텔명, 지역, 타입 검색">
+                </label>
+                <div class="wishlist-filter-buttons" aria-label="위시리스트 필터">
+                    <button type="button" class="active" data-filter="ALL">전체</button>
+                    <button type="button" data-filter="SALE">할인중</button>
+                    <button type="button" data-filter="FIVE">5성급</button>
+                    <button type="button" data-filter="SEOUL">서울</button>
+                </div>
+            </div>
+
+            <div id="wishlistList" class="wishlist-list">
+                <div class="empty-state">위시리스트를 불러오는 중입니다.</div>
+            </div>
+        </section>
+    </main>
+
+    <footer><div id="footer"></div></footer>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/include.js"></script>
+    <script src="component/search-header.js"></script>
+    <script src="js/wishlist.js"></script>
+    <script src="component/header.js"></script>
+</body>
+</html>

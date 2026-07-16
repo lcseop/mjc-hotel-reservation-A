@@ -4,7 +4,7 @@ $(function () {
 
 });
 
-const SIGNUP_API = window.StayNowConfig.apiUrl("/member/signup");
+const SIGNUP_API = window.StayNowConfig.apiUrl("/auth/signup");
 const TERMS_API = window.StayNowConfig.apiUrl("/term");
 
 function init() {
