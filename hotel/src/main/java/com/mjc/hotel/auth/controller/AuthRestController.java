@@ -3,6 +3,8 @@ package com.mjc.hotel.auth.controller;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.auth.service.AuthService;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberResponseDto;
@@ -46,6 +48,23 @@ public class AuthRestController {
     public ResponseEntity<ApiResponse<MemberLoginResponseDto>> login(@RequestBody MemberLoginRequestDto request) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "login success", authService.login(request))
+        );
+    }
+
+    @Operation(
+            summary = "refresh 토큰",
+            description = "refresh 토큰을 통해 access 토큰을 재발급합니다."
+    )
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshTokenResponseDto>> refresh(
+            @RequestBody RefreshTokenRequestDto request
+    ) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        ResponseCode.SUCCESS,
+                        "access token refresh success",
+                        authService.refreshAccessToken(request)
+                )
         );
     }
 }
