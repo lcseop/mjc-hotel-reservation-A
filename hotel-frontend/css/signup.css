@@ -182,56 +182,59 @@ body{
     margin-bottom:30px;
 }
 
-.social-login button{
-    height:52px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:15px;
-    font-weight:700;
-    transition:.2s;
-}
-
-.social-login button:hover{
-    transform:translateY(-2px);
-}
-
-.social-login i,
-.social-login span{
-    margin-right:8px;
-}
-
-.kakao-btn{
-    background:#FEE500;
-    color:#181600;
-}
-
-.naver-btn{
-    background:#03C75A;
-    color:white;
-}
-
-.naver-btn span{
-    display:inline-flex;
+.social-btn{
+    position:relative;
+    display:flex;
     align-items:center;
     justify-content:center;
-    width:22px;
-    height:22px;
-    border-radius:4px;
-    background:rgba(255,255,255,.18);
-    font-weight:900;
+    width:100%;
+    height:52px;
+    border:1px solid transparent;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.18s ease;
+}
+
+.social-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 22px rgba(15,23,42,.08);
+}
+
+.provider-image-btn{
+    padding:0;
+    border:0;
+    background:transparent;
+    overflow:hidden;
+}
+
+.provider-image-btn img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:fill;
 }
 
 .google-btn{
     background:white;
-    color:#1b2437;
-    border:1px solid #d9e0ea !important;
+    color:#1f1f1f;
+    border-color:#747775;
+    gap:12px;
+    font:500 14px/20px Arial, sans-serif;
 }
 
-.google-btn span{
-    color:#4285f4;
-    font-size:20px;
-    font-weight:800;
+.google-mark{
+    position:absolute;
+    left:18px;
+    display:grid;
+    place-items:center;
+    width:20px;
+    height:20px;
+}
+
+.google-mark img{
+    display:block;
+    width:18px;
+    height:18px;
 }
 
 /* ==========================
