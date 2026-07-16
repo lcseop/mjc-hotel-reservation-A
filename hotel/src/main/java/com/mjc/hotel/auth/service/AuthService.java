@@ -1,5 +1,6 @@
 package com.mjc.hotel.auth.service;
 
+import com.mjc.hotel.auth.dto.LogoutRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
@@ -121,6 +122,19 @@ public class AuthService {
                 .build();
     }
 
+    public void logout(LogoutRequestDto request) {
+        if (!hasLogoutCredentials(request)) {
+            return;
+        }
+
+        String refreshToken = request.getRefreshToken();
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            return;
+        }
+
+        refreshTokenService.deleteIfMatches(request.getMemberSid(), refreshToken);
+    }
+
     private void validateLoginMember(Member member) {
         if (member.getStatus() != MemberStatus.ACTIVE) {
             throw new AuthenticationFailedException("로그인할 수 없는 회원입니다.");
@@ -141,6 +155,13 @@ public class AuthService {
             throw invalidRefreshToken();
         }
         return request.getRefreshToken();
+    }
+
+    private boolean hasLogoutCredentials(LogoutRequestDto request) {
+        return request != null
+                && request.getMemberSid() != null
+                && request.getRefreshToken() != null
+                && !request.getRefreshToken().isBlank();
     }
 
     private void validateRefreshToken(String refreshToken) {

@@ -1,5 +1,6 @@
 package com.mjc.hotel.auth.controller;
 
+import com.mjc.hotel.auth.dto.LogoutRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
@@ -65,6 +66,18 @@ public class AuthRestController {
                         "access token refresh success",
                         authService.refreshAccessToken(request)
                 )
+        );
+    }
+
+    @Operation(
+            summary = "회원 로그아웃",
+            description = "저장된 refresh 토큰을 삭제해 재발급을 차단합니다."
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody(required = false) LogoutRequestDto request) {
+        authService.logout(request);
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "logout success", null)
         );
     }
 }
