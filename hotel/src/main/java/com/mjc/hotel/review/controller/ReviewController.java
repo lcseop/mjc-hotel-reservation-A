@@ -5,7 +5,11 @@ import com.mjc.hotel.review.mapper.ReviewMapper;
 import com.mjc.hotel.review.repository.*;
 import com.mjc.hotel.review.request.ReviewCreateRequest;
 import com.mjc.hotel.review.request.ReviewUpdateRequest;
+import com.mjc.hotel.review.request.ReviewWriteStatusRequest;
+import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
+import com.mjc.hotel.review.response.ReviewTagResponse;
+import com.mjc.hotel.review.response.ReviewWriteStatusResponse;
 import com.mjc.hotel.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -132,4 +136,42 @@ public class ReviewController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "review exist_photo_search ok", responses)
         );
     }
+
+    @Operation(
+            summary = "리뷰 항목별 평점 리뷰 ID 조회",
+            description = "리뷰에 딸린 항목별 평점(청결도, 서비스, 위치...)를 리뷰 ID로 조회합니다."
+    )
+    @GetMapping("review-category-search")
+    public ResponseEntity<ApiResponse<List<ReviewCategoryResponse>>> reviewCategorySearch(@RequestParam Long reviewId){
+        List<ReviewCategoryResponse> responses = reviewService.findReviewCategoriesByReviewSid(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "review category search ok", responses)
+        );
+    }
+
+    @Operation(
+            summary = "리뷰 태그 리뷰 ID 조회",
+            description = "리뷰에 딸린 태그(청결함, 친절한 직원, 주차 불편, 체크인 대기...)를 리뷰 ID로 조회합니다."
+    )
+    @GetMapping("review-tag-search")
+    public ResponseEntity<ApiResponse<List<ReviewTagResponse>>> reviewTagSearch(@RequestParam Long reviewId){
+        List<ReviewTagResponse> responses = reviewService.findReviewTagsByReviewSid(reviewId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "review tag search ok", responses)
+        );
+    }
+
+//    @Operation(
+//            summary = "회원의 리뷰 쓰기 상태 판단",
+//            description = "회원이 예약으로 숙박 완료 상태인지 판단합니다. 또한 완료 상태라면 리뷰를 새로 써야하는지, 혹은 수정하는지 판단 합니다."
+//    )
+//    @GetMapping("review-status-opinion")
+//    public ResponseEntity<ApiResponse<ReviewWriteStatusResponse>> opinionReviewWriteStatus(
+//            @RequestBody ReviewWriteStatusRequest request
+//            ,@PageableDefault(page = 0, size = 5) Pageable pageable){
+//        ReviewWriteStatusResponse response = reviewService.opinionReviewWriteStatus(request,pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(
+//                new ApiResponse<>(ResponseCode.SUCCESS, "opinion review write status ok", response)
+//        );
+//    }
 }
