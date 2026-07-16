@@ -101,6 +101,27 @@
                         <p class="field-message" id="emailMessage">사용 가능한 이메일입니다</p>
                     </div>
 
+                    <div class="email-verification" id="emailVerificationBox">
+                        <button type="button" class="verify-send-btn" id="sendEmailCodeBtn">
+                            <i class="fa-regular fa-paper-plane"></i>
+                            인증번호 발송
+                        </button>
+                        <div class="verify-code-row" id="emailCodeRow" hidden>
+                            <div class="input-box">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <input
+                                        type="text"
+                                        id="emailCode"
+                                        placeholder="인증번호 6자리"
+                                        maxlength="6"
+                                        inputmode="numeric"
+                                        autocomplete="one-time-code">
+                            </div>
+                            <button type="button" class="verify-confirm-btn" id="confirmEmailCodeBtn">확인</button>
+                        </div>
+                        <p class="field-message" id="emailVerificationMessage" hidden>이메일 인증을 완료해주세요</p>
+                    </div>
+
                     <div class="input-group">
                         <label for="password">비밀번호</label>
                         <div class="input-box password-box">
