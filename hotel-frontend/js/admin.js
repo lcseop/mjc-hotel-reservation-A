@@ -435,9 +435,12 @@ function bindAdminProfileMenu() {
             return;
         }
         if (action === "logout") {
-            localStorage.removeItem("staynowAuth");
-            sessionStorage.removeItem("staynowAuth");
-            location.href = "login.html";
+            const logoutRequest = window.StayNowConfig && window.StayNowConfig.logout
+                ? window.StayNowConfig.logout()
+                : $.Deferred().resolve().promise();
+            logoutRequest.always(function () {
+                location.href = "login.html";
+            });
         }
     });
 
