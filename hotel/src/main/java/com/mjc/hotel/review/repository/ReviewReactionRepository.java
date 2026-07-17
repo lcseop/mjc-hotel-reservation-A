@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ReviewReactionRepository extends JpaRepository<ReviewReaction, ReviewReactionId> {
-    List<ReviewReaction> findAllByReviewSidAndReactionType(Long reviewId, ReactionType reactionType);
+    List<ReviewReaction> findAllByReviewSidAndReactionTypeEquals(Long reviewId, ReactionType reactionType);
 
 
 }

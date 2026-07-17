@@ -9,6 +9,7 @@ import com.mjc.hotel.reservations.entity.Reservation;
 import com.mjc.hotel.reservations.repository.EmailLogRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class EmailLogService {
     private final EmailLogRepository emailLogRepository;
     private final ReservationRepository reservationRepository;
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String mailFrom;
 
     public EmailLogResponseDto sendEmailAndLog(EmailLogRequestDto request) {
         Reservation reservation = reservationRepository.findById(request.getSid())
@@ -67,6 +71,9 @@ public class EmailLogService {
     private EmailStatus trySendMail(String recipientEmail, Reservation reservation, EmailType emailType) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            if (mailFrom != null && !mailFrom.isBlank()) {
+                message.setFrom(mailFrom);
+            }
             message.setTo(recipientEmail);
             message.setSubject(buildSubject(emailType, reservation));
             message.setText(buildBody(emailType, reservation));
@@ -88,7 +95,16 @@ public class EmailLogService {
     private String buildBody(EmailType emailType, Reservation reservation) {
         return switch (emailType) {
             case RESERVATION_CONFIRMATION -> String.format(
-                    "%s님, 예약이 확정되었습니다.\n예약번호: %s\n체크인: %s\n체크아웃: %s\n결제금액: %d원",
+                    """
+                    %s님, StayNow 예약이 확정되었습니다.
+
+                    예약번호: %s
+                    체크인: %s
+                    체크아웃: %s
+                    결제금액: %,d원
+
+                    즐거운 여행 되세요.
+                    """,
                     reservation.getGuestName(), reservation.getReservationNumber(),
                     reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getTotalAmount());
             case CANCELLATION_NOTICE -> String.format(
