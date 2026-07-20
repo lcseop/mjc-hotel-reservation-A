@@ -124,6 +124,7 @@
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
+    text-decoration: none;
     cursor: pointer;
 }
 
@@ -133,9 +134,23 @@
     color: #374151;
 }
 
+.site-header a.menu-btn,
+.site-header a.menu-btn:visited,
+.site-header a.menu-btn:hover,
+.site-header a.menu-btn:focus,
+.site-header a.menu-btn:active,
+.mobile-menu a.menu-btn,
+.mobile-menu a.menu-btn:visited,
+.mobile-menu a.menu-btn:hover,
+.mobile-menu a.menu-btn:focus,
+.mobile-menu a.menu-btn:active {
+    text-decoration: none !important;
+}
+
 .menu-btn:hover {
     border-color: #bfdbfe;
     color: #2563eb;
+    text-decoration: none;
 }
 
 .user-btn {

@@ -1311,12 +1311,14 @@ function setReviewWriteButtonState(enabled, text) {
 
 function collectWriteCategories() {
     const categories = [];
+    const seen = new Set();
 
-    $(".mini-stars").each(function () {
+    $("#reviewWriteModal .mini-stars").each(function () {
         const categoryId = Number($(this).data("category-id"));
-        if (!categoryId) {
+        if (!categoryId || seen.has(categoryId)) {
             return;
         }
+        seen.add(categoryId);
         categories.push({
             categoryId: categoryId,
             rating: Number($(this).attr("data-rating") || 5)
@@ -1327,9 +1329,15 @@ function collectWriteCategories() {
 }
 
 function collectWriteTags() {
-    return $(".write-tag-chip.active").map(function () {
-        return { tagId: Number($(this).data("tag-id")) };
-    }).get();
+    const seen = new Set();
+    return $("#reviewWriteModal .write-tag-chip.active").map(function () {
+        const tagId = Number($(this).data("tag-id"));
+        if (!tagId || seen.has(tagId)) {
+            return null;
+        }
+        seen.add(tagId);
+        return { tagId: tagId };
+    }).get().filter(Boolean);
 }
 
 function drawWriteTagButtons() {
