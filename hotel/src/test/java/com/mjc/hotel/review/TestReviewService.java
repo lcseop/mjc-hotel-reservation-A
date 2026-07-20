@@ -72,14 +72,13 @@ public class TestReviewService {
 
         List<ReviewTagRequest> tags = new ArrayList<>();
         setTags(tags, 1L);
-
         ReviewCreateRequest request = new ReviewCreateRequest(
                 1L,
                 1L,
                 1L,
                 5,
                 TravelType.SOLO,
-                "리뷰 저장 테스트",
+                "<script>alert('XSS 공격!');</script>리뷰 저장 테스트",
                 categories,
                 tags
         );
