@@ -474,11 +474,13 @@ function updateReviewContentCount() {
 }
 
 function collectReviewCategories() {
-    return $(".mini-stars").map(function () {
+    const seen = new Set();
+    return $("#reviewModal .mini-stars").map(function () {
         const categoryId = Number($(this).data("category-id"));
-        if (!categoryId) {
+        if (!categoryId || seen.has(categoryId)) {
             return null;
         }
+        seen.add(categoryId);
         return {
             categoryId: categoryId,
             rating: Number($(this).attr("data-rating") || 5)
@@ -509,9 +511,15 @@ function drawReviewCategoryStars() {
 }
 
 function collectReviewTags() {
-    return $(".write-tag-chip.active").map(function () {
-        return { tagId: Number($(this).data("tag-id")) };
-    }).get();
+    const seen = new Set();
+    return $("#reviewModal .write-tag-chip.active").map(function () {
+        const tagId = Number($(this).data("tag-id"));
+        if (!tagId || seen.has(tagId)) {
+            return null;
+        }
+        seen.add(tagId);
+        return { tagId: tagId };
+    }).get().filter(Boolean);
 }
 
 function drawWriteTagButtons() {

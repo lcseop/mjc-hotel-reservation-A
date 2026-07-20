@@ -8,7 +8,8 @@ let availablePoint = 0;
 let couponDragMoved = false;
 let tossWidgets = null;
 let tossWidgetAmount = null;
-let tossWidgetRenderPromise = null;
+let tossAmountPromise = Promise.resolve();
+let tossPaymentWindow = null;
 
 $(function () {
     reservationState = loadReservationState();
@@ -288,7 +289,6 @@ function renderPriceSummary() {
 
     $("#taxAmount").text(price.taxAmount > 0 ? formatWon(price.taxAmount) : "포함");
     $("#totalAmount").text(formatWon(Math.max(0, price.totalAmount - pointValue)));
-    syncTossWidgetAmount(Math.max(0, price.totalAmount - pointValue));
 }
 
 function drawRoomPills(room) {
@@ -485,16 +485,19 @@ function requestTossPayment(paymentReady, completeData) {
     const amount = Number(paymentReady.amount || 0);
     const successUrl = makePageUrl("payment-success.html") + "?reservationId=" + encodeURIComponent(completeData.reservation.sid);
     const failUrl = makePageUrl("payment-fail.html") + "?reservationId=" + encodeURIComponent(completeData.reservation.sid);
+    const paymentRequest = {
+        orderId: paymentReady.orderId,
+        orderName: paymentReady.orderName || makeOrderName(completeData.hotel, completeData.room),
+        successUrl,
+        failUrl,
+        customerEmail: completeData.guest.email,
+        customerName: completeData.guest.name,
+        customerMobilePhone: onlyDigits(completeData.guest.phone)
+    };
 
     return ensureTossWidgets(amount).then(function (widgets) {
-        return widgets.requestPayment({
-            orderId: paymentReady.orderId,
-            orderName: paymentReady.orderName || makeOrderName(completeData.hotel, completeData.room),
-            successUrl,
-            failUrl,
-            customerEmail: completeData.guest.email,
-            customerName: completeData.guest.name
-        });
+        setPaymentLoading(false);
+        return openTossPaymentWindow(widgets, paymentRequest);
     });
 }
 
@@ -509,62 +512,79 @@ function ensureTossWidgets(amount) {
     }
 
     if (!tossWidgets) {
-        const auth = reservationState.auth || {};
         const tossPayments = window.TossPayments(clientKey);
         tossWidgets = tossPayments.widgets({
-            customerKey: "staynow-" + String(auth.memberSid || "guest")
+            customerKey: getTossCustomerKey()
         });
     }
 
     const nextAmount = Math.max(0, Number(amount || 0));
-    const setAmountPromise = tossWidgets.setAmount({
-        currency: "KRW",
-        value: nextAmount
+    tossAmountPromise = tossAmountPromise.then(function () {
+        return tossWidgets.setAmount({
+            currency: "KRW",
+            value: nextAmount
+        });
     }).then(function () {
         tossWidgetAmount = nextAmount;
         return tossWidgets;
     });
 
-    if (!tossWidgetRenderPromise) {
-        tossWidgetRenderPromise = setAmountPromise.then(function () {
-            return Promise.all([
-                tossWidgets.renderPaymentMethods({
-                    selector: "#tossPaymentMethods",
-                    variantKey: "DEFAULT"
-                }),
-                tossWidgets.renderAgreement({
-                    selector: "#tossPaymentAgreement",
-                    variantKey: "AGREEMENT"
-                })
-            ]).then(function () {
-                return tossWidgets;
-            });
-        });
+    return tossAmountPromise;
+}
+
+function openTossPaymentWindow(widgets, paymentRequest) {
+    if (!widgets || typeof widgets.renderPaymentWindow !== "function") {
+        return Promise.reject(new Error("토스 결제위젯 결제창형 API를 사용할 수 없습니다."));
     }
 
-    return tossWidgetRenderPromise.then(function () {
-        if (tossWidgetAmount === nextAmount) {
-            return tossWidgets;
+    if (tossPaymentWindow && typeof tossPaymentWindow.destroy === "function") {
+        try {
+            tossPaymentWindow.destroy();
+        } catch (e) {
+            console.warn("Toss payment window destroy skipped", e);
         }
+        tossPaymentWindow = null;
+    }
 
-        return tossWidgets.setAmount({
-            currency: "KRW",
-            value: nextAmount
-        }).then(function () {
-            tossWidgetAmount = nextAmount;
-            return tossWidgets;
-        });
+    return new Promise(function (resolve, reject) {
+        widgets.renderPaymentWindow({
+            variantKey: {
+                paymentMethod: "DEFAULT",
+                agreement: "AGREEMENT"
+            }
+        }).then(function (paymentWindow) {
+            tossPaymentWindow = paymentWindow;
+            paymentWindow.on("paymentRequest", function () {
+                setPaymentLoading(true);
+                widgets.requestPayment(paymentRequest).catch(function (error) {
+                    setPaymentLoading(false);
+                    reject(error);
+                });
+            });
+            resolve(paymentWindow);
+        }).catch(reject);
     });
 }
 
-function syncTossWidgetAmount(amount) {
-    if (!window.TossPayments || !$("#tossPaymentMethods").length) {
-        return;
+function getTossCustomerKey() {
+    const auth = reservationState.auth || {};
+    const memberSid = String(auth.memberSid || "guest");
+    const storageKey = "staynowTossCustomerKey:" + memberSid;
+    let customerKey = localStorage.getItem(storageKey);
+
+    if (!customerKey) {
+        const uuid = window.crypto && typeof window.crypto.randomUUID === "function"
+            ? window.crypto.randomUUID()
+            : String(Date.now()) + "-" + Math.random().toString(36).slice(2, 14);
+        customerKey = "SN-" + uuid;
+        localStorage.setItem(storageKey, customerKey);
     }
 
-    ensureTossWidgets(amount).catch(function (error) {
-        console.warn("Toss widget sync failed", error);
-    });
+    return customerKey;
+}
+
+function onlyDigits(value) {
+    return String(value || "").replace(/\D/g, "");
 }
 
 function makeOrderName(hotel, room) {
