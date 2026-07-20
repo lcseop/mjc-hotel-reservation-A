@@ -123,8 +123,10 @@ function saveLoginData(loginData) {
     storage.setItem("staynowAuth", JSON.stringify({
         token,
         accessToken: loginData.accessToken,
+        refreshToken: loginData.refreshToken,
         tokenType: loginData.tokenType,
         expiresIn: loginData.expiresIn,
+        refreshTokenExpiresIn: loginData.refreshTokenExpiresIn,
         memberSid: loginData.memberSid,
         email: loginData.email,
         name: loginData.name,

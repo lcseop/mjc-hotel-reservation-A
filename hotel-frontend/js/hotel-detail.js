@@ -6,6 +6,7 @@ let hotelImages = [];
 let currentHotel = null;
 let currentRooms = [];
 let currentAmenities = [];
+let blockedRoomIds = new Set();
 let kakaoMapPromise = null;
 let detailMap = null;
 let detailMapOverlay = null;
@@ -556,7 +557,10 @@ function loadRooms(hotelId) {
         url: API_BASE + "/hotel/inroom/" + hotelId,
         type: "GET",
         success: function (result) {
-            drawRooms(result.data || []);
+            const rooms = result.data || [];
+            loadBlockedRoomIds(hotelId).always(function () {
+                drawRooms(rooms);
+            });
         },
         error: function () {
             drawRooms([]);
@@ -568,7 +572,7 @@ function drawRooms(rooms) {
     const list = $("#roomList");
 
     rooms = (rooms || []).filter(function (room) {
-        return room.roomAvailable !== false;
+        return room.roomAvailable !== false && !blockedRoomIds.has(String(room.sid));
     });
     currentRooms = rooms;
     list.empty();
@@ -617,6 +621,78 @@ function drawRooms(rooms) {
 
         loadRoomImage(room.sid);
     });
+}
+
+function loadBlockedRoomIds(hotelId) {
+    const range = getReservationSearchRange();
+    blockedRoomIds = new Set();
+
+    if (!hotelId || !range.checkIn || !range.checkOut) {
+        return $.Deferred().resolve().promise();
+    }
+
+    return $.ajax({
+        url: API_BASE + "/reservation/search",
+        type: "GET",
+        data: {
+            hotelId: hotelId,
+            dateTo: range.checkOut + "T23:59:59",
+            page: 0,
+            size: 500,
+            sort: "checkInDate,asc"
+        }
+    }).then(function (page) {
+        const reservations = getPageContent(page);
+        reservations.forEach(function (reservation) {
+            if (!isBlockingReservation(reservation)) return;
+            if (!datesOverlap(range.checkIn, range.checkOut, reservation.checkInDate, reservation.checkOutDate)) return;
+            if (reservation.roomId) {
+                blockedRoomIds.add(String(reservation.roomId));
+            }
+        });
+    }, function () {
+        blockedRoomIds = new Set();
+    });
+}
+
+function getReservationSearchRange() {
+    const searchRequest = readJson("hotelSearchRequest") || {};
+    return {
+        checkIn: normalizeDateOnly(searchRequest.checkIn || searchRequest.checkInDate),
+        checkOut: normalizeDateOnly(searchRequest.checkOut || searchRequest.checkOutDate)
+    };
+}
+
+function normalizeDateOnly(value) {
+    if (!value) return "";
+    return String(value).slice(0, 10);
+}
+
+function getPageContent(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (value.data) return getPageContent(value.data);
+    return Array.isArray(value.content) ? value.content : [];
+}
+
+function isBlockingReservation(reservation) {
+    const status = String(reservation && reservation.reservationStatus || "").toUpperCase();
+    return ["PENDING", "CONFIRMED", "UPCOMING", "CHECKED_IN"].includes(status);
+}
+
+function datesOverlap(checkIn, checkOut, reservedCheckIn, reservedCheckOut) {
+    const start = toDateOnly(checkIn);
+    const end = toDateOnly(checkOut);
+    const reservedStart = toDateOnly(reservedCheckIn);
+    const reservedEnd = toDateOnly(reservedCheckOut);
+    if (!start || !end || !reservedStart || !reservedEnd) return false;
+    return start < reservedEnd && reservedStart < end;
+}
+
+function toDateOnly(value) {
+    if (!value) return null;
+    const date = new Date(String(value).slice(0, 10) + "T00:00:00");
+    return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function loadRoomImage(roomId) {
