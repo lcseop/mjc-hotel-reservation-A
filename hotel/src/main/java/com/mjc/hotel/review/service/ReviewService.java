@@ -252,8 +252,9 @@ public class ReviewService {
                 ReviewCategory result = reviewCategoryRepository.save(reviewCategory);
                 results.add(result);
 
-                return results;
+
             }
+            return results;
         }
         return null;
     }
@@ -347,8 +348,8 @@ public class ReviewService {
                 ReviewTag result = reviewTagRepository.save(reviewTag);
 
                 results.add(result);
-                return results;
             }
+            return results;
         }
         return null;
     }
