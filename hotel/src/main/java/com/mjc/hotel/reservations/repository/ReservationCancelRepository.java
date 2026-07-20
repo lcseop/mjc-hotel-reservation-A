@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReservationCancelRepository extends JpaRepository<ReservationCancel, Long> {
 
+    boolean existsByReservationSid(Long reservationId);
 }

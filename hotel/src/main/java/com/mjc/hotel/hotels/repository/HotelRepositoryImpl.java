@@ -8,6 +8,7 @@ import com.mjc.hotel.promotion.entity.QDiscountRate;
 import com.mjc.hotel.promotion.entity.QPromotion;
 import com.mjc.hotel.reservations.entity.QReservation;
 import com.mjc.hotel.reservations.entity.QReservationCancel;
+import com.mjc.hotel.reservations.entity.ReservationStatus;
 import com.mjc.hotel.room.entity.QRoom;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -183,6 +184,11 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                                 JPAExpressions
                                         .select(rc.reservation.sid)
                                         .from(rc)
+                        ),
+                        res.reservationStatus.in(
+                                ReservationStatus.CONFIRMED,
+                                ReservationStatus.UPCOMING,
+                                ReservationStatus.CHECKED_IN
                         ),
 
                         // 날짜 겹침 조건

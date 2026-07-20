@@ -3,12 +3,24 @@ const API_BASE = window.StayNowConfig.apiBase;
 $(function () {
     const params = new URLSearchParams(location.search);
     const orderId = params.get("orderId");
+    const reservationId = params.get("reservationId");
     const code = params.get("code") || "PAYMENT_FAILED";
     const message = params.get("message") || "결제가 취소되었거나 실패했습니다.";
 
     $("#failMessage").text(message);
 
-    if (!orderId) {
+    if (!orderId && !reservationId) {
+        return;
+    }
+
+    if (!orderId && reservationId) {
+        $.ajax({
+            url: API_BASE + "/reservation/" + encodeURIComponent(reservationId) + "/payment-cancel",
+            type: "PATCH",
+            contentType: "application/json",
+            headers: authHeaders(),
+            data: JSON.stringify({ reason: message })
+        });
         return;
     }
 
