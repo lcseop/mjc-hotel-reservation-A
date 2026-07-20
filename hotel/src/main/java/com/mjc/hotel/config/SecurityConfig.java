@@ -38,6 +38,8 @@ public class SecurityConfig {
 //                .authorizeHttpRequests(
 //                        auth -> auth.requestMatchers(
 //                                        "/api/auth/login",
+//                                        "/api/auth/logout",
+//                                        "/api/auth/refresh",
 //                                        "/swagger-ui/**",
 //                                        "/api/auth/signup",
 //                                        "/swagger-ui.html",

@@ -41,6 +41,13 @@ public class Promotion extends BaseEntity {
     @Column(name = "discount_info", nullable = false)
     private String discountContent; // 예: "최대 30%", "30,000원"
 
+    @Builder.Default
+    @Column(name = "deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     public void update(String promotionName) {
         this.promotionName = promotionName;
     }

@@ -1,8 +1,11 @@
 package com.mjc.hotel.auth.service;
 
+import com.mjc.hotel.auth.dto.LogoutRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
@@ -28,14 +31,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final long ACCESS_TOKEN_EXPIRES_IN_SECONDS = 1800L;
-
     private final MemberAuthAccountRepository memberAuthAccountRepository;
     private final MemberService memberService;
     private final TermRepository termRepository;
     private final MemberDtoMapper memberDtoMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public Member signup(MemberSignupRequestDto request) {
@@ -77,15 +79,60 @@ public class AuthService {
 
         authAccount.setLastLoginAt(LocalDateTime.now());
 
+        String accessToken = jwtProvider.createAccessToken(member.getEmail());
+        String refreshToken = jwtProvider.createRefreshToken(member.getEmail());
+        long refreshTokenExpiresIn = jwtProvider.getRefreshTokenExpiresInSeconds();
+
+        refreshTokenService.save(member.getSid(), refreshToken, refreshTokenExpiresIn);
+
         return MemberLoginResponseDto.builder()
-                .accessToken(jwtProvider.createToken(member.getEmail()))
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(ACCESS_TOKEN_EXPIRES_IN_SECONDS)
+                .expiresIn(jwtProvider.getAccessTokenExpiresInSeconds())
+                .refreshTokenExpiresIn(refreshTokenExpiresIn)
                 .memberSid(member.getSid())
                 .email(member.getEmail())
                 .name(member.getName())
                 .role(member.getRole())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public RefreshTokenResponseDto refreshAccessToken(RefreshTokenRequestDto request) {
+        String refreshToken = getRequiredRefreshToken(request);
+        validateRefreshToken(refreshToken);
+
+        String email = jwtProvider.getName(refreshToken);
+        MemberAuthAccount authAccount = memberAuthAccountRepository
+                .findLoginAuthAccount(email, MemberAuthProvider.LOCAL)
+                .orElseThrow(() -> invalidRefreshToken());
+
+        Member member = authAccount.getMember();
+        validateLoginMember(member);
+
+        if (!refreshTokenService.matches(member.getSid(), refreshToken)) {
+            throw invalidRefreshToken();
+        }
+
+        return RefreshTokenResponseDto.builder()
+                .accessToken(jwtProvider.createAccessToken(member.getEmail()))
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getAccessTokenExpiresInSeconds())
+                .build();
+    }
+
+    public void logout(LogoutRequestDto request) {
+        if (!hasLogoutCredentials(request)) {
+            return;
+        }
+
+        String refreshToken = request.getRefreshToken();
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            return;
+        }
+
+        refreshTokenService.deleteIfMatches(request.getMemberSid(), refreshToken);
     }
 
     private void validateLoginMember(Member member) {
@@ -101,6 +148,30 @@ public class AuthService {
         if (rawPassword == null || passwordHash == null || !passwordEncoder.matches(rawPassword, passwordHash)) {
             throw new AuthenticationFailedException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
+    }
+
+    private String getRequiredRefreshToken(RefreshTokenRequestDto request) {
+        if (request == null || request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
+            throw invalidRefreshToken();
+        }
+        return request.getRefreshToken();
+    }
+
+    private boolean hasLogoutCredentials(LogoutRequestDto request) {
+        return request != null
+                && request.getMemberSid() != null
+                && request.getRefreshToken() != null
+                && !request.getRefreshToken().isBlank();
+    }
+
+    private void validateRefreshToken(String refreshToken) {
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            throw invalidRefreshToken();
+        }
+    }
+
+    private AuthenticationFailedException invalidRefreshToken() {
+        return new AuthenticationFailedException("유효하지 않은 refresh token입니다.");
     }
 
     private String resolvePasswordHash(String password, String passwordHash) {

@@ -51,11 +51,16 @@ $(function () {
     });
 
     $(document).on("click", ".logout-btn", function () {
-        localStorage.removeItem("staynowAuth");
-        sessionStorage.removeItem("staynowAuth");
+        const logoutRequest = window.StayNowConfig && window.StayNowConfig.logout
+            ? window.StayNowConfig.logout()
+            : $.Deferred().resolve().promise();
+
         closeUserMenu();
         renderAuthHeader();
-        location.href = "index.html";
+
+        logoutRequest.always(function () {
+            location.href = "index.html";
+        });
     });
 
     $(document).on("click", function () {
