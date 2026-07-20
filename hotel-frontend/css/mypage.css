@@ -931,6 +931,11 @@ textarea {
     color: #059669;
 }
 
+.status-chip.checked-in {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
 .status-chip.completed {
     background: #f1f5f9;
     color: #64748b;

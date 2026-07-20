@@ -191,6 +191,10 @@ function makeLeftAction(reservation, state, reviewed) {
             : '<button type="button" class="outline-btn review-btn"><i class="fa-regular fa-pen-to-square"></i> 리뷰 작성</button>';
     }
 
+    if (state.key === "checked-in") {
+        return '<span class="mini-chip green"><i class="fa-solid fa-circle-check"></i> 체크인 완료</span>';
+    }
+
     return '<button type="button" class="mini-chip checkin-btn"><i class="fa-regular fa-clock"></i> 체크인</button>';
 }
 
@@ -374,6 +378,7 @@ function sortReservations(items) {
 function getReservationState(reservation) {
     const status = reservation.reservationStatus;
     if (status === "CANCELLED" || status === "NO_SHOW") return { key: "cancelled", group: "CANCELLED", label: "취소됨" };
+    if (status === "CHECKED_IN") return { key: "checked-in", group: "UPCOMING", label: "투숙 중" };
     if (status === "CHECKED_OUT" || status === "COMPLETED") return { key: "completed", group: "COMPLETED", label: "완료된 여행" };
     return { key: "upcoming", group: "UPCOMING", label: "예정된 여행" };
 }
