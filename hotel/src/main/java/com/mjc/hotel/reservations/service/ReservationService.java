@@ -85,9 +85,6 @@ public class ReservationService {
 
             couponDiscount = calculateDiscount(couponIssue.getCoupon(), totalAmount);
             totalAmount = Math.max(0, totalAmount - couponDiscount);
-
-            couponIssue.setIsUsed(true);
-            couponIssue.setUsedAt(LocalDateTime.now());
         }
 
         Integer usePoint = requestDto.getUsePoint() != null ? requestDto.getUsePoint() : 0;
@@ -97,8 +94,6 @@ public class ReservationService {
             }
             pointDiscount = usePoint;
             totalAmount = Math.max(0, totalAmount - usePoint);
-            memberPoint -= usePoint;
-            member.setPoint(memberPoint);
         }
 
         Integer discountAmount = promotionDiscount + couponDiscount + pointDiscount;
@@ -125,16 +120,6 @@ public class ReservationService {
                 .build();
 
         Reservation savedReservation = reservationRepository.save(reservation);
-
-        if (usePoint > 0) {
-            PointHistory pointHistory = PointHistory.builder()
-                    .reservation(savedReservation)
-                    .member(member)
-                    .amount(-usePoint)
-                    .pointStatus(PointStatus.USE)
-                    .build();
-            pointHistoryRepository.save(pointHistory);
-        }
 
         String qrCode = generateQRCode(savedReservation);
         savedReservation.setCheckInQr(qrCode);
@@ -250,6 +235,56 @@ public class ReservationService {
                 .refundAmount(refundAmount)
                 .build();
         reservationCancelRepository.save(reservationCancel);
+    }
+
+    @Transactional
+    public ReservationResponseDto cancelPendingPaymentReservation(Long reservationId, String reason) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+
+        if (reservation.getReservationStatus() == ReservationStatus.CANCELLED) {
+            return convertToResponseDto(reservation);
+        }
+
+        if (reservation.getReservationStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("결제 대기 예약만 결제 취소 처리할 수 있습니다.");
+        }
+
+        restorePendingReservationBenefits(reservation);
+        reservation.setReservationStatus(ReservationStatus.CANCELLED);
+
+        reservationCancelRepository.save(ReservationCancel.builder()
+                .reservation(reservation)
+                .cancelReason(reason != null && !reason.isBlank() ? reason : "결제 취소")
+                .refundAmount(0)
+                .build());
+
+        return convertToResponseDto(reservation);
+    }
+
+    private void restorePendingReservationBenefits(Reservation reservation) {
+        Member member = reservation.getMember();
+
+        if (reservation.getCouponIssue() != null) {
+            CouponIssue couponIssue = reservation.getCouponIssue();
+            couponIssue.setIsUsed(false);
+            couponIssue.setUsedAt(null);
+        }
+
+        Integer pointDiscount = reservation.getPointDiscount() != null ? reservation.getPointDiscount() : 0;
+        boolean alreadyRefunded = !pointHistoryRepository
+                .findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.USE_CANCEL_REFUND)
+                .isEmpty();
+
+        if (pointDiscount > 0 && !alreadyRefunded) {
+            member.setPoint(safeMemberPoint(member) + pointDiscount);
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(pointDiscount)
+                    .pointStatus(PointStatus.USE_CANCEL_REFUND)
+                    .build());
+        }
     }
 
     @Transactional

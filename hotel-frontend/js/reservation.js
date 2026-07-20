@@ -381,6 +381,7 @@ function submitReservation() {
                             .catch(function (error) {
                                 return notifyTossPaymentFailure(
                                     paymentReady.orderId,
+                                    completeData.reservation.sid,
                                     "PAYMENT_WIDGET_ERROR",
                                     getErrorMessage(error, "결제창을 열지 못했습니다.")
                                 ).then(function () {
@@ -446,22 +447,35 @@ function createTossPaymentReady(reservation, totalAmount, orderName) {
     });
 }
 
-function notifyTossPaymentFailure(orderId, code, message) {
-    if (!orderId) {
+function notifyTossPaymentFailure(orderId, reservationId, code, message) {
+    if (!orderId && !reservationId) {
         return Promise.resolve();
     }
 
     return new Promise(function (resolve) {
+        const payload = {
+            code: code || "PAYMENT_FAILED",
+            message: message || "결제가 취소되었거나 실패했습니다."
+        };
+
+        if (orderId) {
+            $.ajax({
+                url: API_BASE + "/payments/toss/fail",
+                type: "POST",
+                contentType: "application/json",
+                headers: authHeaders(),
+                data: JSON.stringify(Object.assign({ orderId }, payload)),
+                complete: resolve
+            });
+            return;
+        }
+
         $.ajax({
-            url: API_BASE + "/payments/toss/fail",
-            type: "POST",
+            url: API_BASE + "/reservation/" + encodeURIComponent(reservationId) + "/payment-cancel",
+            type: "PATCH",
             contentType: "application/json",
             headers: authHeaders(),
-            data: JSON.stringify({
-                orderId,
-                code: code || "PAYMENT_FAILED",
-                message: message || "결제가 취소되었거나 실패했습니다."
-            }),
+            data: JSON.stringify({ reason: payload.message }),
             complete: resolve
         });
     });
@@ -470,7 +484,7 @@ function notifyTossPaymentFailure(orderId, code, message) {
 function requestTossPayment(paymentReady, completeData) {
     const amount = Number(paymentReady.amount || 0);
     const successUrl = makePageUrl("payment-success.html") + "?reservationId=" + encodeURIComponent(completeData.reservation.sid);
-    const failUrl = makePageUrl("payment-fail.html");
+    const failUrl = makePageUrl("payment-fail.html") + "?reservationId=" + encodeURIComponent(completeData.reservation.sid);
 
     return ensureTossWidgets(amount).then(function (widgets) {
         return widgets.requestPayment({
