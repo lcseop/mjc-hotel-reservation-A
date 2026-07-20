@@ -204,7 +204,7 @@ public class TestReviewService {
                 TEST_REVIEW.getSid(),
                 4,
                 TravelType.FAMILY,
-                "리뷰 수정 테스트",
+                "<script>alert('XSS 공격!');</script>리뷰 수정 테스트",
                 categories,
                 tags
         );
