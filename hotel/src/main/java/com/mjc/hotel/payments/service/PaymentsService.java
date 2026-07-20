@@ -12,8 +12,14 @@ import com.mjc.hotel.payments.entity.PaymentMethod;
 import com.mjc.hotel.payments.entity.PaymentStatus;
 import com.mjc.hotel.payments.entity.Payments;
 import com.mjc.hotel.payments.repository.PaymentsRepository;
+import com.mjc.hotel.reservations.dto.EmailLogRequestDto;
+import com.mjc.hotel.reservations.entity.PointHistory;
+import com.mjc.hotel.reservations.entity.PointStatus;
 import com.mjc.hotel.reservations.entity.Reservation;
+import com.mjc.hotel.reservations.entity.ReservationStatus;
+import com.mjc.hotel.reservations.repository.PointHistoryRepository;
 import com.mjc.hotel.reservations.repository.ReservationRepository;
+import com.mjc.hotel.reservations.service.EmailLogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +49,8 @@ public class PaymentsService {
     private final PaymentsRepository paymentsRepository;
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
+    private final PointHistoryRepository pointHistoryRepository;
+    private final EmailLogService emailLogService;
     private final PaymentsDtoMapper paymentsDtoMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -74,6 +82,10 @@ public class PaymentsService {
 
         if (!reservation.getMember().getSid().equals(member.getSid())) {
             throw new IllegalArgumentException("예약자와 결제 회원이 일치하지 않습니다.");
+        }
+
+        if (reservation.getReservationStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("결제 대기 상태의 예약만 결제를 시작할 수 있습니다.");
         }
 
         BigDecimal reservationAmount = BigDecimal.valueOf(reservation.getTotalAmount());
@@ -136,6 +148,8 @@ public class PaymentsService {
         payment.setFailMessage(null);
         payment.setPoint((int) Math.floor(amount.doubleValue() * 0.005));
 
+        confirmReservationAfterPayment(payment);
+
         return payment;
     }
 
@@ -148,7 +162,82 @@ public class PaymentsService {
         payment.setFailCode(dto.getCode());
         payment.setFailMessage(dto.getMessage());
 
+        cancelPendingReservationAfterPaymentFailure(payment);
+
         return payment;
+    }
+
+    private void confirmReservationAfterPayment(Payments payment) {
+        Reservation reservation = payment.getReservation();
+        if (reservation.getReservationStatus() == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("취소된 예약은 결제를 승인할 수 없습니다.");
+        }
+
+        boolean shouldSendEmail = reservation.getReservationStatus() != ReservationStatus.CONFIRMED;
+        reservation.setReservationStatus(ReservationStatus.CONFIRMED);
+
+        Member member = reservation.getMember();
+        Integer earnPoint = payment.getPoint() != null ? payment.getPoint() : 0;
+        boolean alreadyEarned = !pointHistoryRepository
+                .findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.ACCUMULATION)
+                .isEmpty();
+
+        if (earnPoint > 0 && !alreadyEarned) {
+            Integer memberPoint = member.getPoint() != null ? member.getPoint() : 0;
+            member.setPoint(memberPoint + earnPoint);
+            reservation.setEarnedPoint(earnPoint);
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(earnPoint)
+                    .pointStatus(PointStatus.ACCUMULATION)
+                    .build());
+        }
+
+        if (shouldSendEmail) {
+            sendConfirmationEmailSafely(reservation, member);
+        }
+    }
+
+    private void cancelPendingReservationAfterPaymentFailure(Payments payment) {
+        Reservation reservation = payment.getReservation();
+        if (reservation.getReservationStatus() != ReservationStatus.PENDING) {
+            return;
+        }
+
+        reservation.setReservationStatus(ReservationStatus.CANCELLED);
+
+        if (reservation.getCouponIssue() != null) {
+            reservation.getCouponIssue().setIsUsed(false);
+            reservation.getCouponIssue().setUsedAt(null);
+        }
+
+        Integer pointDiscount = reservation.getPointDiscount() != null ? reservation.getPointDiscount() : 0;
+        boolean alreadyRefunded = !pointHistoryRepository
+                .findByReservationSidAndPointStatus(reservation.getSid(), PointStatus.USE_CANCEL_REFUND)
+                .isEmpty();
+
+        if (pointDiscount > 0 && !alreadyRefunded) {
+            Member member = reservation.getMember();
+            Integer memberPoint = member.getPoint() != null ? member.getPoint() : 0;
+            member.setPoint(memberPoint + pointDiscount);
+            pointHistoryRepository.save(PointHistory.builder()
+                    .reservation(reservation)
+                    .member(member)
+                    .amount(pointDiscount)
+                    .pointStatus(PointStatus.USE_CANCEL_REFUND)
+                    .build());
+        }
+    }
+
+    private void sendConfirmationEmailSafely(Reservation reservation, Member member) {
+        try {
+            EmailLogRequestDto emailRequest = new EmailLogRequestDto();
+            emailRequest.setSid(reservation.getSid());
+            emailRequest.setRecipientEmail(member.getEmail());
+            emailLogService.sendEmailAndLog(emailRequest);
+        } catch (Exception ignored) {
+        }
     }
 
     @Transactional

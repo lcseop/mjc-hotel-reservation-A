@@ -377,7 +377,16 @@ function submitReservation() {
                     .then(function (paymentReady) {
                         completeData.paymentReady = paymentReady;
                         sessionStorage.setItem("pendingTossReservation", JSON.stringify(completeData));
-                        return requestTossPayment(paymentReady, completeData);
+                        return requestTossPayment(paymentReady, completeData)
+                            .catch(function (error) {
+                                return notifyTossPaymentFailure(
+                                    paymentReady.orderId,
+                                    "PAYMENT_WIDGET_ERROR",
+                                    getErrorMessage(error, "결제창을 열지 못했습니다.")
+                                ).then(function () {
+                                    throw error;
+                                });
+                            });
                     });
             })
             .catch(function (xhr) {
@@ -433,6 +442,27 @@ function createTossPaymentReady(reservation, totalAmount, orderName) {
                 resolve(result.data || result);
             },
             error: reject
+        });
+    });
+}
+
+function notifyTossPaymentFailure(orderId, code, message) {
+    if (!orderId) {
+        return Promise.resolve();
+    }
+
+    return new Promise(function (resolve) {
+        $.ajax({
+            url: API_BASE + "/payments/toss/fail",
+            type: "POST",
+            contentType: "application/json",
+            headers: authHeaders(),
+            data: JSON.stringify({
+                orderId,
+                code: code || "PAYMENT_FAILED",
+                message: message || "결제가 취소되었거나 실패했습니다."
+            }),
+            complete: resolve
         });
     });
 }

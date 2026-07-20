@@ -3294,27 +3294,12 @@ a {
     font-size: 13px;
 }
 
-.review-master-form .admin-input,
-.review-master-form .admin-select {
-    opacity: .65;
+.review-master-form {
+    grid-template-columns: minmax(0, 1fr) 160px auto auto;
 }
 
-.review-master-notice {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 28px 16px;
-    padding: 12px 14px;
-    border: 1px solid #fde68a;
-    border-radius: 14px;
-    background: #fffbeb;
-    color: #b45309;
-    font-weight: 800;
-}
-
-.review-master-card .icon-btn.disabled {
-    opacity: .45;
-    cursor: not-allowed;
+.review-master-form .admin-select[hidden] {
+    display: none;
 }
 
 .hotel-master-list {

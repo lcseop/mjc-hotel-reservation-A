@@ -113,7 +113,7 @@ public class ReservationService {
                 .checkOutDate(requestDto.getCheckOutDate())
                 .adults(requestDto.getAdults())
                 .children(requestDto.getChildren() != null ? requestDto.getChildren() : 0)
-                .reservationStatus(ReservationStatus.CONFIRMED)
+                .reservationStatus(ReservationStatus.PENDING)
                 .totalAmount(totalAmount)
                 .specialRequests(requestDto.getSpecialRequests())
                 .originalAmount(originalAmount)
@@ -136,23 +136,8 @@ public class ReservationService {
             pointHistoryRepository.save(pointHistory);
         }
 
-        Integer earnPoint = (int) (totalAmount * 0.005);
-        if (earnPoint > 0) {
-            member.setPoint(memberPoint + earnPoint);
-            savedReservation.setEarnedPoint(earnPoint);
-            PointHistory earnHistory = PointHistory.builder()
-                    .reservation(savedReservation)
-                    .member(member)
-                    .amount(earnPoint)
-                    .pointStatus(PointStatus.ACCUMULATION)
-                    .build();
-            pointHistoryRepository.save(earnHistory);
-        }
-
         String qrCode = generateQRCode(savedReservation);
         savedReservation.setCheckInQr(qrCode);
-
-        sendConfirmationEmailSafely(savedReservation, member);
 
         return convertToResponseDto(savedReservation);
     }
