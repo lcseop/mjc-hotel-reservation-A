@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="45" viewBox="0 0 300 45" role="img" aria-label="카카오 로그인">
+  <rect width="300" height="45" rx="6" fill="#FEE500"/>
+  <path fill="#000" fill-opacity=".9" d="M24 14c-5.25 0-9.5 3.3-9.5 7.36 0 2.55 1.69 4.8 4.26 6.12l-1.05 3.87a.42.42 0 0 0 .64.46l4.52-3.02c.37.04.75.06 1.13.06 5.25 0 9.5-3.3 9.5-7.49S29.25 14 24 14Z"/>
+  <text x="120" y="28" fill="#000" font-family="Arial, 'Noto Sans KR', sans-serif" font-size="14" font-weight="700" text-anchor="middle">카카오 로그인</text>
+</svg>

@@ -9,6 +9,53 @@ const TERMS_API = window.StayNowConfig.apiUrl("/term");
 const EMAIL_VERIFY_SEND_API = window.StayNowConfig.apiUrl("/mail/verification/send");
 const EMAIL_VERIFY_CONFIRM_API = window.StayNowConfig.apiUrl("/mail/verification/confirm");
 const MEMBER_LIST_API = window.StayNowConfig.apiUrl("/member");
+const TERM_TYPES = ["SERVICE", "PRIVACY", "MARKETING"];
+const TERM_CONTENTS = {
+    SERVICE: {
+        badge: "필수",
+        title: "이용약관 동의",
+        body: `
+            <h5>제1조 목적</h5>
+            <p>본 약관은 StayNow가 제공하는 호텔 검색, 예약, 결제 및 관련 서비스의 이용 조건과 절차를 정하기 위한 더미 약관입니다.</p>
+            <h5>제2조 서비스 이용</h5>
+            <ul>
+                <li>회원은 정확한 정보를 입력하고 본인의 계정으로 서비스를 이용해야 합니다.</li>
+                <li>예약 가능 여부, 객실 가격, 프로모션은 호텔 및 객실 상태에 따라 변경될 수 있습니다.</li>
+                <li>부정 이용, 타인의 정보 도용, 서비스 운영 방해 행위는 제한될 수 있습니다.</li>
+            </ul>
+            <h5>제3조 예약 및 취소</h5>
+            <p>예약, 취소, 환불 조건은 예약 시점에 안내된 정책을 기준으로 처리됩니다. 테스트 결제 및 더미 데이터는 실제 숙박 계약으로 간주하지 않습니다.</p>
+        `
+    },
+    PRIVACY: {
+        badge: "필수",
+        title: "개인정보 수집 및 이용 동의",
+        body: `
+            <h5>수집 항목</h5>
+            <p>이름, 이메일, 휴대폰 번호, 비밀번호, 예약 정보, 서비스 이용 기록을 수집할 수 있습니다.</p>
+            <h5>수집 목적</h5>
+            <ul>
+                <li>회원 식별 및 로그인 처리</li>
+                <li>호텔 예약, 예약 확인, 고객 문의 대응</li>
+                <li>부정 이용 방지 및 서비스 품질 개선</li>
+            </ul>
+            <h5>보유 기간</h5>
+            <p>회원 탈퇴 또는 수집 목적 달성 시까지 보관하며, 관련 법령에 따라 필요한 정보는 정해진 기간 동안 보관할 수 있습니다.</p>
+        `
+    },
+    MARKETING: {
+        badge: "선택",
+        title: "마케팅 정보 수신 동의",
+        body: `
+            <h5>수신 내용</h5>
+            <p>특가 호텔, 쿠폰, 이벤트, 맞춤 추천, 프로모션 정보를 이메일 또는 앱/웹 알림으로 받을 수 있습니다.</p>
+            <h5>이용 항목</h5>
+            <p>이메일, 휴대폰 번호, 예약 및 관심 호텔 정보를 마케팅 메시지 발송과 맞춤 혜택 제공에 활용할 수 있습니다.</p>
+            <h5>동의 철회</h5>
+            <p>마케팅 정보 수신 동의는 선택 사항이며, 동의하지 않아도 회원가입과 기본 서비스 이용에는 제한이 없습니다.</p>
+        `
+    }
+};
 
 let verifiedEmail = "";
 let checkedEmail = "";
@@ -53,6 +100,16 @@ function bindEvent() {
     $("#agreeAll").change(toggleAllTerms);
 
     $(".required-term, .optional-term").change(syncTerms);
+
+    $(".term-view-btn").on("click", openTermModal);
+
+    $("[data-close-term-modal]").on("click", closeTermModal);
+
+    $(document).on("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeTermModal();
+        }
+    });
 
 }
 
@@ -340,16 +397,23 @@ function makeSignupPayload(formData, terms) {
 
 function makeTermAgreements(terms, marketingAgree) {
 
-    return terms
-        .filter(function (term) {
-            return term && term.sid && term.deleted !== true;
-        })
-        .map(function (term) {
+    const activeTerms = Array.isArray(terms) ? terms.filter(function (term) {
+        return term && term.sid && term.deleted !== true;
+    }) : [];
+
+    return TERM_TYPES
+        .map(function (termType) {
+            const term = findTermByType(activeTerms, termType);
+            if (!term) {
+                return null;
+            }
+
             return {
                 sid: term.sid,
-                isAgreed: term.isRequired ? true : marketingAgree
+                isAgreed: termType === "MARKETING" ? marketingAgree : true
             };
-        });
+        })
+        .filter(Boolean);
 
 }
 
@@ -490,6 +554,33 @@ function isRequiredTermsChecked() {
 
     return $(".required-term").length === $(".required-term:checked").length;
 
+}
+
+function openTermModal(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const termType = $(this).data("term-type");
+    const term = TERM_CONTENTS[termType] || TERM_CONTENTS.SERVICE;
+
+    $("#termModalBadge").text(term.badge);
+    $("#termModalTitle").text(term.title);
+    $("#termModalBody").html(term.body);
+    $("#termModal").prop("hidden", false);
+    $("body").addClass("term-modal-open");
+}
+
+function closeTermModal() {
+    $("#termModal").prop("hidden", true);
+    $("body").removeClass("term-modal-open");
+}
+
+function findTermByType(terms, termType) {
+    return terms.find(function (term) {
+        return String(term.termType || "").toUpperCase() === termType;
+    }) || terms.find(function (term) {
+        return String(term.title || "").includes(TERM_CONTENTS[termType].title.replace(" 동의", ""));
+    });
 }
 
 /* ==========================
