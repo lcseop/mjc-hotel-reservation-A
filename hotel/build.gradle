@@ -35,7 +35,10 @@ dependencies {
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-	// security
+    //OAuth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// swagger
