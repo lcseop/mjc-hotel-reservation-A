@@ -1,5 +1,6 @@
 package com.mjc.hotel.auth.dto;
 
+import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.member.entity.MemberRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,5 @@ public class MemberLoginResponseDto {
     private String name;
     private MemberRole role;
     private Integer point;
+    private MemberAuthProvider provider;
 }

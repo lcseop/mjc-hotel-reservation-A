@@ -4,30 +4,29 @@ import com.mjc.hotel.auth.dto.LogoutRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
-import com.mjc.hotel.auth.dto.OAuth2MemberResponseDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
-import com.mjc.hotel.auth.oauth.GoogleOidcUser;
+import com.mjc.hotel.auth.oauth.OAuth2FrontendRedirectService;
 import com.mjc.hotel.auth.service.AuthService;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberResponseDto;
-import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
-import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.web.WebAttributes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,6 +36,7 @@ public class AuthRestController {
 
     private final AuthService authService;
     private final MemberDtoMapper memberDtoMapper;
+    private final OAuth2FrontendRedirectService oauth2FrontendRedirectService;
 
     @Operation(
             summary = "회원가입",
@@ -91,44 +91,22 @@ public class AuthRestController {
     }
 
     @Operation(
-            summary = "OAuth2 로그인 성공",
-            description = "OAuth2 로그인으로 확인한 회원 정보를 반환합니다."
+            summary = "Google OAuth2 로그인 시작",
+            description = "프론트 콜백 URL을 세션에 저장하고 Google 인증 화면으로 이동합니다."
     )
-    @GetMapping("/oauth2/success")
-    public ResponseEntity<ApiResponse<OAuth2MemberResponseDto>> oauth2Success(
-            @AuthenticationPrincipal GoogleOidcUser principal
+    @GetMapping("/oauth2/google/start")
+    public ResponseEntity<Void> oauth2GoogleStart(
+            @RequestParam String redirectUri,
+            HttpServletRequest request,
+            HttpSession session
     ) {
-        if (principal == null) {
-            throw new AuthenticationFailedException("OAuth2 로그인 정보가 없습니다.");
+        if (!oauth2FrontendRedirectService.rememberRequestedCallback(redirectUri, request, session)) {
+            return ResponseEntity.badRequest().build();
         }
 
-        OAuth2MemberResponseDto response = OAuth2MemberResponseDto.builder()
-                .memberSid(principal.getMemberSid())
-                .provider(MemberAuthProvider.GOOGLE)
-                .email(principal.getEmail())
-                .name(principal.getDisplayName())
-                .role(principal.getRole())
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("/oauth2/authorization/google"))
                 .build();
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "google oauth2 login success", response)
-        );
     }
 
-    @Operation(
-            summary = "OAuth2 로그인 실패",
-            description = "OAuth2 로그인 실패 사유를 반환합니다."
-    )
-    @GetMapping("/oauth2/failure")
-    public ResponseEntity<ApiResponse<String>> oauth2Failure(HttpSession session) {
-        Object authenticationException = session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-        String message = authenticationException instanceof Exception exception
-                ? exception.getMessage()
-                : "OAuth2 로그인에 실패했습니다.";
-        session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ApiResponse<>(ResponseCode.AUTHENTICATION_ERROR, "oauth2 login failed", message)
-        );
-    }
 }

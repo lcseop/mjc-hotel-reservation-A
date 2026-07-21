@@ -13,6 +13,7 @@ import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.member.entity.MemberStatus;
 import com.mjc.hotel.member.entity.MemberTermAgreement;
 import com.mjc.hotel.member.repository.MemberAuthAccountRepository;
+import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.term.entity.Term;
 import com.mjc.hotel.term.repository.TermRepository;
@@ -32,6 +33,7 @@ import java.util.List;
 public class AuthService {
 
     private final MemberAuthAccountRepository memberAuthAccountRepository;
+    private final MemberRepository memberRepository;
     private final MemberService memberService;
     private final TermRepository termRepository;
     private final MemberDtoMapper memberDtoMapper;
@@ -79,6 +81,27 @@ public class AuthService {
 
         authAccount.setLastLoginAt(LocalDateTime.now());
 
+        return issueLoginTokens(member, MemberAuthProvider.LOCAL);
+    }
+
+    @Transactional
+    public MemberLoginResponseDto loginOAuth2(Long memberSid, MemberAuthProvider provider) {
+        if (provider == null || provider == MemberAuthProvider.LOCAL) {
+            throw new AuthenticationFailedException("유효하지 않은 소셜 로그인 제공자입니다.");
+        }
+
+        MemberAuthAccount authAccount = memberAuthAccountRepository
+                .findActiveByMemberSidAndProvider(memberSid, provider)
+                .orElseThrow(() -> new AuthenticationFailedException("소셜 로그인 계정 정보가 없습니다."));
+
+        Member member = authAccount.getMember();
+        validateLoginMember(member);
+        authAccount.setLastLoginAt(LocalDateTime.now());
+
+        return issueLoginTokens(member, provider);
+    }
+
+    private MemberLoginResponseDto issueLoginTokens(Member member, MemberAuthProvider provider) {
         String accessToken = jwtProvider.createAccessToken(member.getEmail());
         String refreshToken = jwtProvider.createRefreshToken(member.getEmail());
         long refreshTokenExpiresIn = jwtProvider.getRefreshTokenExpiresInSeconds();
@@ -95,6 +118,8 @@ public class AuthService {
                 .email(member.getEmail())
                 .name(member.getName())
                 .role(member.getRole())
+                .point(member.getPoint())
+                .provider(provider)
                 .build();
     }
 
@@ -104,11 +129,10 @@ public class AuthService {
         validateRefreshToken(refreshToken);
 
         String email = jwtProvider.getName(refreshToken);
-        MemberAuthAccount authAccount = memberAuthAccountRepository
-                .findLoginAuthAccount(email, MemberAuthProvider.LOCAL)
+        Member member = memberRepository
+                .findActiveByEmail(email)
                 .orElseThrow(() -> invalidRefreshToken());
 
-        Member member = authAccount.getMember();
         validateLoginMember(member);
 
         if (!refreshTokenService.matches(member.getSid(), refreshToken)) {

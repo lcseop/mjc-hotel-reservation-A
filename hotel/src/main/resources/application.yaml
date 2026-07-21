@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: oauth
   servlet:
     multipart:
       max-file-size: 10MB
@@ -49,6 +51,7 @@ mybatis:
 
 server:
   port: 33000
+  forward-headers-strategy: framework
 
 file:
   upload-dir: uploads
