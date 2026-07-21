@@ -40,15 +40,15 @@
                 </div>
 
                 <div class="social-login">
-                    <button type="button" class="social-btn provider-image-btn kakao-btn" aria-label="카카오 로그인">
+                    <button type="button" class="social-btn provider-image-btn kakao-btn" data-provider="kakao" aria-label="카카오 로그인">
                         <img src="images/auth/kakao_login_large_wide.png" alt="카카오 로그인">
                     </button>
 
-                    <button type="button" class="social-btn provider-image-btn naver-btn" aria-label="네이버 로그인">
+                    <button type="button" class="social-btn provider-image-btn naver-btn" data-provider="naver" aria-label="네이버 로그인">
                         <img src="images/auth/NAVER_login_Dark_KR_green_center_H56.png" alt="네이버 로그인">
                     </button>
 
-                    <button type="button" class="social-btn google-btn" aria-label="Google 로그인">
+                    <button type="button" class="social-btn google-btn" data-provider="google" aria-label="Google 로그인">
                         <span class="google-mark" aria-hidden="true">
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
                         </span>
@@ -247,6 +247,7 @@
 <script src="js/include.js"></script>
 <script src="js/jquery.min.js"></script>
 <script src="js/config.js"></script>
+<script src="js/social-oauth.js"></script>
 <script src="js/signup.js"></script>
 <script src="component/header.js"></script>
 </html>
