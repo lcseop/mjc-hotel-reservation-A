@@ -18,9 +18,15 @@
         assetUrl: function (path) {
             return this.assetBase + "/" + String(path || "").replace(/^\/+/, "");
         },
-        oauthAuthorizationUrl: function (provider) {
+        oauthAuthorizationUrl: function (provider, frontendCallbackUrl) {
+            const normalizedProvider = String(provider || "").toLowerCase();
+            if (normalizedProvider === "google" && frontendCallbackUrl) {
+                return this.apiUrl("/auth/oauth2/google/start")
+                    + "?redirectUri=" + encodeURIComponent(frontendCallbackUrl);
+            }
+
             const base = this.oauthBase || "";
-            return base + "/oauth2/authorization/" + encodeURIComponent(String(provider || "").toLowerCase());
+            return base + "/oauth2/authorization/" + encodeURIComponent(normalizedProvider);
         },
         getAuth: getStoredAuth,
         saveAuth: saveStoredAuth,
@@ -69,7 +75,8 @@
         return target.includes("/api/auth/login")
             || target.includes("/api/auth/signup")
             || target.includes("/api/auth/refresh")
-            || target.includes("/api/auth/logout");
+            || target.includes("/api/auth/logout")
+            || target.includes("/api/auth/oauth2/");
     }
 
     function refreshAccessToken() {
