@@ -1,10 +1,15 @@
 (function (window) {
-    const API_BASE = "http://localhost:33000/api";
+    const localFrontend = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        && window.location.port
+        && !["80", "33000"].includes(window.location.port);
+    const defaultApiBase = localFrontend ? "http://localhost:33000/api" : "/api";
+    const API_BASE = window.STAYNOW_API_BASE || defaultApiBase;
+    const ASSET_BASE = API_BASE.startsWith("http") ? API_BASE.replace(/\/api$/, "") : "";
     let refreshPromise = null;
 
     window.StayNowConfig = {
         apiBase: API_BASE,
-        assetBase: API_BASE.replace(/\/api$/, ""),
+        assetBase: ASSET_BASE,
         tossClientKey: "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm",
         apiUrl: function (path) {
             return API_BASE + "/" + String(path || "").replace(/^\/+/, "");

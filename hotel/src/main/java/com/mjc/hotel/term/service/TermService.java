@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,7 +25,9 @@ public class TermService {
         return termDtoMapper.toResponseDto(termRepository.save(termDtoMapper.toEntity(request)));
     }
 
+    @Transactional
     public List<TermResponseDto> getTerms() {
+        ensureDefaultTerms();
         return termRepository.findAll().stream()
                 .map(termDtoMapper::toResponseDto)
                 .toList();
@@ -55,5 +58,21 @@ public class TermService {
     private Term findTerm(Long sid) {
         return termRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + sid));
+    }
+
+    private void ensureDefaultTerms() {
+        createDefaultTermIfMissing("SERVICE", "이용약관 동의", true);
+        createDefaultTermIfMissing("PRIVACY", "개인정보 수집 및 이용 동의", true);
+        createDefaultTermIfMissing("MARKETING", "마케팅 정보 수신 동의", false);
+    }
+
+    private void createDefaultTermIfMissing(String termType, String title, boolean required) {
+        termRepository.findFirstByTermTypeAndDeletedFalse(termType).orElseGet(() -> termRepository.save(Term.builder()
+                .termType(termType)
+                .title(title)
+                .version("1.0")
+                .isRequired(required)
+                .effectiveAt(LocalDateTime.now())
+                .build()));
     }
 }

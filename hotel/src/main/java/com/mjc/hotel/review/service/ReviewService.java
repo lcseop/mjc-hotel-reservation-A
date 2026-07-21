@@ -25,6 +25,8 @@ import com.mjc.hotel.room.service.RoomService;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -88,7 +90,7 @@ public class ReviewService {
                 .reservation(reservation)
                 .rating(request.getRating())
                 .travelType(request.getTravelType())
-                .content(request.getContent())
+                .content(Jsoup.clean(request.getContent(), Safelist.basic()))
                 .likeCount(0)
                 .dislikeCount(0)
                 .build();
@@ -129,7 +131,7 @@ public class ReviewService {
                 .reservation(find.getReservation())
                 .rating(request.getRating())
                 .travelType(request.getTravelType())
-                .content(request.getContent())
+                .content(Jsoup.clean(request.getContent(), Safelist.basic()))
                 .likeCount(find.getLikeCount())
                 .dislikeCount(find.getDislikeCount())
                 .build();
@@ -250,8 +252,9 @@ public class ReviewService {
                 ReviewCategory result = reviewCategoryRepository.save(reviewCategory);
                 results.add(result);
 
-                return results;
+
             }
+            return results;
         }
         return null;
     }
@@ -345,8 +348,8 @@ public class ReviewService {
                 ReviewTag result = reviewTagRepository.save(reviewTag);
 
                 results.add(result);
-                return results;
             }
+            return results;
         }
         return null;
     }

@@ -99,6 +99,16 @@ public class ReservationController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{reservationId}/payment-cancel")
+    @Operation(summary = "결제 대기 예약 취소", description = "결제 실패/취소된 대기 예약을 정리합니다")
+    public ResponseEntity<ReservationResponseDto> cancelPendingPaymentReservation(
+            @PathVariable Long reservationId,
+            @RequestBody(required = false) Map<String, String> request) {
+        String reason = request != null ? request.get("reason") : null;
+        ReservationResponseDto response = reservationService.cancelPendingPaymentReservation(reservationId, reason);
+        return ResponseEntity.ok(response);
+    }
+
     @PatchMapping("/{reservationId}/check-in")
     @Operation(summary = "체크인", description = "예약에 대한 체크인을 처리합니다")
     public ResponseEntity<ReservationResponseDto> checkIn(

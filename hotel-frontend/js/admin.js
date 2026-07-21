@@ -1430,9 +1430,16 @@ function openReviewTagManager() {
         description: "리뷰 작성에서 사용하는 장점/아쉬운 점 태그입니다.",
         endpoint: "/review-tag-master",
         nameKeys: ["reviewTagName", "title", "name"],
-        metaKeys: ["reviewTagCategory"],
+        hasCategory: true,
+        categoryKey: "reviewTagCategory",
         emptyText: "등록된 리뷰 태그가 없습니다.",
-        unsupportedText: "현재 리뷰 태그 마스터는 조회 API만 열려 있어 추가, 수정, 삭제는 백엔드 API가 필요합니다."
+        makePayload: function (sid, name, category) {
+            return {
+                sid: sid || null,
+                reviewTagName: name,
+                reviewTagCategory: category || "PROS"
+            };
+        }
     });
 }
 
@@ -1442,13 +1449,19 @@ function openReviewCategoryManager() {
         description: "청결도, 서비스, 위치 같은 항목별 평점 카테고리입니다.",
         endpoint: "/review-category-master",
         nameKeys: ["reviewCategoryName", "title", "name"],
-        metaKeys: [],
-        emptyText: "카테고리 조회 API가 아직 연결되어 있지 않습니다.",
-        unsupportedText: "현재 리뷰 카테고리 마스터 컨트롤러가 없어 추가, 수정, 삭제는 백엔드 API가 필요합니다."
+        hasCategory: false,
+        emptyText: "등록된 리뷰 카테고리가 없습니다.",
+        makePayload: function (sid, name) {
+            return {
+                sid: sid || null,
+                reviewCategoryName: name
+            };
+        }
     });
 }
 
 function openReviewMasterManager(config) {
+    closeReviewMasterManager();
     $("body").append(`
         <div class="admin-modal-backdrop nested review-master-backdrop">
             <div class="admin-modal hotel-master-modal review-master-modal">
@@ -1457,27 +1470,38 @@ function openReviewMasterManager(config) {
                     <button type="button" class="modal-close" data-review-master-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <form class="hotel-master-form review-master-form">
-                    <input class="admin-input" type="text" placeholder="이름" disabled>
-                    <select class="admin-select" disabled>
-                        <option>구분 선택</option>
+                    <input class="admin-input" type="hidden" id="reviewMasterSid">
+                    <input class="admin-input" type="text" id="reviewMasterName" placeholder="이름">
+                    <select class="admin-select" id="reviewMasterCategory" ${config.hasCategory ? "" : "hidden"}>
+                        <option value="PROS">좋았던 점</option>
+                        <option value="CONS">아쉬운 점</option>
                     </select>
-                    <button class="admin-btn primary" type="button" data-review-master-disabled><i class="fa-solid fa-plus"></i> 저장</button>
+                    <button class="admin-btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
+                    <button class="admin-btn ghost" type="button" data-review-master-reset><i class="fa-solid fa-rotate-left"></i> 초기화</button>
                 </form>
-                <div class="review-master-notice"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(config.unsupportedText)}</div>
                 <div class="hotel-master-list review-master-list"><div class="admin-loading">목록을 불러오는 중입니다.</div></div>
             </div>
         </div>
     `);
 
     $("[data-review-master-close]").on("click", closeReviewMasterManager);
-    $("[data-review-master-disabled]").on("click", function () {
-        alert(config.unsupportedText);
+    $("[data-review-master-reset]").on("click", resetReviewMasterForm);
+    $(".review-master-form").on("submit", function (event) {
+        event.preventDefault();
+        saveReviewMaster(config);
+    });
+    $(".review-master-list").on("click", "[data-review-master-edit]", function () {
+        const sid = Number($(this).data("review-master-edit"));
+        const item = ($(".review-master-backdrop").data("items") || []).find(function (target) {
+            return Number(target.sid) === sid;
+        });
+        if (item) fillReviewMasterForm(item, config);
+    });
+    $(".review-master-list").on("click", "[data-review-master-delete]", function () {
+        deleteReviewMaster(Number($(this).data("review-master-delete")), config);
     });
 
-    adminGetSafe(config.endpoint, null).then(function (result) {
-        const items = asArray(result);
-        $(".review-master-list").html(renderReviewMasterRows(items, config));
-    });
+    loadReviewMasterItems(config);
 }
 
 function closeReviewMasterManager() {
@@ -1491,9 +1515,7 @@ function renderReviewMasterRows(items, config) {
 
     return items.map(function (item) {
         const title = pickFirstValue(item, config.nameKeys) || "-";
-        const meta = config.metaKeys.map(function (key) {
-            return item && item[key] ? String(item[key]) : "";
-        }).filter(Boolean).join(" · ");
+        const meta = config.hasCategory && item[config.categoryKey] ? formatReviewMasterMeta(item[config.categoryKey]) : "";
 
         return `<article class="hotel-master-card review-master-card">
             <div class="hotel-master-card-main">
@@ -1501,11 +1523,66 @@ function renderReviewMasterRows(items, config) {
                 ${meta ? `<small>${escapeHtml(formatReviewMasterMeta(meta))}</small>` : ""}
             </div>
             <div class="row-actions">
-                <button class="icon-btn disabled" type="button" title="수정 API가 필요합니다" disabled><i class="fa-solid fa-pen"></i></button>
-                <button class="icon-btn danger disabled" type="button" title="삭제 API가 필요합니다" disabled><i class="fa-solid fa-trash"></i></button>
+                <button class="icon-btn" type="button" title="수정" data-review-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn danger" type="button" title="삭제" data-review-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
             </div>
         </article>`;
     }).join("");
+}
+
+function loadReviewMasterItems(config) {
+    $(".review-master-list").html('<div class="admin-loading">목록을 불러오는 중입니다.</div>');
+    adminGetSafe(config.endpoint, []).then(function (result) {
+        const items = asArray(result);
+        $(".review-master-backdrop").data("items", items);
+        $(".review-master-list").html(renderReviewMasterRows(items, config));
+    });
+}
+
+function saveReviewMaster(config) {
+    const sid = Number($("#reviewMasterSid").val() || 0);
+    const name = String($("#reviewMasterName").val() || "").trim();
+    const category = $("#reviewMasterCategory").val();
+
+    if (!name) {
+        alert("이름을 입력해주세요.");
+        $("#reviewMasterName").focus();
+        return;
+    }
+
+    const payload = config.makePayload(sid || null, name, category);
+    const request = sid ? adminPatch(config.endpoint, payload) : adminPost(config.endpoint, payload);
+    request.then(function () {
+        resetReviewMasterForm();
+        loadReviewMasterItems(config);
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "저장에 실패했습니다."));
+    });
+}
+
+function fillReviewMasterForm(item, config) {
+    $("#reviewMasterSid").val(item.sid || "");
+    $("#reviewMasterName").val(pickFirstValue(item, config.nameKeys) || "");
+    if (config.hasCategory) {
+        $("#reviewMasterCategory").val(item[config.categoryKey] || "PROS");
+    }
+}
+
+function resetReviewMasterForm() {
+    $("#reviewMasterSid").val("");
+    $("#reviewMasterName").val("");
+    $("#reviewMasterCategory").val("PROS");
+}
+
+function deleteReviewMaster(sid, config) {
+    if (!sid || !confirm("삭제하시겠습니까?")) return;
+
+    adminDelete(config.endpoint + "/" + sid).then(function () {
+        resetReviewMasterForm();
+        loadReviewMasterItems(config);
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "삭제에 실패했습니다. 이미 리뷰에 연결된 항목일 수 있습니다."));
+    });
 }
 
 function pickFirstValue(item, keys) {
@@ -1517,8 +1594,8 @@ function pickFirstValue(item, keys) {
 
 function formatReviewMasterMeta(value) {
     const upper = String(value || "").toUpperCase();
-    if (upper === "POSITIVE") return "좋았던 점";
-    if (upper === "NEGATIVE") return "아쉬운 점";
+    if (upper === "PROS" || upper === "POSITIVE" || upper === "좋았던 점") return "좋았던 점";
+    if (upper === "CONS" || upper === "NEGATIVE" || upper === "아쉬운 점") return "아쉬운 점";
     return value;
 }
 

@@ -2,102 +2,62 @@ package com.mjc.hotel.promotion;
 
 import com.mjc.hotel.promotion.dto.PromotionDto;
 import com.mjc.hotel.promotion.service.PromotionService;
-import com.mjc.hotel.room.dto.RoomTypeDto;
-import com.mjc.hotel.room.service.RoomTypeService;
+import com.mjc.hotel.room.entity.RoomType;
+import com.mjc.hotel.room.repository.RoomTypeRepository;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.test.context.TestConstructor;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Slf4j
-@ExtendWith(SpringExtension.class)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @SpringBootTest
-@Transactional
+@Transactional // 각 테스트 후 롤백되므로 데이터 오염 방지
 public class PromotionServiceTest {
 
     @Autowired
     private PromotionService promotionService;
-    @Autowired
-    private RoomTypeService roomTypeService;
 
-    private static Long TEST_ROOM_TYPE_ID;
-    private static PromotionDto TEST_PROMOTION;
+    @Autowired
+    private RoomTypeRepository roomTypeRepository;
+
+    private Long testRoomTypeId;
 
     @BeforeEach
     void setUp() {
-        // 테스트용 데이터가 없으면 강제 생성
-        if (TEST_ROOM_TYPE_ID == null) {
-            // RoomType이 하나도 없으면 테스트 자체가 불가능하므로 하나 생성
-            try {
-                TEST_ROOM_TYPE_ID = roomTypeService.findById(1L).getSid();
-            } catch (Exception e) {
-                RoomTypeDto dto = RoomTypeDto.builder().title("테스트 타입").build();
-                TEST_ROOM_TYPE_ID = roomTypeService.insert(dto).getSid();
-            }
-        }
+        // 매 테스트마다 독립적인 테스트용 RoomType 생성
+        RoomType roomType = RoomType.builder().title("테스트 객실 타입").build();
+        testRoomTypeId = roomTypeRepository.save(roomType).getSid();
     }
 
-    private static Long CREATED_PROMOTION_ID;
-
     @Test
-    @Order(1)
-    public void testInsert() {
-        // GIVEN
-        TEST_PROMOTION = PromotionDto.builder()
-                .roomTypeId(TEST_ROOM_TYPE_ID)
-                .promotionName("테스트 프로모션")
+    @DisplayName("프로모션 전체 생명주기 테스트(생성, 수정, 삭제)")
+    void testPromotionLifecycle() {
+        // [1] CREATE
+        PromotionDto dto = PromotionDto.builder()
+                .roomTypeId(testRoomTypeId)
+                .promotionName("봄맞이 이벤트")
+                .discountContent("10%")
+                .status("진행중")
                 .build();
 
-        // WHEN
-        PromotionDto inserted = promotionService.insert(TEST_PROMOTION);
+        PromotionDto created = promotionService.insert(dto);
+        assertThat(created.getSid()).isNotNull();
 
-        // THEN
-        assertThat(inserted).isNotNull();
-        assertThat(inserted.getSid()).isNotNull();
+        // [2] UPDATE
+        created.setPromotionName("여름맞이 이벤트");
+        PromotionDto updated = promotionService.update(created);
+        assertThat(updated.getPromotionName()).isEqualTo("여름맞이 이벤트");
 
-        // 생성된 ID를 클래스 변수에 저장 (이 ID를 삭제 테스트에서 사용)
-        CREATED_PROMOTION_ID = inserted.getSid();
-    }
-
-    @Test
-    @Order(2)
-    public void testUpdate() {
-        // 이미 생성된 ID를 사용하여 업데이트
-        TEST_PROMOTION.setSid(CREATED_PROMOTION_ID);
-        TEST_PROMOTION.setPromotionName("수정된 프로모션");
-
-        PromotionDto updated = promotionService.update(TEST_PROMOTION);
-        assertThat(updated.getPromotionName()).isEqualTo("수정된 프로모션");
-    }
-
-    @Test
-    @Order(3)
-    public void testDelete() {
-        // 1. 삭제할 대상이 실제로 존재하는지 확인 (null 방어)
-        assertThat(CREATED_PROMOTION_ID).isNotNull();
-
-        // 2. 삭제 실행
-        PromotionDto deleted = promotionService.delete(CREATED_PROMOTION_ID);
-
-        // 3. 삭제 후 확인
+        // [3] DELETE (Soft Delete 검증)
+        PromotionDto deleted = promotionService.delete(updated.getSid());
         assertThat(deleted).isNotNull();
-        assertThat(deleted.getSid()).isEqualTo(CREATED_PROMOTION_ID);
 
-        // 4. 다시 삭제 시도 시 에러가 발생하는지 확인 (선택 사항)
+        // [4] EXCEPTION (이미 삭제된 프로모션 재삭제 시 예외 발생 검증)
         assertThrows(DataNotFoundException.class, () -> {
-            promotionService.delete(CREATED_PROMOTION_ID);
+            promotionService.delete(updated.getSid());
         });
     }
 }

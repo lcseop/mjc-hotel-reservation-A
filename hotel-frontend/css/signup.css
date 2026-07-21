@@ -178,60 +178,74 @@ body{
 .social-login{
     display:flex;
     flex-direction:column;
+    align-items:center;
     gap:13px;
     margin-bottom:30px;
+    --social-auth-width:360px;
+    --social-auth-height:54px;
 }
 
-.social-login button{
-    height:52px;
-    border:none;
+.social-btn{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:min(100%, var(--social-auth-width));
+    height:var(--social-auth-height);
+    border:1px solid transparent;
     border-radius:12px;
     cursor:pointer;
-    font-size:15px;
-    font-weight:700;
-    transition:.2s;
+    transition:.18s ease;
 }
 
-.social-login button:hover{
+.social-btn:hover{
     transform:translateY(-2px);
+    box-shadow:0 10px 22px rgba(15,23,42,.08);
 }
 
-.social-login i,
-.social-login span{
-    margin-right:8px;
+.provider-image-btn{
+    padding:0;
+    border:0;
+    background:transparent;
+    overflow:hidden;
+}
+
+.provider-image-btn img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:contain;
 }
 
 .kakao-btn{
-    background:#FEE500;
-    color:#181600;
+    border-radius:8px;
 }
 
 .naver-btn{
-    background:#03C75A;
-    color:white;
-}
-
-.naver-btn span{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:22px;
-    height:22px;
-    border-radius:4px;
-    background:rgba(255,255,255,.18);
-    font-weight:900;
+    border-radius:18px;
 }
 
 .google-btn{
     background:white;
-    color:#1b2437;
-    border:1px solid #d9e0ea !important;
+    color:#1f1f1f;
+    border-color:#747775;
+    gap:12px;
+    font:500 14px/20px Arial, sans-serif;
 }
 
-.google-btn span{
-    color:#4285f4;
-    font-size:20px;
-    font-weight:800;
+.google-mark{
+    position:absolute;
+    left:18px;
+    display:grid;
+    place-items:center;
+    width:20px;
+    height:20px;
+}
+
+.google-mark img{
+    display:block;
+    width:18px;
+    height:18px;
 }
 
 /* ==========================
@@ -518,6 +532,7 @@ body{
 
 .term-list label{
     color:#6b7587;
+    gap:0;
 }
 
 .term-list .required{
@@ -530,9 +545,29 @@ body{
     font-size:12px;
 }
 
-.term-list i{
+.term-list .term-name{
+    flex:1;
+    color:#5f6b7f;
+    font-size:13px;
+}
+
+.term-view-btn{
     margin-left:auto;
+    width:28px;
+    height:28px;
+    border:0;
+    border-radius:8px;
+    background:transparent;
     color:#b7c0cd;
+    cursor:pointer;
+}
+
+.term-view-btn:hover{
+    background:#f1f7ff;
+    color:#2094ff;
+}
+
+.term-view-btn i{
     font-size:12px;
 }
 
@@ -540,6 +575,124 @@ body{
     margin:7px 0 0 28px;
     color:#a6b0c0;
     font-size:12px;
+}
+
+.term-modal[hidden]{
+    display:none;
+}
+
+body.term-modal-open{
+    overflow:hidden;
+}
+
+.term-modal{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+    display:grid;
+    place-items:center;
+    padding:24px;
+}
+
+.term-modal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(15,23,42,.58);
+    backdrop-filter:blur(4px);
+}
+
+.term-modal-panel{
+    position:relative;
+    width:min(92vw, 560px);
+    max-height:min(82vh, 720px);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border-radius:22px;
+    background:white;
+    box-shadow:0 24px 70px rgba(15,23,42,.24);
+}
+
+.term-modal-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:24px 26px 18px;
+    border-bottom:1px solid #edf1f6;
+}
+
+.term-modal-header span{
+    display:inline-flex;
+    align-items:center;
+    height:24px;
+    padding:0 10px;
+    border-radius:999px;
+    background:#eaf4ff;
+    color:#2094ff;
+    font-size:12px;
+    font-weight:800;
+}
+
+.term-modal-header h4{
+    margin:10px 0 0;
+    color:#111827;
+    font-size:22px;
+    line-height:1.35;
+}
+
+.term-modal-close{
+    width:38px;
+    height:38px;
+    border:1px solid #e0e6ef;
+    border-radius:12px;
+    background:#f8fbff;
+    color:#7b8798;
+    cursor:pointer;
+}
+
+.term-modal-body{
+    overflow:auto;
+    padding:22px 26px;
+    color:#4b5563;
+    font-size:14px;
+    line-height:1.75;
+}
+
+.term-modal-body h5{
+    margin:22px 0 8px;
+    color:#172033;
+    font-size:15px;
+}
+
+.term-modal-body h5:first-child{
+    margin-top:0;
+}
+
+.term-modal-body p{
+    margin:0 0 10px;
+}
+
+.term-modal-body ul{
+    margin:0 0 12px;
+    padding-left:18px;
+}
+
+.term-modal-footer{
+    padding:16px 26px 24px;
+    border-top:1px solid #edf1f6;
+}
+
+.term-modal-confirm{
+    width:100%;
+    height:48px;
+    border:0;
+    border-radius:13px;
+    background:linear-gradient(90deg,#6670f6,#12a9f4);
+    color:white;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
 }
 
 /* ==========================

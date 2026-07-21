@@ -14,6 +14,7 @@ let stationMarker = null;
 let currentHotelId = null;
 let currentReviewReservation = null;
 let reviewTagMasters = [];
+let reviewCategoryMasters = [];
 let selectedReviewFiles = [];
 let reviewMode = "all";
 let reviewPage = 0;
@@ -38,6 +39,7 @@ $(function () {
     loadReviews(hotelId);
     loadReviewWriteEligibility(hotelId);
     loadReviewTagMasters();
+    loadReviewCategoryMasters();
     loadWishlistStatus(hotelId);
 });
 
@@ -568,6 +570,22 @@ function loadRooms(hotelId) {
     });
 }
 
+function loadReviewCategoryMasters() {
+    $.ajax({
+        url: API_BASE + "/review-category-master",
+        type: "GET",
+        success: function (result) {
+            reviewCategoryMasters = result.data || [];
+            drawWriteCategoryStars();
+            loadReviews(currentHotelId);
+        },
+        error: function () {
+            reviewCategoryMasters = [];
+            drawWriteCategoryStars();
+        }
+    });
+}
+
 function drawRooms(rooms) {
     const list = $("#roomList");
 
@@ -788,6 +806,7 @@ function drawReviews(page) {
     $.each(reviews, function (index, review) {
         const reviewNumber = (page.number || 0) * REVIEW_SIZE + index + 1;
         const tagsHtml = makeReviewTags(review.tags || []);
+        const categoriesHtml = makeReviewCategories(review.categories || []);
         const reviewerName = makeReviewerName(review.memberId, reviewNumber);
         const initial = reviewerName.slice(0, 1);
         const article = $(`
@@ -808,6 +827,7 @@ function drawReviews(page) {
                 </div>
 
                 <p>${escapeHtml(review.content || "리뷰 내용이 없습니다.")}</p>
+                ${categoriesHtml}
                 ${tagsHtml}
                 <div class="review-photos" data-review-photos="${review.sid}"></div>
                 <div class="review-answer-wrap" data-review-answer="${review.sid}"></div>
@@ -1043,6 +1063,7 @@ function openReviewWriteModal() {
     $("#writePhotoPreview").empty();
     $("#writeTravelType button").removeClass("active").first().addClass("active");
     $(".write-tag-chip").removeClass("active");
+    drawWriteCategoryStars();
     $(".mini-stars").attr("data-rating", "5");
     paintWriteStars();
     $(".mini-stars").each(function () { paintMiniStars($(this)); });
@@ -1073,6 +1094,48 @@ function paintMiniStars(wrap) {
     for (let i = 1; i <= 5; i++) {
         wrap.append('<button type="button" class="mini-star-btn ' + (i <= rating ? "active" : "") + '" data-rating="' + i + '"><i class="fa-regular fa-star"></i></button>');
     }
+}
+
+function makeReviewCategories(categories) {
+    const validCategories = (categories || []).filter(function (category) {
+        return Number(category.reviewCategoryId || category.categoryId || category.sid) > 0;
+    });
+
+    if (!validCategories.length) {
+        return "";
+    }
+
+    return '<div class="review-category-list">' + validCategories.map(function (category) {
+        const categoryId = Number(category.reviewCategoryId || category.categoryId || category.sid);
+        const master = reviewCategoryMasters.find(function (item) {
+            return Number(item.sid) === categoryId;
+        });
+        const name = master?.reviewCategoryName || master?.name || ("항목 " + categoryId);
+        const rating = Number(category.rating || 0);
+        return '<span><b>' + escapeHtml(name) + '</b><i>' + drawStars(rating) + '</i><em>' + rating.toFixed(1) + '</em></span>';
+    }).join("") + '</div>';
+}
+
+function drawWriteCategoryStars() {
+    const grid = $("#reviewWriteModal .write-category-grid");
+    if (!grid.length) {
+        return;
+    }
+
+    if (!reviewCategoryMasters.length) {
+        grid.html('<p class="write-empty-note">등록된 항목별 평점 카테고리가 없습니다.</p>');
+        return;
+    }
+
+    grid.html(reviewCategoryMasters.map(function (category) {
+        const categoryId = Number(category.sid);
+        const name = category.reviewCategoryName || category.name || ("항목 " + categoryId);
+        return '<label><span>' + escapeHtml(name) + '</span><div class="mini-stars" data-category-id="' + categoryId + '" data-rating="5"></div></label>';
+    }).join(""));
+
+    grid.find(".mini-stars").each(function () {
+        paintMiniStars($(this));
+    });
 }
 
 function updateWriteContentCount() {
@@ -1248,10 +1311,16 @@ function setReviewWriteButtonState(enabled, text) {
 
 function collectWriteCategories() {
     const categories = [];
+    const seen = new Set();
 
-    $(".mini-stars").each(function () {
+    $("#reviewWriteModal .mini-stars").each(function () {
+        const categoryId = Number($(this).data("category-id"));
+        if (!categoryId || seen.has(categoryId)) {
+            return;
+        }
+        seen.add(categoryId);
         categories.push({
-            categoryId: Number($(this).data("category-id")),
+            categoryId: categoryId,
             rating: Number($(this).attr("data-rating") || 5)
         });
     });
@@ -1260,9 +1329,15 @@ function collectWriteCategories() {
 }
 
 function collectWriteTags() {
-    return $(".write-tag-chip.active").map(function () {
-        return { tagId: Number($(this).data("tag-id")) };
-    }).get();
+    const seen = new Set();
+    return $("#reviewWriteModal .write-tag-chip.active").map(function () {
+        const tagId = Number($(this).data("tag-id"));
+        if (!tagId || seen.has(tagId)) {
+            return null;
+        }
+        seen.add(tagId);
+        return { tagId: tagId };
+    }).get().filter(Boolean);
 }
 
 function drawWriteTagButtons() {

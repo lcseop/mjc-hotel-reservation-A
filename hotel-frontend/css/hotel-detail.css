@@ -1312,6 +1312,52 @@ body{
     gap:2px;
 }
 
+.write-empty-note{
+    grid-column:1 / -1;
+    margin:0;
+    padding:14px 16px;
+    border:1px dashed #cbd5e1;
+    border-radius:12px;
+    background:#f8fafc;
+    color:#64748b;
+    font-weight:800;
+}
+
+.review-category-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:8px;
+    margin:14px 0;
+}
+
+.review-category-list span{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 12px;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    background:#f8fafc;
+}
+
+.review-category-list b{
+    color:#334155;
+    font-size:13px;
+}
+
+.review-category-list i{
+    color:#f59e0b;
+    font-style:normal;
+    white-space:nowrap;
+}
+
+.review-category-list em{
+    color:#2563eb;
+    font-style:normal;
+    font-weight:900;
+}
+
 .mini-star-btn{
     border:0;
     background:transparent;
