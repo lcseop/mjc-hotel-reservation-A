@@ -192,6 +192,16 @@ body{
     accent-color:#0ea5e9;
 }
 
+.filter-empty{
+    margin:0;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#f8fafc;
+    color:#94a3b8;
+    font-size:13px;
+    font-weight:700;
+}
+
 .result-main{
     min-width:0;
 }

@@ -61,42 +61,16 @@ body{
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:14px;
-    width:fit-content;
     margin:0 auto 16px;
 }
 
-.logo-icon{
-    width:56px;
-    height:56px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    border-radius:14px;
-    background:linear-gradient(135deg,#5f6ff7,#2196f3);
-    color:white;
-    font-size:24px;
-    font-weight:800;
-    flex-shrink:0;
-}
-
-.logo-text{
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-}
-
-.logo-text h2{
-    margin:0;
-    color:#12182f;
-    font-size:25px;
-    line-height:1.15;
-}
-
-.logo-text p{
-    margin:3px 0 0;
-    color:#8a94a8;
-    font-size:13px;
+.auth-logo-img{
+    display:block;
+    width:174px;
+    height:auto;
+    max-height:54px;
+    object-fit:contain;
+    transform:translateX(6px);
 }
 
 .signup-card h3{
@@ -181,8 +155,8 @@ body{
     align-items:center;
     gap:13px;
     margin-bottom:30px;
-    --social-auth-width:360px;
-    --social-auth-height:54px;
+    --social-auth-width:100%;
+    --social-auth-height:60px;
 }
 
 .social-btn{

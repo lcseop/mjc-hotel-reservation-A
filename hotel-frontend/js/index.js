@@ -27,7 +27,13 @@ function init() {
 
 function travelTypeSelect() {
 
-    $(".travel-card").click(function () {
+    $(".travel-card").on("click keydown", function (event) {
+
+        if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") {
+            return;
+        }
+
+        event.preventDefault();
 
         $(".travel-card").removeClass("selected");
 

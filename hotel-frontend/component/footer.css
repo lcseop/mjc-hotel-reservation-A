@@ -18,25 +18,17 @@
 .footer-logo {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
     flex-shrink: 0;
     color: #fff;
-    font-size: 15px;
-    font-weight: 700;
     text-decoration: none;
 }
 
-.footer-logo-icon {
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    background: #3b82f6;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
+.footer-logo-img {
+    display: block;
+    width: 132px;
+    height: auto;
+    max-height: 40px;
+    object-fit: contain;
 }
 
 .footer-copy {

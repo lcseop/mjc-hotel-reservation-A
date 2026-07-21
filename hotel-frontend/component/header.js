@@ -39,6 +39,12 @@ $(function () {
     $(document).on("click", ".auth-user-btn", function (e) {
         e.stopPropagation();
 
+        const auth = getAuthData();
+        if (!auth || !auth.token) {
+            location.href = "login.html";
+            return;
+        }
+
         const panel = $(this).closest(".user-menu, .mobile-user-panel");
         const isOpen = panel.hasClass("open");
 
@@ -100,9 +106,13 @@ function renderAuthHeader() {
         $(".auth-user-email").text(auth.email || "");
         $(".user-dropdown").addClass("is-logged-in");
         $(".user-dropdown").toggleClass("is-admin", auth.role === "ADMIN");
+        $(".wishlist-link").prop("hidden", false);
+        $(".auth-chevron").prop("hidden", false);
     } else {
         $(".auth-user-name").text("로그인");
         $(".auth-user-email").text("로그인이 필요합니다");
         $(".user-dropdown").removeClass("is-logged-in is-admin");
+        $(".wishlist-link").prop("hidden", true);
+        $(".auth-chevron").prop("hidden", true);
     }
 }

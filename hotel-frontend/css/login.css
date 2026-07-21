@@ -89,51 +89,16 @@ body{
     display:flex;
     align-items:center;
     justify-content:center;
-
-    gap:14px;
-
-    width:fit-content;
-
     margin:0 auto 18px;
 }
 
-.logo-icon{
-    width: 56px;
-    height: 56px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    border-radius: 14px;
-    background: linear-gradient(135deg,#5f6ff7,#2196f3);
-
-    color: white;
-    font-size: 50px;
-
-    flex-shrink: 0;
-}
-
-.logo-icon i{
-    font-size:16px;
-}
-
-.logo-text{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.logo-text h2{
-    margin: 0;
-    font-size: 28px;
-    line-height: 1.2;
-}
-
-.logo-text p{
-    margin: 2px 0 0 0;
-    font-size: 14px;
-    color: #777;
+.auth-logo-img{
+    display:block;
+    width:174px;
+    height:auto;
+    max-height:54px;
+    object-fit:contain;
+    transform:translateX(6px);
 }
 
 .login-card h3{

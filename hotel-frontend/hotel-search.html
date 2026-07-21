@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="icon" type="image/png" href="images/icon/Favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/hotel-search.css">
@@ -100,20 +101,9 @@
                         <h3>숙소 유형</h3>
                     </div>
 
-                    <label class="check-row">
-                        <input type="checkbox" class="room-type" value="1">
-                        <span>호텔</span>
-                    </label>
-
-                    <label class="check-row">
-                        <input type="checkbox" class="room-type" value="2">
-                        <span>리조트</span>
-                    </label>
-
-                    <label class="check-row">
-                        <input type="checkbox" class="room-type" value="3">
-                        <span>펜션/풀빌라</span>
-                    </label>
+                    <div id="hotelTypeFilterList">
+                        <p class="filter-empty">숙소 유형을 불러오는 중입니다.</p>
+                    </div>
                 </div>
 
                 <button type="button" id="resetFilterBtn">필터 초기화</button>

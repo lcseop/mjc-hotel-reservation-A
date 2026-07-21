@@ -4,14 +4,7 @@
 <header class="site-header">
     <div class="header-inner">
         <a href="index.html" class="logo-link" aria-label="StayNow 홈으로 이동">
-            <div class="logo-icon" aria-hidden="true">
-                <i class="fa-solid fa-hotel"></i>
-            </div>
-
-            <div class="logo-text">
-                <h1>StayNow</h1>
-                <p>최고의 호텔을 최저가로</p>
-            </div>
+            <img class="header-logo-img" src="images/logo/Logo_Normal.png" alt="StayNow">
         </a>
 
         <nav class="pc-nav" aria-label="주요 메뉴">
@@ -39,7 +32,7 @@
         </nav>
 
         <div class="right-menu">
-            <a href="wishlist.html" class="menu-btn">
+            <a href="wishlist.html" class="menu-btn wishlist-link auth-only" hidden>
                 <i class="fa-regular fa-heart" aria-hidden="true"></i>
                 위시리스트
             </a>
@@ -48,7 +41,7 @@
                 <button type="button" class="user-btn auth-user-btn">
                     <i class="fa-solid fa-user" aria-hidden="true"></i>
                     <span class="auth-user-name">로그인</span>
-                    <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true"></i>
+                    <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true" hidden></i>
                 </button>
 
                 <div class="user-dropdown">
@@ -95,7 +88,7 @@
 
     <div class="mobile-buttons">
 
-        <a href="wishlist.html" class="menu-btn">
+        <a href="wishlist.html" class="menu-btn wishlist-link auth-only" hidden>
             <i class="fa-regular fa-heart" aria-hidden="true"></i>
             위시리스트
         </a>
@@ -104,7 +97,7 @@
             <button type="button" class="user-btn auth-user-btn">
                 <i class="fa-solid fa-user" aria-hidden="true"></i>
                 <span class="auth-user-name">로그인</span>
-                <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true"></i>
+                <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true" hidden></i>
             </button>
 
             <div class="user-dropdown">

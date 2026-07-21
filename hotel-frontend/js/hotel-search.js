@@ -1,5 +1,6 @@
 const HOTEL_API_BASE = window.StayNowConfig.apiBase;
 const HOTEL_SEARCH_API = window.StayNowConfig.apiUrl("/hotel/search");
+const HOTEL_TYPE_API = window.StayNowConfig.apiUrl("/hoteltype");
 const HOTEL_SEARCH_COOKIE = "staynowSearchRequest";
 const PAGE_SIZE = 5;
 let currentHotels = [];
@@ -14,9 +15,11 @@ $(function () {
 function init() {
 
     bindEvent();
-    restoreSearchCondition();
-    initResultDateBounds();
-    drawCachedResultOrSearch();
+    loadHotelTypeFilters().always(function () {
+        restoreSearchCondition();
+        initResultDateBounds();
+        drawCachedResultOrSearch();
+    });
 
 }
 
@@ -28,7 +31,7 @@ function bindEvent() {
 
     $("#resetFilterBtn").click(resetFilters);
 
-    $("input[name='star'], .room-type").change(function () {
+    $(document).on("change", "input[name='star'], .room-type", function () {
         requestHotels(0);
     });
 
@@ -42,6 +45,54 @@ function bindEvent() {
 
     $("#filterPanelToggle").click(function () {
         $(".filter-panel").toggleClass("open");
+    });
+
+}
+
+function loadHotelTypeFilters() {
+
+    return $.ajax({
+        url: HOTEL_TYPE_API,
+        type: "GET",
+        success: function (result) {
+            const types = result.data || [];
+            renderHotelTypeFilters(types);
+        },
+        error: function () {
+            renderHotelTypeFilters([
+                { sid: 1, title: "호텔" },
+                { sid: 2, title: "리조트" },
+                { sid: 3, title: "펜션/풀빌라" }
+            ]);
+        }
+    });
+
+}
+
+function renderHotelTypeFilters(types) {
+
+    const list = $("#hotelTypeFilterList");
+    list.empty();
+
+    if (!types.length) {
+        list.html('<p class="filter-empty">등록된 숙소 유형이 없습니다.</p>');
+        return;
+    }
+
+    types.forEach(function (type) {
+        const id = type.sid || type.id;
+        const title = type.title || type.typeTitle || "숙소 유형";
+
+        if (!id) {
+            return;
+        }
+
+        list.append(
+            '<label class="check-row">' +
+                '<input type="checkbox" class="room-type" value="' + escapeHtml(id) + '">' +
+                '<span>' + escapeHtml(title) + '</span>' +
+            '</label>'
+        );
     });
 
 }
