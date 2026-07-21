@@ -11,11 +11,16 @@
         apiBase: API_BASE,
         assetBase: ASSET_BASE,
         tossClientKey: "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm",
+        oauthBase: API_BASE.replace(/\/api\/?$/, ""),
         apiUrl: function (path) {
             return API_BASE + "/" + String(path || "").replace(/^\/+/, "");
         },
         assetUrl: function (path) {
             return this.assetBase + "/" + String(path || "").replace(/^\/+/, "");
+        },
+        oauthAuthorizationUrl: function (provider) {
+            const base = this.oauthBase || "";
+            return base + "/oauth2/authorization/" + encodeURIComponent(String(provider || "").toLowerCase());
         },
         getAuth: getStoredAuth,
         saveAuth: saveStoredAuth,
