@@ -132,6 +132,7 @@ function saveLoginData(loginData) {
         name: loginData.name,
         role: loginData.role,
         point: Number(loginData.point || 0),
+        provider: loginData.provider || "LOCAL",
         loggedInAt: new Date().toISOString()
     }));
 

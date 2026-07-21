@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class GoogleSocialLoginService {
                         userInfo.providerUserId()
                 )
                 .map(this::loginExistingMember)
-                .orElseGet(() -> signupGoogleMember(userInfo));
+                .orElseGet(() -> signupOrLinkGoogleMember(userInfo));
     }
 
     private Member loginExistingMember(MemberAuthAccount authAccount) {
@@ -49,12 +50,17 @@ public class GoogleSocialLoginService {
         return member;
     }
 
-    private Member signupGoogleMember(GoogleOAuth2UserInfo userInfo) {
-        if (memberRepository.countActiveByEmail(userInfo.email()) > 0) {
+    private Member signupOrLinkGoogleMember(GoogleOAuth2UserInfo userInfo) {
+        List<Member> membersWithSameEmail = memberRepository.findAllActiveByEmail(userInfo.email());
+        if (membersWithSameEmail.size() > 1) {
             throw GoogleOAuth2UserInfo.oauth2Exception(
-                    "account_link_required",
-                    "동일한 이메일의 기존 계정이 있습니다. 로그인 후 구글 계정을 연결해 주세요."
+                    "ambiguous_email_account",
+                    "동일한 이메일을 사용하는 회원이 여러 명이라 구글 계정을 안전하게 연결할 수 없습니다."
             );
+        }
+
+        if (membersWithSameEmail.size() == 1) {
+            return linkGoogleAccount(membersWithSameEmail.getFirst(), userInfo);
         }
 
         Member member = Member.builder()
@@ -76,6 +82,35 @@ public class GoogleSocialLoginService {
         memberAuthAccountRepository.save(authAccount);
 
         return savedMember;
+    }
+
+    private Member linkGoogleAccount(Member member, GoogleOAuth2UserInfo userInfo) {
+        if (member.getStatus() != MemberStatus.ACTIVE) {
+            throw GoogleOAuth2UserInfo.oauth2Exception(
+                    "inactive_member",
+                    "로그인할 수 없는 회원입니다."
+            );
+        }
+
+        if (memberAuthAccountRepository
+                .findActiveByMemberSidAndProvider(member.getSid(), MemberAuthProvider.GOOGLE)
+                .isPresent()) {
+            throw GoogleOAuth2UserInfo.oauth2Exception(
+                    "google_account_conflict",
+                    "이미 다른 구글 계정이 연결된 회원입니다."
+            );
+        }
+
+        MemberAuthAccount googleAuthAccount = MemberAuthAccount.builder()
+                .member(member)
+                .provider(MemberAuthProvider.GOOGLE)
+                .providerUserId(userInfo.providerUserId())
+                .lastLoginAt(LocalDateTime.now())
+                .build();
+        memberAuthAccountRepository.save(googleAuthAccount);
+
+        member.setEmailVerified(true);
+        return member;
     }
 
     private void validateVerifiedEmail(GoogleOAuth2UserInfo userInfo) {

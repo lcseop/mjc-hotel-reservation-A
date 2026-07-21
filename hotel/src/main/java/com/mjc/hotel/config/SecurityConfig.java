@@ -1,6 +1,8 @@
 package com.mjc.hotel.config;
 
 import com.mjc.hotel.auth.oauth.GoogleOidcUserService;
+import com.mjc.hotel.auth.oauth.OAuth2LoginFailureHandler;
+import com.mjc.hotel.auth.oauth.OAuth2LoginSuccessHandler;
 import com.mjc.hotel.util.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -8,8 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,6 +25,8 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final GoogleOidcUserService googleOidcUserService;
+    private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oauth2LoginFailureHandler;
 
     @Bean
     @Profile("!oauth")
@@ -43,13 +45,10 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(googleOidcUserService)
                         )
-                        .defaultSuccessUrl("/api/auth/oauth2/success", true)
-                        .failureUrl("/api/auth/oauth2/failure")
+                        .successHandler(oauth2LoginSuccessHandler)
+                        .failureHandler(oauth2LoginFailureHandler)
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/oauth2/success").authenticated()
-                        .anyRequest().permitAll()
-                );
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
     }
@@ -77,8 +76,4 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
