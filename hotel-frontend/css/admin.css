@@ -1072,6 +1072,25 @@ a {
     overflow-x: auto;
 }
 
+.admin-checkin-table th,
+.admin-checkin-table td {
+    padding: 14px 10px;
+}
+
+.admin-checkin-table th:last-child,
+.admin-checkin-table td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    min-width: 96px;
+    background: #fff;
+    box-shadow: -10px 0 16px rgba(248, 251, 254, .86);
+}
+
+.admin-checkin-table tbody tr:nth-child(even) td:last-child {
+    background: #f8fbfe;
+}
+
 .admin-reservation-table th,
 .admin-reservation-table td {
     padding: 18px 14px;
@@ -2152,10 +2171,24 @@ a {
 
 .checkin-toolbar {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) 150px auto auto auto;
+    grid-template-columns: minmax(220px, 1fr) 170px;
     gap: 10px;
     align-items: center;
     margin-bottom: 18px;
+}
+
+.checkin-bulk-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.checkin-bulk-actions .admin-btn {
+    min-width: 112px;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 .admin-btn.danger {
@@ -2558,6 +2591,11 @@ a {
     .room-type-field .room-type-select-row,
     .room-type-create-row {
         grid-template-columns: 1fr;
+    }
+
+    .checkin-bulk-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 
     .admin-room-floor-head {
@@ -3254,6 +3292,14 @@ a {
     min-height: 0;
     padding: 0 16px;
     font-size: 13px;
+}
+
+.review-master-form {
+    grid-template-columns: minmax(0, 1fr) 160px auto auto;
+}
+
+.review-master-form .admin-select[hidden] {
+    display: none;
 }
 
 .hotel-master-list {

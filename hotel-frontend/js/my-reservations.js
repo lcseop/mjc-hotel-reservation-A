@@ -6,6 +6,7 @@ let currentReviewTarget = null;
 let currentRating = 5;
 let reviewedReservationIds = new Set();
 let reviewTagMasters = [];
+let reviewCategoryMasters = [];
 let selectedReviewFiles = [];
 
 $(function () {
@@ -64,6 +65,7 @@ function bindMyPageEvents() {
     $("#reviewContent").on("input", updateReviewContentCount);
     $("#myReviewForm").on("submit", submitReview);
     loadReviewTagMasters();
+    loadReviewCategoryMasters();
 }
 
 function loadReservations() {
@@ -72,7 +74,11 @@ function loadReservations() {
         headers: myAuthHeaders(),
         data: { memberId: myAuth.memberSid, page: 0, size: 100, sort: "createdAt,desc" },
         success: function (page) {
-            reservations = (page.content || []).map(mergeLocalReservation);
+            reservations = (page.content || [])
+                .filter(function (reservation) {
+                    return reservation.reservationStatus !== "PENDING";
+                })
+                .map(mergeLocalReservation);
             renderProfile();
             renderCounts();
             syncWrittenReviews(renderReservations);
@@ -191,6 +197,10 @@ function makeLeftAction(reservation, state, reviewed) {
             : '<button type="button" class="outline-btn review-btn"><i class="fa-regular fa-pen-to-square"></i> 리뷰 작성</button>';
     }
 
+    if (state.key === "checked-in") {
+        return '<span class="mini-chip green"><i class="fa-solid fa-circle-check"></i> 체크인 완료</span>';
+    }
+
     return '<button type="button" class="mini-chip checkin-btn"><i class="fa-regular fa-clock"></i> 체크인</button>';
 }
 
@@ -238,6 +248,7 @@ function openReviewModal(reservation) {
     $("#writePhotoPreview").empty();
     $("#writeTravelType button").removeClass("active").first().addClass("active");
     $(".write-tag-chip").removeClass("active");
+    drawReviewCategoryStars();
     $(".mini-stars").attr("data-rating", "5").each(function () { paintMiniStars($(this)); });
     paintRating();
     updateReviewContentCount();
@@ -373,9 +384,26 @@ function sortReservations(items) {
 
 function getReservationState(reservation) {
     const status = reservation.reservationStatus;
+    if (status === "PENDING") return { key: "pending", group: "PENDING", label: "결제 대기" };
     if (status === "CANCELLED" || status === "NO_SHOW") return { key: "cancelled", group: "CANCELLED", label: "취소됨" };
+    if (status === "CHECKED_IN") return { key: "checked-in", group: "UPCOMING", label: "투숙 중" };
     if (status === "CHECKED_OUT" || status === "COMPLETED") return { key: "completed", group: "COMPLETED", label: "완료된 여행" };
     return { key: "upcoming", group: "UPCOMING", label: "예정된 여행" };
+}
+
+function loadReviewCategoryMasters() {
+    $.ajax({
+        url: MY_API_BASE + "/review-category-master",
+        type: "GET",
+        success: function (result) {
+            reviewCategoryMasters = result.data || [];
+            drawReviewCategoryStars();
+        },
+        error: function () {
+            reviewCategoryMasters = [];
+            drawReviewCategoryStars();
+        }
+    });
 }
 
 function getMyErrorMessage(xhr, fallback) {
@@ -446,18 +474,52 @@ function updateReviewContentCount() {
 }
 
 function collectReviewCategories() {
-    return $(".mini-stars").map(function () {
+    const seen = new Set();
+    return $("#reviewModal .mini-stars").map(function () {
+        const categoryId = Number($(this).data("category-id"));
+        if (!categoryId || seen.has(categoryId)) {
+            return null;
+        }
+        seen.add(categoryId);
         return {
-            categoryId: Number($(this).data("category-id")),
+            categoryId: categoryId,
             rating: Number($(this).attr("data-rating") || 5)
         };
-    }).get();
+    }).get().filter(Boolean);
+}
+
+function drawReviewCategoryStars() {
+    const grid = $("#reviewModal .write-category-grid");
+    if (!grid.length) {
+        return;
+    }
+
+    if (!reviewCategoryMasters.length) {
+        grid.html('<p class="write-empty-note">등록된 항목별 평점 카테고리가 없습니다.</p>');
+        return;
+    }
+
+    grid.html(reviewCategoryMasters.map(function (category) {
+        const categoryId = Number(category.sid);
+        const name = category.reviewCategoryName || category.name || ("항목 " + categoryId);
+        return '<label><span>' + escapeHtml(name) + '</span><div class="mini-stars" data-category-id="' + categoryId + '" data-rating="5"></div></label>';
+    }).join(""));
+
+    grid.find(".mini-stars").each(function () {
+        paintMiniStars($(this));
+    });
 }
 
 function collectReviewTags() {
-    return $(".write-tag-chip.active").map(function () {
-        return { tagId: Number($(this).data("tag-id")) };
-    }).get();
+    const seen = new Set();
+    return $("#reviewModal .write-tag-chip.active").map(function () {
+        const tagId = Number($(this).data("tag-id"));
+        if (!tagId || seen.has(tagId)) {
+            return null;
+        }
+        seen.add(tagId);
+        return { tagId: tagId };
+    }).get().filter(Boolean);
 }
 
 function drawWriteTagButtons() {

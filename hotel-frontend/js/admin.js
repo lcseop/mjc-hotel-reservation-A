@@ -208,6 +208,12 @@ function renderAdminShell(pageId, auth) {
     $(document).off("click.adminHotelAmenityManage").on("click.adminHotelAmenityManage", "[data-admin-action='open-hotel-amenity-manage']", function () {
         openHotelAmenityManager();
     });
+    $(document).off("click.adminReviewTagManage").on("click.adminReviewTagManage", "[data-admin-action='open-review-tag-manage']", function () {
+        openReviewTagManager();
+    });
+    $(document).off("click.adminReviewCategoryManage").on("click.adminReviewCategoryManage", "[data-admin-action='open-review-category-manage']", function () {
+        openReviewCategoryManager();
+    });
     $(document).off("click.adminGuestCoupon").on("click.adminGuestCoupon", "[data-admin-action='open-guest-coupon']", function () {
         openGuestCouponModal();
     });
@@ -429,9 +435,12 @@ function bindAdminProfileMenu() {
             return;
         }
         if (action === "logout") {
-            localStorage.removeItem("staynowAuth");
-            sessionStorage.removeItem("staynowAuth");
-            location.href = "login.html";
+            const logoutRequest = window.StayNowConfig && window.StayNowConfig.logout
+                ? window.StayNowConfig.logout()
+                : $.Deferred().resolve().promise();
+            logoutRequest.always(function () {
+                location.href = "login.html";
+            });
         }
     });
 
@@ -629,7 +638,7 @@ function headActions(id) {
         promotions: [["프로모션 생성", "fa-plus", "primary", "create-promotion"]],
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
         checkin: [["QR 체크인", "fa-qrcode", "primary", "open-qr-checkin"], ["캘린더 보기", "fa-calendar", "", "open-checkin-calendar"], ["리포트 다운로드", "fa-download", "", "download-checkin-report"]],
-        reviews: [],
+        reviews: [["리뷰 태그 관리", "fa-tags", "", "open-review-tag-manage"], ["리뷰 카테고리 관리", "fa-list-check", "", "open-review-category-manage"]],
         settings: [["호텔 타입 관리", "fa-layer-group", "", "open-hotel-type-manage"], ["편의시설 관리", "fa-wand-magic-sparkles", "", "open-hotel-amenity-manage"], ["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
     };
     const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
@@ -737,9 +746,11 @@ function renderCheckin() {
                         <option value="CHECKED_OUT">체크아웃</option>
                         <option value="CANCELLED">취소</option>
                     </select>
-                    <button class="admin-btn" type="button" data-checkin-bulk="check-in">일괄 체크인</button>
-                    <button class="admin-btn" type="button" data-checkin-bulk="check-out">일괄 체크아웃</button>
-                    <button class="admin-btn danger" type="button" data-checkin-bulk="cancel">일괄 취소</button>
+                    <div class="checkin-bulk-actions">
+                        <button class="admin-btn" type="button" data-checkin-bulk="check-in">일괄 체크인</button>
+                        <button class="admin-btn" type="button" data-checkin-bulk="check-out">일괄 체크아웃</button>
+                        <button class="admin-btn danger" type="button" data-checkin-bulk="cancel">일괄 취소</button>
+                    </div>
                 </div>
                 <div id="checkinTableWrap" class="admin-table-wrap">
                     <div class="admin-loading">체크인 데이터를 불러오는 중입니다.</div>
@@ -1411,6 +1422,181 @@ function answerAdminReview(reviewId) {
             alert(getAdminAjaxMessage(xhr, "리뷰 답변 등록에 실패했습니다."));
             button.prop("disabled", false).html('<i class="fa-solid fa-paper-plane"></i> 답변 등록');
         });
+}
+
+function openReviewTagManager() {
+    openReviewMasterManager({
+        title: "리뷰 태그 관리",
+        description: "리뷰 작성에서 사용하는 장점/아쉬운 점 태그입니다.",
+        endpoint: "/review-tag-master",
+        nameKeys: ["reviewTagName", "title", "name"],
+        hasCategory: true,
+        categoryKey: "reviewTagCategory",
+        emptyText: "등록된 리뷰 태그가 없습니다.",
+        makePayload: function (sid, name, category) {
+            return {
+                sid: sid || null,
+                reviewTagName: name,
+                reviewTagCategory: category || "PROS"
+            };
+        }
+    });
+}
+
+function openReviewCategoryManager() {
+    openReviewMasterManager({
+        title: "리뷰 카테고리 관리",
+        description: "청결도, 서비스, 위치 같은 항목별 평점 카테고리입니다.",
+        endpoint: "/review-category-master",
+        nameKeys: ["reviewCategoryName", "title", "name"],
+        hasCategory: false,
+        emptyText: "등록된 리뷰 카테고리가 없습니다.",
+        makePayload: function (sid, name) {
+            return {
+                sid: sid || null,
+                reviewCategoryName: name
+            };
+        }
+    });
+}
+
+function openReviewMasterManager(config) {
+    closeReviewMasterManager();
+    $("body").append(`
+        <div class="admin-modal-backdrop nested review-master-backdrop">
+            <div class="admin-modal hotel-master-modal review-master-modal">
+                <div class="admin-modal-head">
+                    <div><h2>${escapeHtml(config.title)}</h2><p>${escapeHtml(config.description)}</p></div>
+                    <button type="button" class="modal-close" data-review-master-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form class="hotel-master-form review-master-form">
+                    <input class="admin-input" type="hidden" id="reviewMasterSid">
+                    <input class="admin-input" type="text" id="reviewMasterName" placeholder="이름">
+                    <select class="admin-select" id="reviewMasterCategory" ${config.hasCategory ? "" : "hidden"}>
+                        <option value="PROS">좋았던 점</option>
+                        <option value="CONS">아쉬운 점</option>
+                    </select>
+                    <button class="admin-btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
+                    <button class="admin-btn ghost" type="button" data-review-master-reset><i class="fa-solid fa-rotate-left"></i> 초기화</button>
+                </form>
+                <div class="hotel-master-list review-master-list"><div class="admin-loading">목록을 불러오는 중입니다.</div></div>
+            </div>
+        </div>
+    `);
+
+    $("[data-review-master-close]").on("click", closeReviewMasterManager);
+    $("[data-review-master-reset]").on("click", resetReviewMasterForm);
+    $(".review-master-form").on("submit", function (event) {
+        event.preventDefault();
+        saveReviewMaster(config);
+    });
+    $(".review-master-list").on("click", "[data-review-master-edit]", function () {
+        const sid = Number($(this).data("review-master-edit"));
+        const item = ($(".review-master-backdrop").data("items") || []).find(function (target) {
+            return Number(target.sid) === sid;
+        });
+        if (item) fillReviewMasterForm(item, config);
+    });
+    $(".review-master-list").on("click", "[data-review-master-delete]", function () {
+        deleteReviewMaster(Number($(this).data("review-master-delete")), config);
+    });
+
+    loadReviewMasterItems(config);
+}
+
+function closeReviewMasterManager() {
+    $(".review-master-backdrop").remove();
+}
+
+function renderReviewMasterRows(items, config) {
+    if (!items.length) {
+        return `<div class="empty-admin-state">${escapeHtml(config.emptyText)}</div>`;
+    }
+
+    return items.map(function (item) {
+        const title = pickFirstValue(item, config.nameKeys) || "-";
+        const meta = config.hasCategory && item[config.categoryKey] ? formatReviewMasterMeta(item[config.categoryKey]) : "";
+
+        return `<article class="hotel-master-card review-master-card">
+            <div class="hotel-master-card-main">
+                <div class="hotel-master-item-title"><strong>${escapeHtml(title)}</strong><span>ID ${escapeHtml(item.sid)}</span></div>
+                ${meta ? `<small>${escapeHtml(formatReviewMasterMeta(meta))}</small>` : ""}
+            </div>
+            <div class="row-actions">
+                <button class="icon-btn" type="button" title="수정" data-review-master-edit="${escapeHtml(item.sid)}"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn danger" type="button" title="삭제" data-review-master-delete="${escapeHtml(item.sid)}"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </article>`;
+    }).join("");
+}
+
+function loadReviewMasterItems(config) {
+    $(".review-master-list").html('<div class="admin-loading">목록을 불러오는 중입니다.</div>');
+    adminGetSafe(config.endpoint, []).then(function (result) {
+        const items = asArray(result);
+        $(".review-master-backdrop").data("items", items);
+        $(".review-master-list").html(renderReviewMasterRows(items, config));
+    });
+}
+
+function saveReviewMaster(config) {
+    const sid = Number($("#reviewMasterSid").val() || 0);
+    const name = String($("#reviewMasterName").val() || "").trim();
+    const category = $("#reviewMasterCategory").val();
+
+    if (!name) {
+        alert("이름을 입력해주세요.");
+        $("#reviewMasterName").focus();
+        return;
+    }
+
+    const payload = config.makePayload(sid || null, name, category);
+    const request = sid ? adminPatch(config.endpoint, payload) : adminPost(config.endpoint, payload);
+    request.then(function () {
+        resetReviewMasterForm();
+        loadReviewMasterItems(config);
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "저장에 실패했습니다."));
+    });
+}
+
+function fillReviewMasterForm(item, config) {
+    $("#reviewMasterSid").val(item.sid || "");
+    $("#reviewMasterName").val(pickFirstValue(item, config.nameKeys) || "");
+    if (config.hasCategory) {
+        $("#reviewMasterCategory").val(item[config.categoryKey] || "PROS");
+    }
+}
+
+function resetReviewMasterForm() {
+    $("#reviewMasterSid").val("");
+    $("#reviewMasterName").val("");
+    $("#reviewMasterCategory").val("PROS");
+}
+
+function deleteReviewMaster(sid, config) {
+    if (!sid || !confirm("삭제하시겠습니까?")) return;
+
+    adminDelete(config.endpoint + "/" + sid).then(function () {
+        resetReviewMasterForm();
+        loadReviewMasterItems(config);
+    }, function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "삭제에 실패했습니다. 이미 리뷰에 연결된 항목일 수 있습니다."));
+    });
+}
+
+function pickFirstValue(item, keys) {
+    for (const key of keys) {
+        if (item && item[key]) return item[key];
+    }
+    return "";
+}
+
+function formatReviewMasterMeta(value) {
+    const upper = String(value || "").toUpperCase();
+    if (upper === "PROS" || upper === "POSITIVE" || upper === "좋았던 점") return "좋았던 점";
+    if (upper === "CONS" || upper === "NEGATIVE" || upper === "아쉬운 점") return "아쉬운 점";
+    return value;
 }
 
 function renderAdminReviewStars(score) {

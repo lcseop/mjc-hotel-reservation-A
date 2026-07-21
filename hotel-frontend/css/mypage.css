@@ -931,6 +931,11 @@ textarea {
     color: #059669;
 }
 
+.status-chip.checked-in {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
 .status-chip.completed {
     background: #f1f5f9;
     color: #64748b;
@@ -1330,6 +1335,17 @@ textarea {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.write-empty-note {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 800;
 }
 
 .write-chip-row button,
