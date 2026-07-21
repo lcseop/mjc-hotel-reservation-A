@@ -596,6 +596,18 @@ function makePageUrl(pageName) {
 }
 
 function validateReservationForm() {
+    const stay = getStayInfo();
+    const checkInDate = toReservationDateValue(stay.checkIn);
+    const checkOutDate = toReservationDateValue(stay.checkOut);
+
+    if (!checkInDate || isPastReservationDate(checkInDate)) {
+        return "지난 날짜로는 예약할 수 없습니다. 체크인 날짜를 다시 선택해주세요.";
+    }
+
+    if (!checkOutDate || checkOutDate <= checkInDate) {
+        return "체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.";
+    }
+
     if (!$("#guestName").val().trim()) {
         $("#guestName").focus();
         return "투숙객 이름을 입력해주세요.";
@@ -630,6 +642,22 @@ function validateReservationForm() {
     }
 
     return "";
+}
+
+function toReservationDateValue(value) {
+    return value ? String(value).slice(0, 10) : "";
+}
+
+function isPastReservationDate(value) {
+    return value && value < toReservationTodayValue();
+}
+
+function toReservationTodayValue() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
 }
 
 function syncAgreementAll() {

@@ -3,6 +3,7 @@ const HOTEL_SEARCH_API = window.StayNowConfig.apiUrl("/hotel/search");
 const HOTEL_SEARCH_COOKIE = "staynowSearchRequest";
 const PAGE_SIZE = 5;
 let currentHotels = [];
+let resultDatesAdjusted = false;
 
 $(function () {
 
@@ -14,6 +15,7 @@ function init() {
 
     bindEvent();
     restoreSearchCondition();
+    initResultDateBounds();
     drawCachedResultOrSearch();
 
 }
@@ -82,10 +84,17 @@ function drawCachedResultOrSearch() {
 
     const cached = sessionStorage.getItem("hotelSearchResult");
 
-    if (cached) {
+    if (cached && !resultDatesAdjusted) {
         sessionStorage.removeItem("hotelSearchResult");
+        if (!validateRequest(makeRequest())) {
+            return;
+        }
         drawResult(JSON.parse(cached));
         return;
+    }
+
+    if (cached) {
+        sessionStorage.removeItem("hotelSearchResult");
     }
 
     requestHotels(0);
@@ -171,6 +180,12 @@ function validateRequest(request) {
         return false;
     }
 
+    if (isPastResultDate($("#resultCheckIn").val())) {
+        alert("지난 날짜로는 체크인할 수 없습니다.");
+        $("#resultCheckIn").focus();
+        return false;
+    }
+
     if (new Date($("#resultCheckIn").val()) >= new Date($("#resultCheckOut").val())) {
         alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
         $("#resultCheckOut").focus();
@@ -197,6 +212,62 @@ function drawResult(result) {
     drawHotels(hotels);
     drawPagination(page);
 
+}
+
+function initResultDateBounds() {
+    const today = toResultInputDate(new Date());
+
+    $("#resultCheckIn").attr("min", today);
+
+    if (isPastResultDate($("#resultCheckIn").val())) {
+        $("#resultCheckIn").val(today);
+        resultDatesAdjusted = true;
+    }
+
+    updateResultCheckoutMin(true);
+
+    $("#resultCheckIn").on("change", function () {
+        if (isPastResultDate($(this).val())) {
+            $(this).val(today);
+        }
+        updateResultCheckoutMin(true);
+    });
+
+    $("#resultCheckOut").on("change", function () {
+        const minCheckout = $(this).attr("min");
+        if ($(this).val() && $(this).val() < minCheckout) {
+            $(this).val(minCheckout);
+        }
+    });
+}
+
+function updateResultCheckoutMin(forceValid) {
+    const checkIn = $("#resultCheckIn").val() || toResultInputDate(new Date());
+    const minCheckout = addResultDays(checkIn, 1);
+
+    $("#resultCheckOut").attr("min", minCheckout);
+
+    if (forceValid && (!$("#resultCheckOut").val() || $("#resultCheckOut").val() <= checkIn)) {
+        $("#resultCheckOut").val(minCheckout);
+        resultDatesAdjusted = true;
+    }
+}
+
+function addResultDays(value, days) {
+    const date = new Date(value + "T00:00:00");
+    date.setDate(date.getDate() + days);
+    return toResultInputDate(date);
+}
+
+function toResultInputDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+}
+
+function isPastResultDate(value) {
+    return value && value < toResultInputDate(new Date());
 }
 
 function drawSummary(page) {

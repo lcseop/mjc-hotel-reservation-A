@@ -163,7 +163,6 @@ function makeReservationCard(reservation) {
         '</div>'
     );
 
-    card.find(".checkin-btn").on("click", function () { checkInReservation(reservation.sid); });
     card.find(".review-btn").on("click", function () { openReviewModal(reservation); });
     card.find(".cancel-btn").on("click", function () { cancelReservation(reservation.sid); });
     card.find(".hotel-link").on("click", function () { goHotelDetail(reservation.hotelId); });
@@ -201,19 +200,7 @@ function makeLeftAction(reservation, state, reviewed) {
         return '<span class="mini-chip green"><i class="fa-solid fa-circle-check"></i> 체크인 완료</span>';
     }
 
-    return '<button type="button" class="mini-chip checkin-btn"><i class="fa-regular fa-clock"></i> 체크인</button>';
-}
-
-function checkInReservation(id) {
-    $.ajax({
-        url: MY_API_BASE + "/reservation/" + id + "/check-in",
-        type: "PATCH",
-        headers: myAuthHeaders(),
-        success: loadReservations,
-        error: function () {
-            alert("현재 체크인 처리할 수 없습니다. 체크인 가능 시간을 확인해주세요.");
-        }
-    });
+    return '<span class="mini-chip blue"><i class="fa-regular fa-calendar-check"></i> 예약 확정</span>';
 }
 
 function cancelReservation(id) {

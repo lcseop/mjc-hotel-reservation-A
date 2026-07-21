@@ -19,6 +19,7 @@ function initGlobalSearchHeader() {
 
     globalSearchInitialized = true;
     restoreGlobalSearchRequest();
+    initGlobalDateBounds();
 
     $("#globalSearchBtn").on("click", function () {
         requestGlobalSearch();
@@ -89,6 +90,12 @@ function validateGlobalSearchRequest(request) {
         return false;
     }
 
+    if (isPastGlobalDate($("#globalSearchCheckIn").val())) {
+        alert("지난 날짜로는 체크인할 수 없습니다.");
+        $("#globalSearchCheckIn").focus();
+        return false;
+    }
+
     if (new Date($("#globalSearchCheckIn").val()) >= new Date($("#globalSearchCheckOut").val())) {
         alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
         $("#globalSearchCheckOut").focus();
@@ -106,6 +113,47 @@ function restoreGlobalSearchRequest() {
     $("#globalSearchCheckOut").val(toGlobalDateValue(request.checkOut));
     $("#globalSearchAdult").val(request.adult || 2);
     $("#globalSearchChild").val(request.child || 0);
+}
+
+function initGlobalDateBounds() {
+    const today = toGlobalInputDate(new Date());
+
+    $("#globalSearchCheckIn").attr("min", today);
+
+    if (isPastGlobalDate($("#globalSearchCheckIn").val())) {
+        $("#globalSearchCheckIn").val(today);
+    }
+
+    updateGlobalCheckoutMin(true);
+
+    $("#globalSearchCheckIn").on("change", function () {
+        if (isPastGlobalDate($(this).val())) {
+            $(this).val(today);
+        }
+        updateGlobalCheckoutMin(true);
+    });
+
+    $("#globalSearchCheckOut").on("change", function () {
+        const minCheckout = $(this).attr("min");
+        if ($(this).val() && $(this).val() < minCheckout) {
+            $(this).val(minCheckout);
+        }
+    });
+}
+
+function updateGlobalCheckoutMin(forceValid) {
+    const checkIn = $("#globalSearchCheckIn").val() || toGlobalInputDate(new Date());
+    const minCheckout = toGlobalInputDate(addGlobalDays(new Date(checkIn + "T00:00:00"), 1));
+
+    $("#globalSearchCheckOut").attr("min", minCheckout);
+
+    if (forceValid && (!$("#globalSearchCheckOut").val() || $("#globalSearchCheckOut").val() <= checkIn)) {
+        $("#globalSearchCheckOut").val(minCheckout);
+    }
+}
+
+function isPastGlobalDate(value) {
+    return value && value < toGlobalInputDate(new Date());
 }
 
 function getDefaultGlobalSearchRequest() {

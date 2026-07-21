@@ -9,6 +9,7 @@ $(function () {
 
 function init() {
     setDefaultSearchValues();
+    initSearchDateBounds();
     guestPicker();
     cardHover();
     travelTypeSelect();
@@ -127,6 +128,15 @@ function searchValidation() {
 
         }
 
+        if (isBeforeToday(checkInDate)) {
+
+            alert("지난 날짜로는 체크인할 수 없습니다.");
+            $("#searchCheckIn").focus();
+
+            return;
+
+        }
+
         if (new Date(checkInDate) >= new Date(checkOutDate)) {
 
             alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
@@ -138,6 +148,47 @@ function searchValidation() {
         searchHotels(request);
 
     });
+
+}
+
+function initSearchDateBounds() {
+
+    const today = toDateInputValue(new Date());
+
+    $("#searchCheckIn").attr("min", today);
+
+    if (isBeforeToday($("#searchCheckIn").val())) {
+        $("#searchCheckIn").val(today);
+    }
+
+    updateSearchCheckoutMin(true);
+
+    $("#searchCheckIn").on("change", function () {
+        if (isBeforeToday($(this).val())) {
+            $(this).val(today);
+        }
+        updateSearchCheckoutMin(true);
+    });
+
+    $("#searchCheckOut").on("change", function () {
+        const minCheckout = $(this).attr("min");
+        if ($(this).val() && $(this).val() < minCheckout) {
+            $(this).val(minCheckout);
+        }
+    });
+
+}
+
+function updateSearchCheckoutMin(forceValid) {
+
+    const checkIn = $("#searchCheckIn").val() || toDateInputValue(new Date());
+    const minCheckout = addDateInputDays(checkIn, 1);
+
+    $("#searchCheckOut").attr("min", minCheckout);
+
+    if (forceValid && ($("#searchCheckOut").val() === "" || $("#searchCheckOut").val() <= checkIn)) {
+        $("#searchCheckOut").val(minCheckout);
+    }
 
 }
 
@@ -155,6 +206,21 @@ function setDefaultSearchValues() {
     if ($("#searchCheckOut").val() === "") {
         $("#searchCheckOut").val(toDateInputValue(tomorrow));
     }
+
+}
+
+function addDateInputDays(value, days) {
+
+    const date = new Date(value + "T00:00:00");
+    date.setDate(date.getDate() + days);
+
+    return toDateInputValue(date);
+
+}
+
+function isBeforeToday(value) {
+
+    return value && value < toDateInputValue(new Date());
 
 }
 
@@ -301,6 +367,10 @@ function makePresetSearchRequest(preset) {
 
 function goHotelSearch(request) {
 
+    if (!isIndexSearchDateRequestValid(request)) {
+        return;
+    }
+
     $.ajax({
         url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
@@ -317,6 +387,32 @@ function goHotelSearch(request) {
             alert("호텔 검색 중 오류가 발생했습니다.");
         }
     });
+
+}
+
+function isIndexSearchDateRequestValid(request) {
+
+    const checkIn = String(request.checkIn || "").slice(0, 10);
+    const checkOut = String(request.checkOut || "").slice(0, 10);
+
+    if (!checkIn || !checkOut) {
+        alert("체크인과 체크아웃 날짜를 선택하세요.");
+        return false;
+    }
+
+    if (isBeforeToday(checkIn)) {
+        alert("지난 날짜로는 체크인할 수 없습니다.");
+        $("#searchCheckIn").focus();
+        return false;
+    }
+
+    if (checkOut <= checkIn) {
+        alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
+        $("#searchCheckOut").focus();
+        return false;
+    }
+
+    return true;
 
 }
 
