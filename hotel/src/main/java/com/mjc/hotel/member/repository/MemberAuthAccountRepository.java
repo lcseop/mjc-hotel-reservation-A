@@ -31,6 +31,20 @@ public interface MemberAuthAccountRepository extends JpaRepository<MemberAuthAcc
             select authAccount
             from MemberAuthAccount authAccount
             join fetch authAccount.member member
+            where member.sid = :memberSid
+              and authAccount.provider = :provider
+              and (authAccount.deleted = false or authAccount.deleted is null)
+              and (member.deleted = false or member.deleted is null)
+            """)
+    Optional<MemberAuthAccount> findActiveByMemberSidAndProvider(
+            @Param("memberSid") Long memberSid,
+            @Param("provider") MemberAuthProvider provider
+    );
+
+    @Query("""
+            select authAccount
+            from MemberAuthAccount authAccount
+            join fetch authAccount.member member
             where member.email = :email
               and authAccount.provider = :provider
               and (authAccount.deleted = false or authAccount.deleted is null)

@@ -28,6 +28,7 @@
         sessionStorage.setItem("oauthProvider", provider);
         sessionStorage.setItem("oauthRemember", $("#remember").is(":checked") ? "true" : "false");
 
-        location.href = config.oauthAuthorizationUrl(provider);
+        const frontendCallbackUrl = new URL("oauth-callback.html", window.location.href).href;
+        location.href = config.oauthAuthorizationUrl(provider, frontendCallbackUrl);
     }
 })(window, window.jQuery);

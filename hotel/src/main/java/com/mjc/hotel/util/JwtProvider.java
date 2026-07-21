@@ -16,7 +16,7 @@ public class JwtProvider {
 	private static final String REFRESH_TOKEN_TYPE = "refresh";
 
 	private final String SECRET_KEY = "secret-my-secretkey-hello-secret-my-secretkey-hello";
-	private final long ACCESS_TOKEN_TIME = 1000L * 60 * 30;
+	private final long ACCESS_TOKEN_TIME = 1000L * 60 * 60;
 	private final long REFRESH_TOKEN_TIME = 1000L * 60 * 60 * 24 * 14;
 
 	public String createAccessToken(String name) {
