@@ -1,10 +1,11 @@
 package com.mjc.hotel.config;
 
+import com.mjc.hotel.auth.oauth.GoogleOidcUserService;
 import com.mjc.hotel.util.JwtFilter;
-import com.mjc.hotel.util.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,35 +24,43 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final GoogleOidcUserService googleOidcUserService;
 
     @Bean
+    @Profile("!oauth")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+        configureCommonSecurity(http)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    @Bean
+    @Profile("oauth")
+    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
+        configureCommonSecurity(http)
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(googleOidcUserService)
+                        )
+                        .defaultSuccessUrl("/api/auth/oauth2/success", true)
+                        .failureUrl("/api/auth/oauth2/failure")
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/oauth2/success").authenticated()
+                        .anyRequest().permitAll()
+                );
+
+        return http.build();
+    }
+
+    private HttpSecurity configureCommonSecurity(HttpSecurity http) throws Exception {
+        return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-
-//                 테스트시에만 permitAll
-//                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-//                .authorizeHttpRequests(
-//                        auth -> auth.requestMatchers(
-//                                        "/api/auth/login",
-//                                        "/api/auth/logout",
-//                                        "/api/auth/refresh",
-//                                        "/swagger-ui/**",
-//                                        "/api/auth/signup",
-//                                        "/swagger-ui.html",
-//                                        "/v3/api-docs/**")
-//                            .permitAll().anyRequest().authenticated()
-//                );
-        .authorizeHttpRequests(
-                auth -> auth
-                        .anyRequest().permitAll()
-        );
-
-        return http.build();
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
