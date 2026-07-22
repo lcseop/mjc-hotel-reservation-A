@@ -1,8 +1,9 @@
 package com.mjc.hotel.config;
 
-import com.mjc.hotel.auth.oauth.GoogleOidcUserService;
-import com.mjc.hotel.auth.oauth.OAuth2LoginFailureHandler;
-import com.mjc.hotel.auth.oauth.OAuth2LoginSuccessHandler;
+import com.mjc.hotel.auth.oauth.handler.OAuth2LoginFailureHandler;
+import com.mjc.hotel.auth.oauth.handler.OAuth2LoginSuccessHandler;
+import com.mjc.hotel.auth.oauth.service.SocialOAuth2UserService;
+import com.mjc.hotel.auth.oauth.service.SocialOidcUserService;
 import com.mjc.hotel.util.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    private final GoogleOidcUserService googleOidcUserService;
+    private final SocialOidcUserService socialOidcUserService;
+    private final SocialOAuth2UserService socialOAuth2UserService;
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oauth2LoginFailureHandler;
 
@@ -43,7 +45,8 @@ public class SecurityConfig {
         configureCommonSecurity(http)
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
-                                .oidcUserService(googleOidcUserService)
+                                .oidcUserService(socialOidcUserService)
+                                .userService(socialOAuth2UserService)
                         )
                         .successHandler(oauth2LoginSuccessHandler)
                         .failureHandler(oauth2LoginFailureHandler)

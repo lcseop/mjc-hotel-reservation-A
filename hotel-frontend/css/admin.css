@@ -56,10 +56,18 @@ a {
 .admin-brand {
     height: 74px;
     display: flex;
-    gap: 12px;
     align-items: center;
     padding: 0 24px;
     background: #10192a;
+}
+
+.admin-brand-logo {
+    display: block;
+    width: 180px;
+    height: auto;
+    max-height: 42px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
 }
 
 .brand-icon,

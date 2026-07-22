@@ -137,6 +137,7 @@ public class HotelService {
                     calculateMaxDiscountRate(hotel.getSid())
             );
             hotel.setMaxDiscountRate(maxDiscountRate);
+            hotel.setAmenities(findHotelInAmenities(hotel.getSid()));
         });
         return page;
     }

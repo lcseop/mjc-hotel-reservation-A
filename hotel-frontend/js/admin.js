@@ -68,8 +68,7 @@ function renderAdminShell(pageId, auth) {
     $("#adminApp").html(`
         <header class="admin-topbar">
             <a class="admin-brand" href="admin-dashboard.html">
-                <span class="brand-icon"><i class="fa-solid fa-hotel"></i></span>
-                <span class="brand-copy"><strong>StayNow</strong><span>관리자 시스템</span></span>
+                <img class="admin-brand-logo" src="images/logo/Logo_Normal.png" alt="StayNow">
             </a>
             <nav class="admin-top-nav">${ADMIN_TOP_NAV.map(id => navTop(id, pageId)).join("")}</nav>
             <div class="admin-tools">

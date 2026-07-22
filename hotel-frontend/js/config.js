@@ -20,8 +20,8 @@
         },
         oauthAuthorizationUrl: function (provider, frontendCallbackUrl) {
             const normalizedProvider = String(provider || "").toLowerCase();
-            if (normalizedProvider === "google" && frontendCallbackUrl) {
-                return this.apiUrl("/auth/oauth2/google/start")
+            if (frontendCallbackUrl) {
+                return this.apiUrl("/auth/oauth2/" + encodeURIComponent(normalizedProvider) + "/start")
                     + "?redirectUri=" + encodeURIComponent(frontendCallbackUrl);
             }
 

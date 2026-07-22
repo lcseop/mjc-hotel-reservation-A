@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="icon" type="image/png" href="images/icon/Favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/index.css">
@@ -55,27 +56,25 @@
 
         <div class="search-box">
 
-            <div class="search-tab">
-                <button class="active">
-                    <i class="fa-solid fa-hotel"></i> 호텔 검색
-                </button>
-            </div>
-
             <div class="search-form">
 
                 <div class="search-item location">
-                    <label>여행지 또는 호텔명</label>
-                    <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시">
+                    <label>여행지 / 호텔명</label>
+                    <div class="location-input-wrap">
+                        <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시" autocomplete="off" aria-controls="searchSuggestions" aria-expanded="false">
+                        <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
+                    </div>
                 </div>
 
-                <div class="search-item">
-                    <label>체크인</label>
-                    <input type="date" id="searchCheckIn">
-                </div>
-
-                <div class="search-item">
-                    <label>체크아웃</label>
-                    <input type="date" id="searchCheckOut">
+                <div class="search-item date-range">
+                    <label>숙박 기간</label>
+                    <button type="button" class="date-range-toggle" id="dateRangeToggle" aria-expanded="false" aria-controls="dateRangePicker">
+                        <span id="dateRangeText">날짜 선택</span>
+                        <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                    </button>
+                    <input type="hidden" id="searchCheckIn">
+                    <input type="hidden" id="searchCheckOut">
+                    <div class="date-range-picker" id="dateRangePicker" hidden></div>
                 </div>
 
                 <div class="search-item">
@@ -134,58 +133,57 @@
 
             <div class="section-header">
                 <div>
-                    <span class="section-eng">TRAVEL TYPE</span>
-                    <h2>여행 유형별 찾기</h2>
+                    <span class="section-eng">HOTEL TYPE</span>
+                    <h2>호텔 유형별 찾기</h2>
                 </div>
 
-                <a href="#">전체 보기</a>
             </div>
 
             <div class="travel-grid">
 
-                <div class="travel-card blue">
-                    <div class="icon">
-                        <i class="fa-solid fa-hotel"></i>
-                    </div>
-
-                    <h3>호텔</h3>
-                    <p>전국 12만+ 숙소</p>
+                <div class="travel-card type-image-card hotel-type-card" role="button" tabindex="0" aria-label="호텔 유형 검색" data-tooltip="호텔 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Hotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Hotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">호텔</strong>
+                    </span>
+                    <span class="sr-only">호텔</span>
                 </div>
 
-                <div class="travel-card purple">
-                    <div class="icon">
-                        <i class="fa-solid fa-house"></i>
-                    </div>
-
-                    <h3>펜션·풀빌라</h3>
-                    <p>실내 수영장 · 오션뷰</p>
+                <div class="travel-card type-image-card pension-type-card" role="button" tabindex="0" aria-label="펜션·풀빌라 유형 검색" data-tooltip="펜션 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Pension-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Pension-Button-Image.png" alt="">
+                        <strong class="type-card-label">펜션</strong>
+                    </span>
+                    <span class="sr-only">펜션·풀빌라</span>
                 </div>
 
-                <div class="travel-card green">
-                    <div class="icon">
-                        <i class="fa-solid fa-campground"></i>
-                    </div>
-
-                    <h3>리조트·글램핑</h3>
-                    <p>자연속 힐링 공간</p>
+                <div class="travel-card type-image-card resort-type-card" role="button" tabindex="0" aria-label="리조트 유형 검색" data-tooltip="리조트 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Resort-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Resort-Button-Image.png" alt="">
+                        <strong class="type-card-label">리조트</strong>
+                    </span>
+                    <span class="sr-only">리조트·글램핑</span>
                 </div>
 
-                <div class="travel-card orange">
-                    <div class="icon">
-                        <i class="fa-solid fa-star"></i>
-                    </div>
-
-                    <h3>특급 호텔</h3>
-                    <p>5성급 프리미엄</p>
+                <div class="travel-card type-image-card five-star-type-card" role="button" tabindex="0" aria-label="5성급 호텔 유형 검색" data-tooltip="5성급 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/FiveStarHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/FiveStarHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">5성</strong>
+                    </span>
+                    <span class="sr-only">특급 호텔</span>
                 </div>
 
-                <div class="travel-card red">
-                    <div class="icon">
-                        <i class="fa-regular fa-heart"></i>
-                    </div>
-
-                    <h3>커플·허니문</h3>
-                    <p>로맨틱한 여행</p>
+                <div class="travel-card type-image-card couple-type-card" role="button" tabindex="0" aria-label="커플 호텔 유형 검색" data-tooltip="커플 관련 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/CoupleHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/CoupleHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">커플</strong>
+                    </span>
+                    <span class="sr-only">커플·허니문</span>
                 </div>
 
             </div>
@@ -222,76 +220,10 @@
                     <h2>오늘의 특가</h2>
                 </div>
 
-                <a href="#">전체 특가 보기</a>
-
             </div>
 
 
-            <div class="deal-grid">
-
-                <div class="deal-card">
-
-                    <div class="discount">-40%</div>
-
-                    <img src="images/deal1.jpg" alt="">
-
-                    <div class="deal-body">
-
-                        <h3>그랜드 서울 호텔</h3>
-
-                        <p class="old-price">₩310,000</p>
-
-                        <p class="new-price">₩186,400</p>
-
-                        <button>예약하기</button>
-
-                    </div>
-
-                </div>
-
-
-                <div class="deal-card">
-
-                    <div class="discount purple">-35%</div>
-
-                    <img src="images/deal2.jpg" alt="">
-
-                    <div class="deal-body">
-
-                        <h3>롯데호텔 서울</h3>
-
-                        <p class="old-price">₩480,000</p>
-
-                        <p class="new-price">₩312,000</p>
-
-                        <button>예약하기</button>
-
-                    </div>
-
-                </div>
-
-
-                <div class="deal-card">
-
-                    <div class="discount green">-28%</div>
-
-                    <img src="images/deal3.jpg" alt="">
-
-                    <div class="deal-body">
-
-                        <h3>제주 신라호텔</h3>
-
-                        <p class="old-price">₩540,000</p>
-
-                        <p class="new-price">₩388,800</p>
-
-                        <button>예약하기</button>
-
-                    </div>
-
-                </div>
-
-            </div>
+            <div class="deal-grid"></div>
 
         </section>
 

@@ -6,10 +6,11 @@ import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
-import com.mjc.hotel.auth.oauth.OAuth2FrontendRedirectService;
+import com.mjc.hotel.auth.oauth.handler.OAuth2FrontendRedirectService;
 import com.mjc.hotel.auth.service.AuthService;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.dto.MemberResponseDto;
+import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,12 +22,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -91,22 +94,45 @@ public class AuthRestController {
     }
 
     @Operation(
-            summary = "Google OAuth2 로그인 시작",
-            description = "프론트 콜백 URL을 세션에 저장하고 Google 인증 화면으로 이동합니다."
+            summary = "소셜 OAuth2 로그인 시작",
+            description = "프론트 콜백 URL을 세션에 저장하고 선택한 제공자의 인증 화면으로 이동합니다."
     )
-    @GetMapping("/oauth2/google/start")
-    public ResponseEntity<Void> oauth2GoogleStart(
+    @GetMapping("/oauth2/{provider}/start")
+    public ResponseEntity<Void> oauth2Start(
+            @PathVariable String provider,
             @RequestParam String redirectUri,
             HttpServletRequest request,
             HttpSession session
     ) {
+        String registrationId = resolveSocialRegistrationId(provider);
+        if (registrationId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (!oauth2FrontendRedirectService.rememberRequestedCallback(redirectUri, request, session)) {
             return ResponseEntity.badRequest().build();
         }
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("/oauth2/authorization/google"))
+                .location(URI.create("/oauth2/authorization/" + registrationId))
                 .build();
+    }
+
+    private String resolveSocialRegistrationId(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return null;
+        }
+
+        try {
+            MemberAuthProvider authProvider = MemberAuthProvider.valueOf(
+                    provider.trim().toUpperCase(Locale.ROOT)
+            );
+            return authProvider == MemberAuthProvider.LOCAL
+                    ? null
+                    : authProvider.name().toLowerCase(Locale.ROOT);
+        } catch (IllegalArgumentException exception) {
+            return null;
+        }
     }
 
 }
