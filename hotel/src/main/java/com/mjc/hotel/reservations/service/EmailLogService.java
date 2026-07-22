@@ -88,7 +88,7 @@ public class EmailLogService {
         return switch (emailType) {
             case RESERVATION_CONFIRMATION -> "[호텔예약] 예약이 확정되었습니다 - " + reservation.getReservationNumber();
             case CANCELLATION_NOTICE -> "[호텔예약] 예약이 취소되었습니다 - " + reservation.getReservationNumber();
-            case CEHCK_IN_QR -> "[호텔예약] 체크인 QR코드 안내 - " + reservation.getReservationNumber();
+            case CHECK_IN_QR -> "[호텔예약] 체크인 QR코드 안내 - " + reservation.getReservationNumber();
         };
     }
 
@@ -109,7 +109,7 @@ public class EmailLogService {
                     reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getTotalAmount());
             case CANCELLATION_NOTICE -> String.format(
                     "%s님, 예약이 취소되었습니다.\n예약번호: %s", reservation.getGuestName(), reservation.getReservationNumber());
-            case CEHCK_IN_QR -> String.format(
+            case CHECK_IN_QR -> String.format(
                     "%s님, 체크인 QR코드입니다.\n예약번호: %s\nQR코드: %s",
                     reservation.getGuestName(), reservation.getReservationNumber(), reservation.getCheckInQr());
         };
