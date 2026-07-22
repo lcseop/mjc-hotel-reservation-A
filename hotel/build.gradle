@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.7'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id "org.sonarqube" version "7.3.1.8318"
 }
 
 group = 'com.mjc'
@@ -15,6 +16,15 @@ java {
 
 repositories {
 	mavenCentral()
+}
+
+sonar {
+	properties {
+		property "sonar.projectKey", "hotel"
+		property "sonar.projectName", "hotel"
+		property "sonar.host.url", "http://localhost:9000"
+		property "sonar.token", "sqp_d091b990cb072bcebdeb8e121b7b3375725a480d"
+	}
 }
 
 dependencies {
