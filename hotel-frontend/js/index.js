@@ -1,5 +1,11 @@
 const INDEX_SEARCH_COOKIE = "staynowSearchRequest";
 const INDEX_API_BASE = window.StayNowConfig.apiBase;
+const DEFAULT_LOCATION_SUGGESTIONS = [
+    "서울특별시", "부산광역시", "제주특별자치도", "강릉", "경주", "여수", "속초", "인천", "대구", "대전", "광주", "전주", "수원", "가평", "춘천"
+];
+
+let indexHotelSuggestionItems = [];
+let datePickerMonth = null;
 
 $(function () {
 
@@ -9,6 +15,8 @@ $(function () {
 
 function init() {
     setDefaultSearchValues();
+    initSearchDateBounds();
+    initSearchSuggestions();
     guestPicker();
     cardHover();
     travelTypeSelect();
@@ -26,7 +34,13 @@ function init() {
 
 function travelTypeSelect() {
 
-    $(".travel-card").click(function () {
+    $(".travel-card").on("click keydown", function (event) {
+
+        if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") {
+            return;
+        }
+
+        event.preventDefault();
 
         $(".travel-card").removeClass("selected");
 
@@ -127,6 +141,15 @@ function searchValidation() {
 
         }
 
+        if (isBeforeToday(checkInDate)) {
+
+            alert("지난 날짜로는 체크인할 수 없습니다.");
+            $("#dateRangeToggle").focus();
+
+            return;
+
+        }
+
         if (new Date(checkInDate) >= new Date(checkOutDate)) {
 
             alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
@@ -138,6 +161,45 @@ function searchValidation() {
         searchHotels(request);
 
     });
+
+}
+
+function initSearchDateBounds() {
+
+    normalizeSearchDateRange();
+    initDateRangePicker();
+    updateDateRangeText();
+
+}
+
+function updateSearchCheckoutMin(forceValid) {
+
+    const checkIn = $("#searchCheckIn").val() || toDateInputValue(new Date());
+    const minCheckout = addDateInputDays(checkIn, 1);
+
+    $("#searchCheckOut").attr("min", minCheckout);
+
+    if (forceValid && ($("#searchCheckOut").val() === "" || $("#searchCheckOut").val() <= checkIn)) {
+        $("#searchCheckOut").val(minCheckout);
+    }
+
+}
+
+function normalizeSearchDateRange() {
+
+    const today = toDateInputValue(new Date());
+    let checkIn = $("#searchCheckIn").val();
+    let checkOut = $("#searchCheckOut").val();
+
+    if (!checkIn || isBeforeToday(checkIn)) {
+        checkIn = today;
+        $("#searchCheckIn").val(checkIn);
+    }
+
+    if (!checkOut || checkOut <= checkIn) {
+        checkOut = addDateInputDays(checkIn, 1);
+        $("#searchCheckOut").val(checkOut);
+    }
 
 }
 
@@ -158,6 +220,21 @@ function setDefaultSearchValues() {
 
 }
 
+function addDateInputDays(value, days) {
+
+    const date = new Date(value + "T00:00:00");
+    date.setDate(date.getDate() + days);
+
+    return toDateInputValue(date);
+
+}
+
+function isBeforeToday(value) {
+
+    return value && value < toDateInputValue(new Date());
+
+}
+
 function toDateInputValue(date) {
 
     const year = date.getFullYear();
@@ -165,6 +242,299 @@ function toDateInputValue(date) {
     const day = String(date.getDate()).padStart(2, "0");
 
     return year + "-" + month + "-" + day;
+
+}
+
+function initSearchSuggestions() {
+
+    const input = $("#searchLocation");
+    const suggestions = $("#searchSuggestions");
+
+    if (!input.length || !suggestions.length) {
+        return;
+    }
+
+    loadIndexHotelSuggestions();
+
+    input.on("focus input", function () {
+        renderSearchSuggestions($(this).val());
+    });
+
+    input.on("keydown", function (event) {
+        if (event.key === "Escape") {
+            hideSearchSuggestions();
+        }
+    });
+
+    suggestions.on("mousedown", ".suggestion-item", function (event) {
+        event.preventDefault();
+        input.val($(this).data("value"));
+        hideSearchSuggestions();
+    });
+
+    $(document).on("mousedown", function (event) {
+        if (!$(event.target).closest(".location-input-wrap").length) {
+            hideSearchSuggestions();
+        }
+    });
+
+}
+
+function loadIndexHotelSuggestions() {
+
+    $.ajax({
+        url: INDEX_API_BASE + "/hotel/all",
+        type: "GET",
+        timeout: 5000,
+        success: function (result) {
+            const hotels = Array.isArray(result)
+                ? result
+                : (result && Array.isArray(result.data)
+                    ? result.data
+                    : (result && Array.isArray(result.content) ? result.content : []));
+            indexHotelSuggestionItems = hotels
+                .map(function (hotel) {
+                    const name = hotel.hotelName || hotel.name;
+                    if (!name) {
+                        return null;
+                    }
+                    return {
+                        type: "호텔",
+                        value: name,
+                        label: name,
+                        subtitle: hotel.location || hotel.address || "호텔명 검색"
+                    };
+                })
+                .filter(Boolean)
+                .slice(0, 80);
+        }
+    });
+
+}
+
+function renderSearchSuggestions(keyword) {
+
+    const suggestions = $("#searchSuggestions");
+    const query = String(keyword || "").trim().toLowerCase();
+    const locationItems = DEFAULT_LOCATION_SUGGESTIONS.map(function (name) {
+        return {
+            type: "지역",
+            value: name,
+            label: name,
+            subtitle: "인기 여행지"
+        };
+    });
+    const items = locationItems.concat(indexHotelSuggestionItems)
+        .filter(function (item) {
+            if (!query) {
+                return item.type === "지역";
+            }
+            return String(item.label).toLowerCase().includes(query) || String(item.subtitle).toLowerCase().includes(query);
+        })
+        .slice(0, 8);
+
+    if (!items.length) {
+        suggestions.html(`
+            <button type="button" class="suggestion-item" data-value="${escapeHtml(keyword)}">
+                <span class="suggestion-main">
+                    <span class="suggestion-name">${escapeHtml(keyword)}</span>
+                    <span class="suggestion-sub">입력한 검색어로 바로 검색</span>
+                </span>
+                <span class="suggestion-type">검색</span>
+            </button>
+        `);
+    } else {
+        suggestions.html(items.map(function (item) {
+            return `
+                <button type="button" class="suggestion-item" role="option" data-value="${escapeHtml(item.value)}">
+                    <span class="suggestion-main">
+                        <span class="suggestion-name">${escapeHtml(item.label)}</span>
+                        <span class="suggestion-sub">${escapeHtml(item.subtitle)}</span>
+                    </span>
+                    <span class="suggestion-type">${escapeHtml(item.type)}</span>
+                </button>
+            `;
+        }).join(""));
+    }
+
+    suggestions.prop("hidden", false);
+    $("#searchLocation").attr("aria-expanded", "true");
+
+}
+
+function hideSearchSuggestions() {
+
+    $("#searchSuggestions").prop("hidden", true);
+    $("#searchLocation").attr("aria-expanded", "false");
+
+}
+
+function initDateRangePicker() {
+
+    if (!$("#dateRangeToggle").length) {
+        return;
+    }
+
+    datePickerMonth = getMonthStart($("#searchCheckIn").val() || toDateInputValue(new Date()));
+    renderDateRangePicker();
+
+    $("#dateRangeToggle").on("click", function (event) {
+        event.stopPropagation();
+        const picker = $("#dateRangePicker");
+        const willOpen = picker.prop("hidden");
+        picker.prop("hidden", !willOpen);
+        $(this).attr("aria-expanded", String(willOpen));
+        if (willOpen) {
+            renderDateRangePicker();
+        }
+    });
+
+    $("#dateRangePicker").on("click", function (event) {
+        event.stopPropagation();
+    });
+
+    $("#dateRangePicker").on("click", "[data-date-nav]", function () {
+        datePickerMonth.setMonth(datePickerMonth.getMonth() + Number($(this).data("date-nav")));
+        renderDateRangePicker();
+    });
+
+    $("#dateRangePicker").on("click", ".date-cell:not(.disabled)", function () {
+        selectSearchDate($(this).data("date"));
+    });
+
+    $(document).on("click", function () {
+        closeDateRangePicker();
+    });
+
+}
+
+function renderDateRangePicker() {
+
+    const monthOne = getMonthStart(datePickerMonth || new Date());
+    const monthTwo = addMonths(monthOne, 1);
+    const checkIn = $("#searchCheckIn").val();
+    const checkOut = $("#searchCheckOut").val();
+
+    $("#dateRangePicker").html(`
+        <div class="date-picker-head">
+            <button type="button" class="date-picker-nav" data-date-nav="-1" aria-label="이전 달">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <div class="date-picker-title">숙박 기간 선택</div>
+            <button type="button" class="date-picker-nav" data-date-nav="1" aria-label="다음 달">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="date-picker-months">
+            ${renderCalendarMonth(monthOne, checkIn, checkOut)}
+            ${renderCalendarMonth(monthTwo, checkIn, checkOut)}
+        </div>
+        <p class="date-picker-hint">${checkIn && !checkOut ? "체크아웃 날짜를 선택해주세요." : "체크인은 오늘 이후, 체크아웃은 체크인 다음 날부터 선택할 수 있어요."}</p>
+    `);
+
+}
+
+function renderCalendarMonth(monthDate, checkIn, checkOut) {
+
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const start = new Date(firstDay);
+    start.setDate(firstDay.getDate() - firstDay.getDay());
+
+    let days = "";
+
+    for (let i = 0; i < 42; i++) {
+        const day = new Date(start);
+        day.setDate(start.getDate() + i);
+        const value = toDateInputValue(day);
+        const isOtherMonth = day.getMonth() !== month;
+        const isDisabled = isBeforeToday(value);
+        const isStart = value === checkIn;
+        const isEnd = value === checkOut;
+        const inRange = checkIn && checkOut && value > checkIn && value < checkOut;
+        const classes = [
+            "date-cell",
+            isOtherMonth ? "other-month" : "",
+            isDisabled ? "disabled" : "",
+            isStart ? "selected-start" : "",
+            isEnd ? "selected-end" : "",
+            inRange ? "in-range" : ""
+        ].filter(Boolean).join(" ");
+
+        days += `<button type="button" class="${classes}" data-date="${value}" ${isDisabled ? "disabled" : ""}>${day.getDate()}</button>`;
+    }
+
+    return `
+        <div class="date-picker-month">
+            <div class="date-picker-month-title">${year}년 ${month + 1}월</div>
+            <div class="date-picker-week">
+                <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+            </div>
+            <div class="date-picker-days">${days}</div>
+        </div>
+    `;
+
+}
+
+function selectSearchDate(value) {
+
+    const checkIn = $("#searchCheckIn").val();
+    const checkOut = $("#searchCheckOut").val();
+
+    if (!checkIn || (checkIn && checkOut) || value <= checkIn) {
+        $("#searchCheckIn").val(value);
+        $("#searchCheckOut").val("");
+    } else {
+        $("#searchCheckOut").val(value);
+        setTimeout(closeDateRangePicker, 120);
+    }
+
+    updateDateRangeText();
+    renderDateRangePicker();
+
+}
+
+function updateDateRangeText() {
+
+    const checkIn = $("#searchCheckIn").val();
+    const checkOut = $("#searchCheckOut").val();
+    const text = checkIn && checkOut
+        ? formatDateRangeLabel(checkIn) + " - " + formatDateRangeLabel(checkOut)
+        : (checkIn ? formatDateRangeLabel(checkIn) + " - 체크아웃 선택" : "날짜 선택");
+
+    $("#dateRangeText").text(text);
+
+}
+
+function closeDateRangePicker() {
+
+    $("#dateRangePicker").prop("hidden", true);
+    $("#dateRangeToggle").attr("aria-expanded", "false");
+
+}
+
+function formatDateRangeLabel(value) {
+
+    const date = new Date(value + "T00:00:00");
+    const days = ["일", "월", "화", "수", "목", "금", "토"];
+
+    return String(date.getMonth() + 1).padStart(2, "0") + "." + String(date.getDate()).padStart(2, "0") + " (" + days[date.getDay()] + ")";
+
+}
+
+function getMonthStart(value) {
+
+    const date = value instanceof Date ? new Date(value) : new Date(value + "T00:00:00");
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+
+}
+
+function addMonths(value, count) {
+
+    const date = new Date(value);
+    date.setMonth(date.getMonth() + count);
+    return date;
 
 }
 
@@ -301,6 +671,10 @@ function makePresetSearchRequest(preset) {
 
 function goHotelSearch(request) {
 
+    if (!isIndexSearchDateRequestValid(request)) {
+        return;
+    }
+
     $.ajax({
         url: INDEX_API_BASE + "/hotel/search?page=0&size=5",
         type: "POST",
@@ -317,6 +691,32 @@ function goHotelSearch(request) {
             alert("호텔 검색 중 오류가 발생했습니다.");
         }
     });
+
+}
+
+function isIndexSearchDateRequestValid(request) {
+
+    const checkIn = String(request.checkIn || "").slice(0, 10);
+    const checkOut = String(request.checkOut || "").slice(0, 10);
+
+    if (!checkIn || !checkOut) {
+        alert("체크인과 체크아웃 날짜를 선택하세요.");
+        return false;
+    }
+
+    if (isBeforeToday(checkIn)) {
+        alert("지난 날짜로는 체크인할 수 없습니다.");
+        $("#dateRangeToggle").focus();
+        return false;
+    }
+
+    if (checkOut <= checkIn) {
+        alert("체크아웃 날짜는 체크인 날짜보다 늦어야 합니다.");
+        $("#dateRangeToggle").focus();
+        return false;
+    }
+
+    return true;
 
 }
 

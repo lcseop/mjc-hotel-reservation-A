@@ -1,18 +1,22 @@
 <section class="global-search-top" aria-label="호텔 검색">
     <div class="global-search-bar">
         <div class="global-search-field location">
-            <label for="globalSearchLocation">여행지</label>
-            <input type="text" id="globalSearchLocation" placeholder="서울특별시">
+            <label for="globalSearchLocation">여행지 / 호텔명</label>
+            <div class="global-location-wrap">
+                <input type="text" id="globalSearchLocation" placeholder="서울특별시" autocomplete="off" aria-controls="globalSearchSuggestions" aria-expanded="false">
+                <div class="global-search-suggestions" id="globalSearchSuggestions" role="listbox" hidden></div>
+            </div>
         </div>
 
-        <div class="global-search-field">
-            <label for="globalSearchCheckIn">체크인</label>
-            <input type="date" id="globalSearchCheckIn">
-        </div>
-
-        <div class="global-search-field">
-            <label for="globalSearchCheckOut">체크아웃</label>
-            <input type="date" id="globalSearchCheckOut">
+        <div class="global-search-field global-date-range-field">
+            <label>숙박 기간</label>
+            <button type="button" class="global-date-toggle" id="globalDateRangeToggle" aria-expanded="false" aria-controls="globalDateRangePicker">
+                <span id="globalDateRangeText">날짜 선택</span>
+                <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+            </button>
+            <input type="hidden" id="globalSearchCheckIn">
+            <input type="hidden" id="globalSearchCheckOut">
+            <div class="global-date-picker" id="globalDateRangePicker" hidden></div>
         </div>
 
         <div class="global-search-field">
