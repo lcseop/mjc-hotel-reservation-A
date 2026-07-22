@@ -20,10 +20,10 @@ repositories {
 
 sonar {
 	properties {
-		property "sonar.projectKey", "hotel"
-		property "sonar.projectName", "hotel"
+		property "sonar.projectKey", "lcseop_mjc-hotel-reservation-A_b2ce8e43-334d-403c-8451-23357fd7f4ba"
+		property "sonar.projectName", "mjc-hotel-reservation-A"
 		property "sonar.host.url", "http://localhost:9000"
-		property "sonar.token", "sqp_d091b990cb072bcebdeb8e121b7b3375725a480d"
+		property "sonar.token", "sqp_6f0ba3e0178970af8d00b7173d45e22d2f300369"
 	}
 }
 
