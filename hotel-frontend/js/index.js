@@ -49,7 +49,7 @@ function travelTypeSelect() {
         const index = $(".travel-card").index(this);
         const presets = [
             { location: "", hotelTypeNames: ["호텔"], star: null },
-            { location: "", hotelTypeNames: ["펜션/풀빌라"], star: null },
+            { location: "", hotelTypeNames: ["펜션"], star: null },
             { location: "", hotelTypeNames: ["리조트"], star: null },
             { location: "", hotelTypeNames: ["호텔"], star: 5 },
             { location: "커플", hotelTypeNames: ["호텔"], star: null }
