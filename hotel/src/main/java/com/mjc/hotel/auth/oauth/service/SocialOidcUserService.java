@@ -19,6 +19,7 @@ public class SocialOidcUserService implements OAuth2UserService<OidcUserRequest,
 
     private final SocialUserInfoMapperRegistry mapperRegistry;
     private final SocialMemberService socialMemberService;
+    private final SocialProviderTokenService socialProviderTokenService;
     private final OidcUserService delegate = new OidcUserService();
 
     @Override
@@ -29,6 +30,12 @@ public class SocialOidcUserService implements OAuth2UserService<OidcUserRequest,
         OidcUser oidcUser = delegate.loadUser(userRequest);
         SocialUserInfo userInfo = mapper.map(oidcUser.getAttributes());
         Member member = socialMemberService.loginOrSignup(userInfo);
+        socialProviderTokenService.save(
+                member.getSid(),
+                userInfo.provider(),
+                userRequest.getAccessToken().getTokenValue(),
+                userRequest.getAccessToken().getExpiresAt()
+        );
 
         return new SocialOidcUser(oidcUser, member, userInfo.provider());
     }

@@ -32,6 +32,7 @@ function bindAccountEvents() {
     });
 
     $("#accountForm").on("submit", submitAccountForm);
+    $("#withdrawBtn").on("click", submitMemberWithdrawal);
 }
 
 function loadAccountMember() {
@@ -64,8 +65,72 @@ function loadAccountAuthAccounts() {
         type: "GET",
         headers: accountAuthHeaders(),
         success: function (result) {
-            accountAuthAccounts = result && result.data ? result.data : [];
+            accountAuthAccounts = (result && result.data ? result.data : []).filter(function (authAccount) {
+                return authAccount.deleted !== true && String(authAccount.deleted).toLowerCase() !== "true";
+            });
+            renderWithdrawalAuthentication();
         }
+    });
+}
+
+function renderWithdrawalAuthentication() {
+    const hasLocalAccount = accountAuthAccounts.some(function (authAccount) {
+        return String(authAccount.provider || "").toUpperCase() === "LOCAL";
+    });
+    const socialProviders = accountAuthAccounts
+        .map(function (authAccount) { return String(authAccount.provider || "").toUpperCase(); })
+        .filter(function (provider) { return provider && provider !== "LOCAL"; });
+
+    $("#withdrawLocalPasswordArea").prop("hidden", !hasLocalAccount);
+    $("#withdrawSocialHint").text(
+        socialProviders.length
+            ? "소셜 계정 연결 해제를 위해 마지막 소셜 로그인 후 10분 안에 탈퇴해야 합니다."
+            : ""
+    );
+}
+
+function submitMemberWithdrawal() {
+    if (!$("#withdrawConfirmed").is(":checked")) {
+        alert("회원 탈퇴 안내를 확인하고 동의해주세요.");
+        return;
+    }
+
+    const hasLocalAccount = accountAuthAccounts.some(function (authAccount) {
+        return String(authAccount.provider || "").toUpperCase() === "LOCAL";
+    });
+    const password = $("#withdrawPassword").val();
+    if (hasLocalAccount && !password) {
+        alert("현재 비밀번호를 입력해주세요.");
+        $("#withdrawPassword").focus();
+        return;
+    }
+    if (!window.confirm("정말 회원 탈퇴를 진행하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+        return;
+    }
+
+    $("#withdrawBtn").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> 탈퇴 처리 중');
+    $.ajax({
+        url: ACCOUNT_API_BASE + "/members/me/withdraw",
+        type: "POST",
+        headers: accountAuthHeaders(),
+        contentType: "application/json",
+        data: JSON.stringify({
+            password: password || null,
+            confirmed: true
+        })
+    }).done(function () {
+        localStorage.removeItem("staynowAuth");
+        sessionStorage.removeItem("staynowAuth");
+        alert("회원 탈퇴가 완료되었습니다.");
+        location.replace("index.html");
+    }).fail(function (xhr) {
+        const response = xhr && xhr.responseJSON;
+        const message = response && (response.data || response.message)
+            ? (response.data || response.message)
+            : "회원 탈퇴에 실패했습니다.";
+        alert(message);
+    }).always(function () {
+        $("#withdrawBtn").prop("disabled", false).html('<i class="fa-solid fa-user-slash"></i> 회원 탈퇴');
     });
 }
 
@@ -211,7 +276,7 @@ function formatAccountStatus(status) {
     const normalized = String(status || "").toUpperCase();
     if (normalized === "ACTIVE") return "정상";
     if (normalized === "SUSPENDED") return "정지";
-    if (normalized === "WITHDRAWN") return "탈퇴";
+    if (normalized === "WITHDRAWN" || normalized === "DELETED") return "탈퇴";
     return status || "정상";
 }
 
