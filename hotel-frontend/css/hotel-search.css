@@ -106,8 +106,7 @@ body{
 
 .filter-title strong{
     display:block;
-    margin-bottom:6px;
-    font-size:16px;
+    font-size:18px;
 }
 
 .filter-title small{
@@ -439,7 +438,47 @@ body{
 }
 
 .result-header h1{
+    position:relative;
+    display:inline-flex;
     font-size:24px;
+    cursor:help;
+}
+
+.result-heading:focus{
+    outline:none;
+}
+
+.result-heading:focus-visible{
+    border-radius:8px;
+    box-shadow:0 0 0 4px rgba(54,169,246,.14);
+}
+
+.result-heading::after{
+    content:attr(data-tooltip);
+    position:absolute;
+    left:0;
+    top:calc(100% + 8px);
+    z-index:20;
+    min-width:max-content;
+    max-width:min(520px, calc(100vw - 48px));
+    padding:9px 12px;
+    border-radius:10px;
+    background:rgba(17,24,39,.92);
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.3;
+    box-shadow:0 10px 24px rgba(15,23,42,.18);
+    opacity:0;
+    transform:translateY(-4px);
+    transition:opacity .16s ease, transform .16s ease;
+    pointer-events:none;
+}
+
+.result-heading:hover::after,
+.result-heading:focus-visible::after{
+    opacity:1;
+    transform:translateY(0);
 }
 
 .sort-box{
@@ -490,16 +529,29 @@ body{
 .hotel-result-card{
     display:grid;
     grid-template-columns:250px 1fr auto;
+    align-items:center;
     gap:20px;
     min-height:190px;
     padding:14px;
     border-radius:14px;
     background:white;
+    color:inherit;
+    text-decoration:none;
     box-shadow:0 8px 22px rgba(25,45,80,.06);
+    cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.hotel-result-card:hover,
+.hotel-result-card:focus-visible{
+    outline:none;
+    transform:translateY(-2px);
+    box-shadow:0 14px 30px rgba(25,45,80,.11);
 }
 
 .hotel-thumb{
     position:relative;
+    align-self:center;
     width:250px;
     height:162px;
     border-radius:10px;
@@ -552,6 +604,14 @@ body{
     color:#6b7587;
     font-size:13px;
     line-height:1.6;
+}
+
+.hotel-desc{
+    display:-webkit-box;
+    overflow:hidden;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    max-height:4.8em;
 }
 
 .tag-list{

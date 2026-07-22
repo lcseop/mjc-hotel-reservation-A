@@ -15,7 +15,7 @@
     <section class="search-top">
         <div class="search-bar">
             <div class="search-field location">
-                <label>여행지</label>
+                <label>여행지 / 호텔명</label>
                 <div class="result-location-wrap">
                     <input type="text" id="resultLocation" placeholder="서울특별시" autocomplete="off" aria-controls="resultSearchSuggestions" aria-expanded="false">
                     <div class="result-search-suggestions" id="resultSearchSuggestions" role="listbox" hidden></div>
@@ -23,7 +23,7 @@
             </div>
 
             <div class="search-field result-date-field">
-                <label>체크인 · 체크아웃</label>
+                <label>숙박 기간</label>
                 <button type="button" class="result-date-toggle" id="resultDateRangeToggle" aria-expanded="false" aria-controls="resultDateRangePicker">
                     <span id="resultDateRangeText">날짜 선택</span>
                     <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
@@ -55,8 +55,7 @@
             <div class="filter-title">
                 <button type="button" id="filterPanelToggle">
                     <span>
-                        <strong id="filterLocation">검색 결과</strong>
-                        <small id="filterCount">0개 호텔</small>
+                        <strong id="filterCount">0개 호텔</strong>
                     </span>
                     <i class="fa-solid fa-chevron-down"></i>
                 </button>
@@ -117,8 +116,7 @@
         <section class="result-main">
             <div class="result-header">
                 <div>
-                    <p id="resultPeriod">체크인과 체크아웃을 선택해주세요</p>
-                    <h1><span id="resultTitle">호텔</span> 검색 결과</h1>
+                    <h1 id="resultHeading" class="result-heading" tabindex="0" data-tooltip="숙박 기간을 선택해주세요">검색 결과</h1>
                 </div>
 
                 <div class="sort-box">
@@ -130,11 +128,6 @@
                         <option value="starDesc">성급 높은순</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="notice">
-                <i class="fa-solid fa-tag"></i>
-                조건에 맞는 객실이 있는 호텔만 표시됩니다.
             </div>
 
             <div id="hotelResultList" class="hotel-result-list"></div>

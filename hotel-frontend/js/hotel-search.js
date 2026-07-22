@@ -489,7 +489,7 @@ function renderResultDateRangePicker() {
             <button type="button" class="result-date-picker-nav" data-result-date-nav="-1" aria-label="이전 달">
                 <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <div class="result-date-picker-title">체크인과 체크아웃을 선택하세요</div>
+            <div class="result-date-picker-title">숙박 기간을 선택하세요</div>
             <button type="button" class="result-date-picker-nav" data-result-date-nav="1" aria-label="다음 달">
                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             </button>
@@ -598,10 +598,11 @@ function drawSummary(page) {
     const checkIn = $("#resultCheckIn").val();
     const checkOut = $("#resultCheckOut").val();
 
-    $("#resultTitle").text(request.location || "호텔");
-    $("#filterLocation").text((request.location || "전체") + " 호텔 검색 결과");
     $("#filterCount").text(total.toLocaleString() + "개 호텔");
-    $("#resultPeriod").text(
+    $("#resultHeading").attr(
+        "data-tooltip",
+        (request.location || "전체") +
+        " · " +
         formatDate(checkIn) +
         " ~ " +
         formatDate(checkOut) +
@@ -631,12 +632,15 @@ function drawHotels(hotels) {
 
         const price = hotel.hotelPrice || 0;
         const discountRate = hotel.maxDiscountRate || 0;
+        const hotelId = hotel.sid || "";
+        const detailUrl = "hotel-detail.html?id=" + hotelId;
+        const tags = buildHotelAmenityTags(hotel);
         const saleBadge = discountRate > 0
             ? `<span class="sale-badge show">SALE ${discountRate}%</span>`
             : "";
         const card = `
-            <article class="hotel-result-card">
-                <div class="hotel-thumb" data-hotel-id="${hotel.sid || ""}">
+            <a class="hotel-result-card" href="${detailUrl}" aria-label="${escapeHtml(hotel.hotelName || "호텔")} 상세 보기">
+                <div class="hotel-thumb" data-hotel-id="${hotelId}">
                     <img src="${getFallbackImage()}" alt="${escapeHtml(hotel.hotelName || "호텔")} 썸네일">
                     ${saleBadge}
                 </div>
@@ -651,18 +655,17 @@ function drawHotels(hotels) {
                     <p class="hotel-desc">${escapeHtml(hotel.description || "편안한 숙박을 제공하는 StayNow 추천 호텔입니다.")}</p>
                     <div class="tag-list">
                         <span>${escapeHtml(hotel.typeTitle || "호텔")}</span>
-                        <span>예약 가능</span>
-                        <span>무료 취소</span>
+                        ${tags}
                     </div>
                 </div>
 
-                <div class="hotel-price" data-hotel-id="${hotel.sid || ""}">
+                <div class="hotel-price" data-hotel-id="${hotelId}">
                     <small class="price-room-label">예약 가능한 객실 최저가</small>
                     <strong class="price-value">₩${price.toLocaleString()}~</strong>
                     <span class="price-room-name">객실 확인 중</span>
-                    <a class="reserve-btn" href="hotel-detail.html?id=${hotel.sid || ""}">예약하기</a>
+                    <span class="reserve-btn">예약하기</span>
                 </div>
-            </article>
+            </a>
         `;
 
         list.append(card);
@@ -672,6 +675,29 @@ function drawHotels(hotels) {
     loadHotelThumbnails(sortedHotels);
     loadLowestRoomPrices(sortedHotels);
 
+}
+
+function buildHotelAmenityTags(hotel) {
+    const source = hotel.amenities || hotel.hotelAmenities || hotel.amenityList || hotel.hotelInAmenities || [];
+    const amenities = Array.isArray(source) ? source : [];
+    const names = amenities
+        .map(function (amenity) {
+            if (typeof amenity === "string") {
+                return amenity;
+            }
+            return amenity.amenityName ||
+                amenity.title ||
+                amenity.name ||
+                amenity.hotelAmenityName ||
+                (amenity.amenities && (amenity.amenities.amenityName || amenity.amenities.name)) ||
+                (amenity.amenity && (amenity.amenity.amenityName || amenity.amenity.name));
+        })
+        .filter(Boolean)
+        .slice(0, 3);
+
+    return names.map(function (name) {
+        return `<span>${escapeHtml(name)}</span>`;
+    }).join("");
 }
 
 function loadLowestRoomPrices(hotels) {

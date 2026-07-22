@@ -318,7 +318,7 @@ function renderGlobalDateRangePicker() {
             <button type="button" class="global-date-picker-nav" data-global-date-nav="-1" aria-label="이전 달">
                 <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <div class="global-date-picker-title">체크인과 체크아웃을 선택하세요</div>
+            <div class="global-date-picker-title">숙박 기간을 선택하세요</div>
             <button type="button" class="global-date-picker-nav" data-global-date-nav="1" aria-label="다음 달">
                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             </button>
