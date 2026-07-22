@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface HotelTypeRepository extends JpaRepository<HotelType, Long> {
     Slice<HotelType> findByTitleContains(String name, Pageable pageable);
+
+    boolean existsByTitleAndDeletedFalse(String title);
 }

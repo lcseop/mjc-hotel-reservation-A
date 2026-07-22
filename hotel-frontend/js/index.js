@@ -48,11 +48,11 @@ function travelTypeSelect() {
 
         const index = $(".travel-card").index(this);
         const presets = [
-            { location: "", roomTypeIds: [1], star: null },
-            { location: "", roomTypeIds: [3], star: null },
-            { location: "", roomTypeIds: [2], star: null },
-            { location: "", roomTypeIds: [1], star: 5 },
-            { location: "커플", roomTypeIds: [1], star: null }
+            { location: "", hotelTypeNames: ["호텔"], star: null },
+            { location: "", hotelTypeNames: ["펜션/풀빌라"], star: null },
+            { location: "", hotelTypeNames: ["리조트"], star: null },
+            { location: "", hotelTypeNames: ["호텔"], star: 5 },
+            { location: "커플", hotelTypeNames: ["호텔"], star: null }
         ];
 
         goHotelSearch(makePresetSearchRequest(presets[index]));
@@ -554,7 +554,8 @@ function makeHotelSearchRequest() {
         minPrice: null,
         maxPrice: null,
         star: null,
-        roomTypeIds: []
+        roomTypeIds: [],
+        hotelTypeNames: []
     };
 
 }
@@ -664,7 +665,8 @@ function makePresetSearchRequest(preset) {
         minPrice: null,
         maxPrice: null,
         star: preset.star,
-        roomTypeIds: preset.roomTypeIds || []
+        roomTypeIds: preset.roomTypeIds || [],
+        hotelTypeNames: preset.hotelTypeNames || []
     };
 
 }
@@ -756,17 +758,17 @@ function recommendButton() {
         {
             title: "서울 프리미엄 호캉스",
             desc: "5성급 호텔 중심으로 조용하고 편한 숙소를 추천합니다.",
-            request: { location: "서울", roomTypeIds: [1], star: 5 }
+            request: { location: "서울", hotelTypeNames: ["호텔"], star: 5 }
         },
         {
             title: "커플을 위한 로맨틱 스테이",
             desc: "이름과 설명에 커플 감성이 담긴 호텔을 찾아볼게요.",
-            request: { location: "커플", roomTypeIds: [1], star: null }
+            request: { location: "커플", hotelTypeNames: ["호텔"], star: null }
         },
         {
             title: "리조트에서 쉬어가는 하루",
             desc: "리조트 타입 객실 중심으로 여유로운 숙소를 추천합니다.",
-            request: { location: "", roomTypeIds: [2], star: null }
+            request: { location: "", hotelTypeNames: ["리조트"], star: null }
         }
     ];
 
@@ -970,6 +972,7 @@ function loadFlashDeals() {
     const request = makePresetSearchRequest({
         location: "",
         roomTypeIds: [],
+        hotelTypeNames: [],
         star: null
     });
 

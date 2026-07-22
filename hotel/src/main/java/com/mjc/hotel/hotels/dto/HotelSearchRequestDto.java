@@ -21,6 +21,7 @@ public class HotelSearchRequestDto {
     private Integer maxPrice;
     private Integer star;
     private List<Long> roomTypeIds;
+    private List<String> hotelTypeNames;
 
     public Integer getTotalPeople() {
         int adultCount = adult != null ? adult : 0;

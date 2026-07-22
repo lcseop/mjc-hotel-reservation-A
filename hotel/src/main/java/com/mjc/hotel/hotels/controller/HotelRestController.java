@@ -179,4 +179,39 @@ public class HotelRestController {
                 new ApiResponse<>(ResponseCode.SUCCESS, "tour api hotels import success", result)
         );
     }
+
+    @Operation(
+            summary = "공공 데이터 호텔 가져오기 미리보기",
+            description = "한국관광공사 TourAPI에서 호텔 후보 목록만 조회합니다. DB에는 저장하지 않습니다."
+    )
+    @GetMapping("/import/tourapi/preview")
+    public ResponseEntity<ApiResponse<List<TourApiHotelPreviewDto>>> previewTourApiHotels(
+            @RequestParam(defaultValue = "서울") String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        List<TourApiHotelPreviewDto> result = tourApiHotelImportService.previewHotels(keyword, page, size);
+        return ResponseEntity.status(200).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "tour api hotels preview success", result)
+        );
+    }
+
+    @Operation(
+            summary = "선택한 공공 데이터 호텔 가져오기",
+            description = "미리보기 목록에서 선택한 TourAPI 호텔만 저장하고 기본 객실까지 생성합니다."
+    )
+    @PostMapping("/import/tourapi/selected")
+    public ResponseEntity<ApiResponse<TourApiImportResponseDto>> importSelectedTourApiHotels(
+            @RequestBody TourApiImportRequestDto dto
+    ) {
+        TourApiImportResponseDto result = tourApiHotelImportService.importSelectedHotels(
+                dto.getKeyword(),
+                dto.getPage() == null ? 1 : dto.getPage(),
+                dto.getSize() == null ? 10 : dto.getSize(),
+                dto.getContentIds()
+        );
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>(ResponseCode.SUCCESS, "selected tour api hotels import success", result)
+        );
+    }
 }

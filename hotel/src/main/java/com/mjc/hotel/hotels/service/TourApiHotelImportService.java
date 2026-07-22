@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mjc.hotel.hotels.dto.TourApiHotelPreviewDto;
 import com.mjc.hotel.hotels.dto.TourApiImportResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
@@ -30,7 +31,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -65,29 +68,69 @@ public class TourApiHotelImportService {
             throw new IllegalStateException("TOUR_API_SERVICE_KEY 또는 tour-api.service-key 설정이 필요합니다.");
         }
 
-        String safeKeyword = keyword == null || keyword.isBlank() ? "호텔" : keyword.trim();
-        String areaCode = resolveAreaCode(safeKeyword);
-        JsonNode items = areaCode != null
-                ? requestItems("/areaBasedList2",
-                        param("numOfRows", String.valueOf(size)),
-                        param("pageNo", String.valueOf(page)),
-                        param("contentTypeId", "32"),
-                        param("areaCode", areaCode),
-                        param("listYN", "Y"),
-                        param("arrange", "Q")
-                )
-                : requestItems("/searchKeyword2",
-                        param("numOfRows", String.valueOf(size)),
-                        param("pageNo", String.valueOf(page)),
-                        param("contentTypeId", "32"),
-                        param("keyword", safeKeyword)
-                );
+        JsonNode items = searchTourApiItems(keyword, page, size);
+        return saveTourApiItems(items, null);
+    }
+
+    public List<TourApiHotelPreviewDto> previewHotels(String keyword, int page, int size) {
+        if (serviceKey == null || serviceKey.isBlank()) {
+            throw new IllegalStateException("TOUR_API_SERVICE_KEY 또는 tour-api.service-key 설정이 필요합니다.");
+        }
+
+        JsonNode items = searchTourApiItems(keyword, page, size);
+        List<TourApiHotelPreviewDto> previews = new ArrayList<>();
+
+        for (JsonNode item : items) {
+            String title = cleanText(item.path("title").asText(""));
+            String location = cleanText(firstNonBlank(item.path("addr1").asText(""), item.path("addr2").asText("")));
+
+            if (title.isBlank() || location.isBlank()) {
+                continue;
+            }
+
+            title = cut(title, 50);
+            location = cut(location, 50);
+
+            previews.add(TourApiHotelPreviewDto.builder()
+                    .contentId(item.path("contentid").asText(""))
+                    .title(title)
+                    .location(location)
+                    .imagePath(firstNonBlank(item.path("firstimage").asText(""), item.path("firstimage2").asText("")))
+                    .latitude(toDouble(item.path("mapy").asText("")))
+                    .longitude(toDouble(item.path("mapx").asText("")))
+                    .alreadyImported(hotelRepository.existsByHotelNameAndLocation(title, location))
+                    .build());
+        }
+
+        return previews;
+    }
+
+    @Transactional
+    public TourApiImportResponseDto importSelectedHotels(String keyword, int page, int size, List<String> contentIds) {
+        if (contentIds == null || contentIds.isEmpty()) {
+            return TourApiImportResponseDto.builder()
+                    .requested(0)
+                    .imported(0)
+                    .skipped(0)
+                    .build();
+        }
+
+        JsonNode items = searchTourApiItems(keyword, page, size);
+        return saveTourApiItems(items, new HashSet<>(contentIds));
+    }
+
+    private TourApiImportResponseDto saveTourApiItems(JsonNode items, Set<String> selectedContentIds) {
 
         int requested = items.size();
         int imported = 0;
         int skipped = 0;
 
         for (JsonNode item : items) {
+            if (selectedContentIds != null && !selectedContentIds.contains(item.path("contentid").asText(""))) {
+                skipped++;
+                continue;
+            }
+
             String title = cleanText(item.path("title").asText(""));
             String location = cleanText(firstNonBlank(item.path("addr1").asText(""), item.path("addr2").asText("")));
 
@@ -115,6 +158,30 @@ public class TourApiHotelImportService {
                 .imported(imported)
                 .skipped(skipped)
                 .build();
+    }
+
+    private JsonNode searchTourApiItems(String keyword, int page, int size) {
+        String safeKeyword = keyword == null || keyword.isBlank() ? "호텔" : keyword.trim();
+        String areaCode = resolveAreaCode(safeKeyword);
+        JsonNode items = areaCode != null
+                ? requestAreaStayItems(areaCode, page, size)
+                : requestItems("/searchKeyword2",
+                param("numOfRows", String.valueOf(size)),
+                param("pageNo", String.valueOf(page)),
+                param("contentTypeId", "32"),
+                param("keyword", hotelKeyword(safeKeyword))
+        );
+
+        if (areaCode != null && items.isEmpty()) {
+            items = requestItems("/searchKeyword2",
+                    param("numOfRows", String.valueOf(size)),
+                    param("pageNo", String.valueOf(page)),
+                    param("contentTypeId", "32"),
+                    param("keyword", hotelKeyword(safeKeyword))
+            );
+        }
+
+        return items;
     }
 
     private Hotel saveHotel(JsonNode item, String title, String location) {
@@ -255,6 +322,29 @@ public class TourApiHotelImportService {
         }
     }
 
+    private JsonNode requestAreaStayItems(String areaCode, int page, int size) {
+        JsonNode items = requestItems("/searchStay2",
+                param("numOfRows", String.valueOf(size)),
+                param("pageNo", String.valueOf(page)),
+                param("areaCode", areaCode),
+                param("listYN", "Y"),
+                param("arrange", "A")
+        );
+
+        if (!items.isEmpty()) {
+            return items;
+        }
+
+        return requestItems("/areaBasedList2",
+                param("numOfRows", String.valueOf(size)),
+                param("pageNo", String.valueOf(page)),
+                param("contentTypeId", "32"),
+                param("areaCode", areaCode),
+                param("listYN", "Y"),
+                param("arrange", "A")
+        );
+    }
+
     private String buildQuery(String... params) {
         List<String> query = new ArrayList<>();
         query.add("serviceKey=" + encodeServiceKey(serviceKey));
@@ -299,6 +389,22 @@ public class TourApiHotelImportService {
         if (value.contains("제주")) return "39";
 
         return null;
+    }
+
+    private String hotelKeyword(String keyword) {
+        String value = keyword == null || keyword.isBlank() ? "호텔" : keyword.trim();
+        String compact = value.replace(" ", "");
+
+        if (compact.contains("호텔")
+                || compact.contains("숙박")
+                || compact.contains("리조트")
+                || compact.contains("펜션")
+                || compact.contains("모텔")
+                || compact.contains("게스트하우스")) {
+            return value;
+        }
+
+        return value + " 호텔";
     }
 
     private String encodeServiceKey(String value) {
