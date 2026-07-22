@@ -152,6 +152,14 @@ body{
     box-shadow:0 10px 22px rgba(15,23,42,.08);
 }
 
+.social-btn:disabled,
+.social-btn[aria-busy="true"]{
+    cursor:wait;
+    opacity:.72;
+    transform:none;
+    box-shadow:none;
+}
+
 .provider-image-btn{
     padding:0;
     border:0;

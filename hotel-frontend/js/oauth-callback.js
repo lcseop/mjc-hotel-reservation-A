@@ -1,4 +1,6 @@
 $(function () {
+    const providerName = sessionStorage.getItem("oauthProviderName") || "소셜";
+    $("#oauthMessage").text(providerName + " 로그인 정보를 확인하고 있어요.");
     handleOAuthCallback();
 });
 
@@ -41,9 +43,7 @@ function handleOAuthCallback() {
     saveOAuthLoginData(loginData);
 
     const redirectUrl = sessionStorage.getItem("afterLoginRedirect") || "index.html";
-    sessionStorage.removeItem("afterLoginRedirect");
-    sessionStorage.removeItem("oauthProvider");
-    sessionStorage.removeItem("oauthRemember");
+    clearOAuthState();
 
     location.replace(redirectUrl);
 }
@@ -74,11 +74,19 @@ function saveOAuthLoginData(loginData) {
 }
 
 function showOAuthError(message) {
+    clearOAuthState();
     $("#oauthTitle").text("소셜 로그인을 완료하지 못했어요");
     $("#oauthMessage").html(
         escapeHtml(message) +
         '<br><br><a class="oauth-callback-link" href="login.html">로그인 화면으로 돌아가기</a>'
     );
+}
+
+function clearOAuthState() {
+    sessionStorage.removeItem("afterLoginRedirect");
+    sessionStorage.removeItem("oauthProvider");
+    sessionStorage.removeItem("oauthProviderName");
+    sessionStorage.removeItem("oauthRemember");
 }
 
 function escapeHtml(value) {
