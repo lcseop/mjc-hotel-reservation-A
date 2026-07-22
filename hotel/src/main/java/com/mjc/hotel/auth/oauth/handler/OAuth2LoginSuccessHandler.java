@@ -1,8 +1,8 @@
-package com.mjc.hotel.auth.oauth;
+package com.mjc.hotel.auth.oauth.handler;
 
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
+import com.mjc.hotel.auth.oauth.principal.SocialPrincipal;
 import com.mjc.hotel.auth.service.AuthService;
-import com.mjc.hotel.member.entity.MemberAuthProvider;
 import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,18 +35,22 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String redirectUrl;
 
         try {
-            if (!(authentication.getPrincipal() instanceof GoogleOidcUser principal)) {
-                throw new AuthenticationFailedException("OAuth2 로그인 정보가 없습니다.");
+            if (!(authentication.getPrincipal() instanceof SocialPrincipal principal)) {
+                throw new AuthenticationFailedException("소셜 로그인 정보가 없습니다.");
             }
 
             MemberLoginResponseDto loginResponse = authService.loginOAuth2(
                     principal.getMemberSid(),
-                    MemberAuthProvider.GOOGLE
+                    principal.getProvider()
             );
             redirectUrl = redirectService.createSuccessRedirect(session, loginResponse);
-            log.info("Google OAuth2 login succeeded: memberSid={}", principal.getMemberSid());
+            log.info(
+                    "OAuth2 login succeeded: provider={}, memberSid={}",
+                    principal.getProvider(),
+                    principal.getMemberSid()
+            );
         } catch (Exception exception) {
-            log.error("Google OAuth2 token issuance failed", exception);
+            log.error("OAuth2 application token issuance failed", exception);
             redirectUrl = redirectService.createFailureRedirect(
                     session,
                     "oauth2_token_issue_failed",
@@ -62,7 +66,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         if (exception instanceof AuthenticationFailedException && exception.getMessage() != null) {
             return exception.getMessage();
         }
-        return "구글 로그인 토큰을 발급하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+        return "소셜 로그인 토큰을 발급하지 못했습니다. 잠시 후 다시 시도해 주세요.";
     }
 
     private void invalidateOAuthSession(HttpSession session) {

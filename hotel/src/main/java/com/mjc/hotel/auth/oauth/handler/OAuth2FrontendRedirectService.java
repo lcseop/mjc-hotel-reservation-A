@@ -1,4 +1,4 @@
-package com.mjc.hotel.auth.oauth;
+package com.mjc.hotel.auth.oauth.handler;
 
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,7 +1,7 @@
-package com.mjc.hotel.auth.oauth;
+package com.mjc.hotel.auth.oauth.principal;
 
 import com.mjc.hotel.member.entity.Member;
-import com.mjc.hotel.member.entity.MemberRole;
+import com.mjc.hotel.member.entity.MemberAuthProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -14,45 +14,31 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class GoogleOidcUser implements OidcUser {
+public final class SocialOidcUser implements OidcUser, SocialPrincipal {
 
     private final OidcUser delegate;
     private final Collection<? extends GrantedAuthority> authorities;
     private final Long memberSid;
-    private final String email;
-    private final String displayName;
-    private final MemberRole role;
+    private final MemberAuthProvider provider;
 
-    public GoogleOidcUser(OidcUser delegate, Member member) {
+    public SocialOidcUser(OidcUser delegate, Member member, MemberAuthProvider provider) {
         this.delegate = delegate;
         this.memberSid = member.getSid();
-        this.email = member.getEmail();
-        this.displayName = member.getName();
-        this.role = member.getRole();
+        this.provider = provider;
 
         Set<GrantedAuthority> mappedAuthorities = new LinkedHashSet<>(delegate.getAuthorities());
-        mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
         this.authorities = Collections.unmodifiableSet(mappedAuthorities);
     }
 
+    @Override
     public Long getMemberSid() {
         return memberSid;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public MemberRole getRole() {
-        return role;
-    }
-
-    public String getProviderUserId() {
-        return delegate.getSubject();
+    @Override
+    public MemberAuthProvider getProvider() {
+        return provider;
     }
 
     @Override

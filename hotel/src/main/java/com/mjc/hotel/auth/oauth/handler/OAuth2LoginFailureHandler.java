@@ -1,4 +1,4 @@
-package com.mjc.hotel.auth.oauth;
+package com.mjc.hotel.auth.oauth.handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +30,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
         String errorCode = resolveErrorCode(exception);
         String message = resolveMessage(exception, errorCode);
 
-        log.warn("Google OAuth2 login failed: code={}, message={}", errorCode, exception.getMessage());
+        log.warn("OAuth2 login failed: code={}, message={}", errorCode, exception.getMessage());
         String redirectUrl = redirectService.createFailureRedirect(session, errorCode, message);
 
         try {
@@ -52,11 +52,11 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
     private String resolveMessage(AuthenticationException exception, String errorCode) {
         if ("access_denied".equals(errorCode)) {
-            return "구글 로그인 동의가 취소되었거나 이 계정에 앱 접근 권한이 없습니다.";
+            return "소셜 로그인 동의가 취소되었거나 앱 접근 권한이 없습니다.";
         }
         if ("authorization_request_not_found".equals(errorCode)
                 || "invalid_state_parameter".equals(errorCode)) {
-            return "구글 로그인 세션이 만료되었습니다. 로그인 화면에서 다시 시도해 주세요.";
+            return "소셜 로그인 세션이 만료되었습니다. 로그인 화면에서 다시 시도해 주세요.";
         }
 
         String message = exception.getMessage();
@@ -64,6 +64,6 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             String prefix = "[" + errorCode + "] ";
             return message.startsWith(prefix) ? message.substring(prefix.length()) : message;
         }
-        return "구글 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+        return "소셜 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.";
     }
 }
