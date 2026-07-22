@@ -1,12 +1,93 @@
 {
   "info": {
-    "_postman_id": "f3eb53e9-3f7d-45fa-9c41-5ec1c49a498a",
+    "_postman_id": "a8c5325b-d655-4cca-aa8f-f6f9bcf6a4e5",
     "name": "Hotel_Reservation",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "53642322",
-    "_collection_link": "https://go.postman.co/collection/53642322-f3eb53e9-3f7d-45fa-9c41-5ec1c49a498a?source=collection_link"
+    "_exporter_id": "53671660",
+    "_collection_link": "https://go.postman.co/collection/53671660-a8c5325b-d655-4cca-aa8f-f6f9bcf6a4e5?source=collection_link"
   },
   "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "로그인",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hello@staynow.kr\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원가입",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"홍길동\",\n  \"phone\": \"010-0000-0000\",\n  \"email\": \"hello@staynow.kr\",\n  \"password\": \"password123\",\n  \"passwordConfirm\": \"password123\",\n  \"termAgreements\": [\n    { \"sid\": 1, \"isAgreed\": true },\n    { \"sid\": 2, \"isAgreed\": true },\n    { \"sid\": 3, \"isAgreed\": false }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/auth/signup",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "로그아웃",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "refresh token",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "payment",
       "item": [
@@ -538,7 +619,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"test12345\",\n  \"phone\": \"01022223333\",\n  \"email\": \"test1234@gmail.com\",\n  \"status\": \"ACTIVE\",\n  \"role\": \"ADMIN\",\n  \"emailVerified\": false,\n  \"phoneVerified\": false,\n  \"point\": 100\n}\n",
+              "raw": "{\n  \"name\": \"test12345\",\n  \"phone\": \"01022223333\",\n  \"email\": \"test1234@gmail.com\",\n  \"status\": \"ACTIVE\",\n  \"role\": \"ADMIN\",\n  \"emailVerified\": false,\n  \"point\": 100\n}\n",
               "options": {
                 "raw": {
                   "language": "json"
@@ -609,7 +690,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"sid\": 25,\n    \"name\": \"홍길동동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false,\n    \"phoneVerified\": false,\n    \"point\": 1000\n  }",
+              "raw": "{\n    \"sid\": 36,\n    \"name\": \"홍길동동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false,\n    \"point\": 1000\n  }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -638,10 +719,10 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"홍길동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false,\n    \"phoneVerified\": false\n  }"
+              "raw": "{\n    \"name\": \"홍길동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false\n  }"
             },
             "url": {
-              "raw": "http://localhost:33000/api/member/25",
+              "raw": "http://localhost:33000/api/member/36",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -650,7 +731,7 @@
               "path": [
                 "api",
                 "member",
-                "25"
+                "36"
               ]
             }
           },
@@ -855,7 +936,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -968,7 +1049,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1081,7 +1162,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1236,7 +1317,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1349,7 +1430,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1462,7 +1543,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1617,7 +1698,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1730,7 +1811,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -1843,7 +1924,7 @@
                   },
                   "status": "OK",
                   "code": 200,
-                  "_postman_previewlanguage": null,
+                  "_postman_previewlanguage": "Text",
                   "header": [
                     {
                       "key": "Vary",
@@ -2695,6 +2776,103 @@
                 "room",
                 "type",
                 "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "password_reset",
+      "item": [
+        {
+          "name": "비밀번호_변경_인증번호 발송",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset/send-code",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset",
+                "send-code"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "인증번호_일치여부_확인",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\",\n    \"code\": \"437443\"\n  }\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset/verify-code",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset",
+                "verify-code"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "비밀번호_변경",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\",\n    \"code\": \"437443\",\n    \"newPassword\": \"!a831829\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset"
               ]
             }
           },
