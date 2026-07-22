@@ -2,6 +2,8 @@ package com.mjc.hotel.util;
 
 import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import com.mjc.hotel.member.withdrawal.exception.SocialUnlinkException;
+import com.mjc.hotel.member.withdrawal.exception.WithdrawalConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,6 +29,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> authenticationFailedHandler(AuthenticationFailedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 new ApiResponse<>(ResponseCode.AUTHENTICATION_ERROR, "authentication failed", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(WithdrawalConflictException.class)
+    public ResponseEntity<ApiResponse<String>> withdrawalConflictHandler(WithdrawalConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ApiResponse<>(ResponseCode.DELETE_ERROR, "withdrawal conflict", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(SocialUnlinkException.class)
+    public ResponseEntity<ApiResponse<String>> socialUnlinkHandler(SocialUnlinkException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
+                new ApiResponse<>(ResponseCode.DELETE_ERROR, "social unlink failed", ex.getMessage())
         );
     }
 }

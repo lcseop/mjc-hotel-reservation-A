@@ -2,6 +2,8 @@ package com.mjc.hotel.auth;
 
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
+import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.auth.service.AuthService;
 import com.mjc.hotel.auth.service.RefreshTokenService;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
@@ -15,12 +17,14 @@ import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.member.service.MemberService;
 import com.mjc.hotel.term.repository.TermRepository;
 import com.mjc.hotel.util.JwtProvider;
+import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -83,6 +87,58 @@ class AuthServiceOAuth2Test {
     }
 
     @Test
+    void naverLoginIssuesApplicationTokensWithoutClaimingTheEmailIsVerified() {
+        Member member = Member.builder()
+                .sid(3L)
+                .email("naver-user@example.com")
+                .name("네이버 회원")
+                .status(MemberStatus.ACTIVE)
+                .role(MemberRole.USER)
+                .emailVerified(false)
+                .point(5000)
+                .build();
+        MemberAuthAccount authAccount = MemberAuthAccount.builder()
+                .member(member)
+                .provider(MemberAuthProvider.NAVER)
+                .providerUserId("naver-id")
+                .build();
+
+        when(authAccountRepository.findActiveByMemberSidAndProvider(3L, MemberAuthProvider.NAVER))
+                .thenReturn(Optional.of(authAccount));
+
+        MemberLoginResponseDto response = authService.loginOAuth2(3L, MemberAuthProvider.NAVER);
+
+        assertThat(jwtProvider.validateAccessToken(response.getAccessToken())).isTrue();
+        assertThat(jwtProvider.validateRefreshToken(response.getRefreshToken())).isTrue();
+        assertThat(response.getProvider()).isEqualTo(MemberAuthProvider.NAVER);
+        assertThat(member.getEmailVerified()).isFalse();
+        verify(refreshTokenService).save(eq(3L), eq(response.getRefreshToken()), eq(1209600L));
+    }
+
+    @Test
+    void naverMemberCanRefreshAnApplicationAccessToken() {
+        Member member = Member.builder()
+                .sid(3L)
+                .email("naver-user@example.com")
+                .status(MemberStatus.ACTIVE)
+                .role(MemberRole.USER)
+                .emailVerified(false)
+                .point(5000)
+                .build();
+        String refreshToken = jwtProvider.createRefreshToken(member.getEmail());
+        RefreshTokenRequestDto request = new RefreshTokenRequestDto();
+        request.setRefreshToken(refreshToken);
+
+        when(memberRepository.findActiveByEmail(member.getEmail())).thenReturn(Optional.of(member));
+        when(refreshTokenService.matches(3L, refreshToken)).thenReturn(true);
+
+        RefreshTokenResponseDto response = authService.refreshAccessToken(request);
+
+        assertThat(jwtProvider.validateAccessToken(response.getAccessToken())).isTrue();
+        assertThat(jwtProvider.getName(response.getAccessToken())).isEqualTo(member.getEmail());
+    }
+
+    @Test
     void localLoginResponseAlsoContainsPointAndProvider() {
         Member member = Member.builder()
                 .sid(2L)
@@ -112,5 +168,32 @@ class AuthServiceOAuth2Test {
         assertThat(response.getPoint()).isZero();
         assertThat(response.getExpiresIn()).isEqualTo(3600L);
         assertThat(jwtProvider.validateAccessToken(response.getAccessToken())).isTrue();
+    }
+
+    @Test
+    void localLoginStillRejectsAnUnverifiedEmail() {
+        Member member = Member.builder()
+                .sid(4L)
+                .email("unverified@example.com")
+                .status(MemberStatus.ACTIVE)
+                .role(MemberRole.USER)
+                .emailVerified(false)
+                .point(0)
+                .build();
+        MemberAuthAccount authAccount = MemberAuthAccount.builder()
+                .member(member)
+                .provider(MemberAuthProvider.LOCAL)
+                .passwordHash("password-hash")
+                .build();
+        MemberLoginRequestDto request = new MemberLoginRequestDto();
+        request.setEmail(member.getEmail());
+        request.setPassword("password");
+
+        when(authAccountRepository.findLoginAuthAccount(member.getEmail(), MemberAuthProvider.LOCAL))
+                .thenReturn(Optional.of(authAccount));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(AuthenticationFailedException.class)
+                .hasMessageContaining("이메일 인증");
     }
 }

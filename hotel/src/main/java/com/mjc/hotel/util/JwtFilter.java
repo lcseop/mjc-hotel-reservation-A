@@ -1,5 +1,7 @@
 package com.mjc.hotel.util;
 
+import com.mjc.hotel.member.entity.MemberStatus;
+import com.mjc.hotel.member.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +20,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
 	private final JwtProvider jwtProvider;
+	private final MemberRepository memberRepository;
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -28,17 +31,29 @@ public class JwtFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	public void doFilterInternal(
+			HttpServletRequest request,
+			HttpServletResponse response,
+			FilterChain filterChain
+	) throws ServletException, IOException {
 
 		String bearerToken = request.getHeader("Authorization");
 
-		if (bearerToken != null && bearerToken.startsWith("Bearer")) {
+		if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
 			String token = bearerToken.substring(7);
 
 			if (jwtProvider.validateAccessToken(token)) {
 				String name = jwtProvider.getName(token);
+				boolean activeMember = memberRepository.findActiveByEmail(name)
+						.filter(member -> member.getStatus() == MemberStatus.ACTIVE)
+						.isPresent();
+				if (!activeMember) {
+					writeUnauthorized(response);
+					return;
+				}
 
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(name, null, List.of());
+				UsernamePasswordAuthenticationToken authentication =
+						new UsernamePasswordAuthenticationToken(name, null, List.of());
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 
 //				UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
@@ -48,21 +63,23 @@ public class JwtFilter extends OncePerRequestFilter {
 //				);
 
 			} else {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				response.setContentType("application/json;charset=UTF-8");
-
-				response.getWriter().write("""
-					{
-					  "success": false,
-					  "message": "토큰이 만료되었거나 유효하지 않습니다.",
-					  "data": null
-					}
-				""");
-
+				writeUnauthorized(response);
 				return;
 			}
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	private void writeUnauthorized(HttpServletResponse response) throws IOException {
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json;charset=UTF-8");
+		response.getWriter().write("""
+				{
+				  "success": false,
+				  "message": "토큰이 만료되었거나 유효하지 않습니다.",
+				  "data": null
+				}
+				""");
 	}
 }

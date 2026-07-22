@@ -1,4 +1,9 @@
 spring:
+  session:
+    timeout: 10m
+    redis:
+      namespace: staynow:session
+      flush-mode: on_save
   profiles:
     active: oauth
   servlet:
@@ -50,6 +55,13 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 server:
+  servlet:
+    session:
+      cookie:
+        name: STAYNOW_SESSION
+        http-only: true
+        same-site: lax
+        secure: false #https 적용 후에는 true로 변경
   port: 33000
   forward-headers-strategy: framework
 
