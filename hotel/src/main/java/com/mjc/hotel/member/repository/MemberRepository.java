@@ -29,6 +29,15 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("""
             select member
             from Member member
+            where member.sid = :memberSid
+              and member.status = com.mjc.hotel.member.entity.MemberStatus.ACTIVE
+              and (member.deleted = false or member.deleted is null)
+            """)
+    Optional<Member> findActiveBySid(@Param("memberSid") Long memberSid);
+
+    @Query("""
+            select member
+            from Member member
             where lower(member.email) = lower(:email)
               and (member.deleted = false or member.deleted is null)
             order by member.sid

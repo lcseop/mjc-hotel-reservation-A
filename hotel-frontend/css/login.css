@@ -416,6 +416,84 @@ body{
 }
 
 /* ==========================
+    Password Reset
+========================== */
+
+.reset-card{
+    width:470px;
+}
+
+.reset-progress{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+    margin:4px 0 28px;
+    padding:0;
+    list-style:none;
+}
+
+.reset-progress li{
+    padding:10px 6px;
+    border-radius:10px;
+    background:#f1f5f9;
+    color:#94a3b8;
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+}
+
+.reset-progress li.active{
+    background:#e8f1ff;
+    color:#2563eb;
+}
+
+.reset-progress li.complete{
+    background:#ecfdf3;
+    color:#15803d;
+}
+
+.reset-step[hidden]{
+    display:none;
+}
+
+.reset-guide,
+.reset-notice{
+    margin-top:14px;
+    color:#64748b;
+    font-size:13px;
+    line-height:1.6;
+}
+
+.reset-notice{
+    margin:0 0 20px;
+    padding:12px 14px;
+    border-radius:10px;
+    background:#f8fafc;
+}
+
+.reset-secondary-btn{
+    width:100%;
+    min-height:44px;
+    margin-top:10px;
+    border:1px solid #dbe3ee;
+    border-radius:12px;
+    background:#fff;
+    color:#475569;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.reset-secondary-btn:disabled{
+    cursor:not-allowed;
+    opacity:.55;
+}
+
+.reset-login-link{
+    display:grid;
+    gap:5px;
+}
+
+/* ==========================
     Responsive
 ========================== */
 

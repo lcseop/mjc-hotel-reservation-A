@@ -98,6 +98,35 @@ class SocialMemberServiceTest {
     }
 
     @Test
+    void newNaverMemberKeepsEmailUnverifiedAndUsesProviderIdForAuthentication() {
+        SocialUserInfo userInfo = socialUser(
+                MemberAuthProvider.NAVER,
+                "naver-id",
+                "naver@example.com",
+                false
+        );
+
+        when(authAccountRepository.findActiveByProviderAndProviderUserId(
+                MemberAuthProvider.NAVER,
+                "naver-id"
+        )).thenReturn(Optional.empty());
+        when(memberRepository.findAllActiveByEmail("naver@example.com")).thenReturn(List.of());
+        when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
+            Member member = invocation.getArgument(0);
+            member.setSid(9L);
+            return member;
+        });
+
+        Member result = service.loginOrSignup(userInfo);
+
+        ArgumentCaptor<MemberAuthAccount> accountCaptor = ArgumentCaptor.forClass(MemberAuthAccount.class);
+        verify(authAccountRepository).save(accountCaptor.capture());
+        assertThat(result.getEmailVerified()).isFalse();
+        assertThat(accountCaptor.getValue().getProvider()).isEqualTo(MemberAuthProvider.NAVER);
+        assertThat(accountCaptor.getValue().getProviderUserId()).isEqualTo("naver-id");
+    }
+
+    @Test
     void unverifiedNaverEmailDoesNotAutomaticallyLinkExistingMember() {
         SocialUserInfo userInfo = socialUser(
                 MemberAuthProvider.NAVER,

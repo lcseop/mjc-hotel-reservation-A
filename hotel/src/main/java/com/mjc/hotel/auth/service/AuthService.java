@@ -76,7 +76,8 @@ public class AuthService {
                 .orElseThrow(() -> new AuthenticationFailedException("이메일 또는 비밀번호가 올바르지 않습니다."));
 
         Member member = authAccount.getMember();
-        validateLoginMember(member);
+        validateActiveMember(member);
+        validateVerifiedEmail(member);
         validatePassword(request.getPassword(), authAccount.getPasswordHash());
 
         authAccount.setLastLoginAt(LocalDateTime.now());
@@ -95,7 +96,7 @@ public class AuthService {
                 .orElseThrow(() -> new AuthenticationFailedException("소셜 로그인 계정 정보가 없습니다."));
 
         Member member = authAccount.getMember();
-        validateLoginMember(member);
+        validateActiveMember(member);
         authAccount.setLastLoginAt(LocalDateTime.now());
 
         return issueLoginTokens(member, provider);
@@ -133,7 +134,7 @@ public class AuthService {
                 .findActiveByEmail(email)
                 .orElseThrow(() -> invalidRefreshToken());
 
-        validateLoginMember(member);
+        validateActiveMember(member);
 
         if (!refreshTokenService.matches(member.getSid(), refreshToken)) {
             throw invalidRefreshToken();
@@ -159,10 +160,13 @@ public class AuthService {
         refreshTokenService.deleteIfMatches(request.getMemberSid(), refreshToken);
     }
 
-    private void validateLoginMember(Member member) {
+    private void validateActiveMember(Member member) {
         if (member.getStatus() != MemberStatus.ACTIVE) {
             throw new AuthenticationFailedException("로그인할 수 없는 회원입니다.");
         }
+    }
+
+    private void validateVerifiedEmail(Member member) {
         if (!Boolean.TRUE.equals(member.getEmailVerified())) {
             throw new AuthenticationFailedException("이메일 인증이 필요합니다.");
         }

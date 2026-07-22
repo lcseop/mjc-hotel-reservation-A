@@ -43,6 +43,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByMember_SidAndReservationStatus(Long memberId, ReservationStatus status);
 
+    boolean existsByMember_SidAndReservationStatusIn(
+            Long memberId,
+            List<ReservationStatus> statuses
+    );
+
     @EntityGraph(attributePaths = {"member", "room", "room.hotelId", "room.roomTypeId"})
     Page<Reservation> findByMember_SidAndReservationStatus(Long memberId, ReservationStatus status, Pageable pageable);
 

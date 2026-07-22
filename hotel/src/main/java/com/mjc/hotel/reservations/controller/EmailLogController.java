@@ -7,8 +7,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.Name;
-import javax.swing.text.html.HTML;
 import java.util.List;
 
 @RestController
@@ -29,7 +27,7 @@ public class EmailLogController {
         return emailLogService.getLogsByReservation(reservationSid);
     }
 
-    @GetMapping("/{emailLogSid}/resend")
+    @PostMapping("/{emailLogSid}/resend")
     public EmailLogResponseDto resendLog(@PathVariable Long emailLogSid) {
         return emailLogService.resendEmail(emailLogSid);
     }
