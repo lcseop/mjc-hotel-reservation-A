@@ -54,4 +54,31 @@ public interface MemberAuthAccountRepository extends JpaRepository<MemberAuthAcc
             @Param("email") String email,
             @Param("provider") MemberAuthProvider provider
     );
+
+    @Query("""
+            select authAccount
+            from MemberAuthAccount authAccount
+            join fetch authAccount.member member
+            where lower(member.email) = lower(:email)
+              and authAccount.provider = com.mjc.hotel.member.entity.MemberAuthProvider.LOCAL
+              and member.status = com.mjc.hotel.member.entity.MemberStatus.ACTIVE
+              and (authAccount.deleted = false or authAccount.deleted is null)
+              and (member.deleted = false or member.deleted is null)
+            order by authAccount.sid
+            """)
+    List<MemberAuthAccount> findAllActiveLocalByEmail(@Param("email") String email);
+
+    @Query("""
+            select authAccount
+            from MemberAuthAccount authAccount
+            join fetch authAccount.member member
+            where authAccount.sid = :authAccountSid
+              and authAccount.provider = com.mjc.hotel.member.entity.MemberAuthProvider.LOCAL
+              and member.status = com.mjc.hotel.member.entity.MemberStatus.ACTIVE
+              and (authAccount.deleted = false or authAccount.deleted is null)
+              and (member.deleted = false or member.deleted is null)
+            """)
+    Optional<MemberAuthAccount> findActiveLocalBySid(
+            @Param("authAccountSid") Long authAccountSid
+    );
 }

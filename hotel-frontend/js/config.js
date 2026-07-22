@@ -74,6 +74,7 @@
         const target = String(url || "");
         return target.includes("/api/auth/login")
             || target.includes("/api/auth/signup")
+            || target.includes("/api/member/password-reset")
             || target.includes("/api/auth/refresh")
             || target.includes("/api/auth/logout")
             || target.includes("/api/auth/oauth2/");
