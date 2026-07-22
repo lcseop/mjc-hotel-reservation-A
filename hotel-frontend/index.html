@@ -56,27 +56,25 @@
 
         <div class="search-box">
 
-            <div class="search-tab">
-                <button class="active">
-                    <i class="fa-solid fa-hotel"></i> 호텔 검색
-                </button>
-            </div>
-
             <div class="search-form">
 
                 <div class="search-item location">
                     <label>여행지 또는 호텔명</label>
-                    <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시">
+                    <div class="location-input-wrap">
+                        <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시" autocomplete="off" aria-controls="searchSuggestions" aria-expanded="false">
+                        <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
+                    </div>
                 </div>
 
-                <div class="search-item">
-                    <label>체크인</label>
-                    <input type="date" id="searchCheckIn">
-                </div>
-
-                <div class="search-item">
-                    <label>체크아웃</label>
-                    <input type="date" id="searchCheckOut">
+                <div class="search-item date-range">
+                    <label>체크인 · 체크아웃</label>
+                    <button type="button" class="date-range-toggle" id="dateRangeToggle" aria-expanded="false" aria-controls="dateRangePicker">
+                        <span id="dateRangeText">날짜 선택</span>
+                        <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                    </button>
+                    <input type="hidden" id="searchCheckIn">
+                    <input type="hidden" id="searchCheckOut">
+                    <div class="date-range-picker" id="dateRangePicker" hidden></div>
                 </div>
 
                 <div class="search-item">
@@ -143,45 +141,49 @@
 
             <div class="travel-grid">
 
-                <div class="travel-card type-image-card hotel-type-card" role="button" tabindex="0" aria-label="호텔 유형 검색">
-                    <img class="type-card-bg" src="images/button/Hotel-Button-Background.png" alt="">
-                    <img class="type-card-figure" src="images/button/Hotel-Button-Image.png" alt="">
-                    <strong class="type-card-label">호텔</strong>
+                <div class="travel-card type-image-card hotel-type-card" role="button" tabindex="0" aria-label="호텔 유형 검색" data-tooltip="호텔 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Hotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Hotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">호텔</strong>
+                    </span>
                     <span class="sr-only">호텔</span>
                 </div>
 
-                <div class="travel-card type-image-card pension-type-card" role="button" tabindex="0" aria-label="펜션·풀빌라 유형 검색">
-                    <img class="type-card-bg" src="images/button/Pension-Button-Background.png" alt="">
-                    <img class="type-card-figure" src="images/button/Pension-Button-Image.png" alt="">
-                    <strong class="type-card-label">펜션</strong>
+                <div class="travel-card type-image-card pension-type-card" role="button" tabindex="0" aria-label="펜션·풀빌라 유형 검색" data-tooltip="펜션 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Pension-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Pension-Button-Image.png" alt="">
+                        <strong class="type-card-label">펜션</strong>
+                    </span>
                     <span class="sr-only">펜션·풀빌라</span>
                 </div>
 
-                <div class="travel-card green">
-                    <div class="icon">
-                        <i class="fa-solid fa-campground"></i>
-                    </div>
-
-                    <h3>리조트·글램핑</h3>
-                    <p>자연속 힐링 공간</p>
+                <div class="travel-card type-image-card resort-type-card" role="button" tabindex="0" aria-label="리조트 유형 검색" data-tooltip="리조트 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Resort-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Resort-Button-Image.png" alt="">
+                        <strong class="type-card-label">리조트</strong>
+                    </span>
+                    <span class="sr-only">리조트·글램핑</span>
                 </div>
 
-                <div class="travel-card orange">
-                    <div class="icon">
-                        <i class="fa-solid fa-star"></i>
-                    </div>
-
-                    <h3>특급 호텔</h3>
-                    <p>5성급 프리미엄</p>
+                <div class="travel-card type-image-card five-star-type-card" role="button" tabindex="0" aria-label="5성급 호텔 유형 검색" data-tooltip="5성급 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/FiveStarHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/FiveStarHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">5성</strong>
+                    </span>
+                    <span class="sr-only">특급 호텔</span>
                 </div>
 
-                <div class="travel-card red">
-                    <div class="icon">
-                        <i class="fa-regular fa-heart"></i>
-                    </div>
-
-                    <h3>커플·허니문</h3>
-                    <p>로맨틱한 여행</p>
+                <div class="travel-card type-image-card couple-type-card" role="button" tabindex="0" aria-label="커플 호텔 유형 검색" data-tooltip="커플 관련 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/CoupleHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/CoupleHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">커플</strong>
+                    </span>
+                    <span class="sr-only">커플·허니문</span>
                 </div>
 
             </div>

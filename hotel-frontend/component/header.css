@@ -13,12 +13,14 @@
 
 .header-inner {
     width: 100%;
+    max-width: 1480px;
     min-height: 78px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 14px 40px;
+    margin: 0 auto;
+    padding: 14px 48px;
 }
 
 .logo-link {
@@ -299,10 +301,6 @@
         gap: 16px;
     }
 
-    .menu a {
-        padding: 9px 12px;
-    }
-
     .right-menu {
         gap: 8px;
     }
@@ -314,7 +312,6 @@
 }
 
 @media (max-width: 860px) {
-    .pc-nav,
     .right-menu {
         display: none;
     }
