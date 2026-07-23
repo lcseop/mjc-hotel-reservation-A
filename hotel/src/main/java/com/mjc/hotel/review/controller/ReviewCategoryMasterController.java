@@ -1,7 +1,6 @@
 package com.mjc.hotel.review.controller;
 
-import com.mjc.hotel.review.request.ReviewCategoryMasterCreateRequest;
-import com.mjc.hotel.review.request.ReviewCategoryMasterUpdateRequest;
+import com.mjc.hotel.review.request.ReviewCategoryMasterRequest;
 import com.mjc.hotel.review.response.ReviewCategoryMasterResponse;
 import com.mjc.hotel.review.service.ReviewCategoryMasterService;
 import com.mjc.hotel.util.ApiResponse;
@@ -33,7 +32,7 @@ public class ReviewCategoryMasterController {
 
     @Operation(summary = "리뷰 카테고리 마스터 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> create(@RequestBody ReviewCategoryMasterCreateRequest request) {
+    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> create(@RequestBody ReviewCategoryMasterRequest request) {
         ReviewCategoryMasterResponse result = reviewCategoryMasterService.insert(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "review category master insert ok", result)

@@ -6,8 +6,7 @@ import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.mjc.hotel.review.request.ReviewCategoryMasterCreateRequest;
-import com.mjc.hotel.review.request.ReviewCategoryMasterUpdateRequest;
+import com.mjc.hotel.review.request.ReviewCategoryMasterRequest;
 import com.mjc.hotel.review.response.ReviewCategoryMasterResponse;
 
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.List;
 public class ReviewCategoryMasterService {
     private final ReviewCategoryMasterRepository reviewCategoryMasterRepository;
     
-    public ReviewCategoryMasterResponse insert(ReviewCategoryMasterCreateRequest request){
+    public ReviewCategoryMasterResponse insert(ReviewCategoryMasterRequest request){
         ReviewCategoryMaster newReviewCategoryMaster = ReviewCategoryMaster.builder()
                 .reviewCategoryName(request.getReviewCategoryName())
                 .build();
@@ -28,7 +27,7 @@ public class ReviewCategoryMasterService {
         return result;
     }
 
-    public ReviewCategoryMasterResponse update(ReviewCategoryMasterUpdateRequest request){
+    public ReviewCategoryMasterResponse update(ReviewCategoryMasterRequest request){
         ReviewCategoryMaster find = reviewCategoryMasterRepository.findById(request.getSid())
                 .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Category Master Not Found"));
         
@@ -65,10 +64,7 @@ public class ReviewCategoryMasterService {
         List<ReviewCategoryMaster> reviewCategoryMasters = reviewCategoryMasterRepository.findAll();
 
         List<ReviewCategoryMasterResponse> results = reviewCategoryMasters.stream()
-                .map(entity -> ReviewCategoryMasterResponse.builder()
-                        .sid(entity.getSid())
-                        .reviewCategoryName(entity.getReviewCategoryName())
-                        .build())
+                .map(this::toReviewCategoryMasterResponse)
                 .toList();
         return results;
     }
