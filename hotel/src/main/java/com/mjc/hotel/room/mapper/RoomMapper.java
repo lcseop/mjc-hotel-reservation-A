@@ -1,20 +1,16 @@
 package com.mjc.hotel.room.mapper;
 
-import com.mjc.hotel.hotels.dto.HotelRequestDto;
 import com.mjc.hotel.hotels.entity.Hotel;
-import com.mjc.hotel.hotels.entity.HotelPhoto;
-import com.mjc.hotel.hotels.entity.HotelType;
 import com.mjc.hotel.hotels.mapper.HotelMapper;
 import com.mjc.hotel.room.dto.RoomRequestDto;
 import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.entity.RoomPhoto;
-import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.entity.RoomType;
 
-import java.util.List;
-
 public class RoomMapper {
+
+    private RoomMapper() {}
+
     public static Room clone(Room origin, RoomRequestDto room, boolean sid, Hotel hotel, RoomType type) {
         if (room == null || type == null
                 || hotel == null || room.getRoomName() == null

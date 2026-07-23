@@ -11,6 +11,7 @@ import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTagRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomTagService {
-    @Autowired
-    private RoomTagRepository roomTagRepository;
-    @Autowired
-    private RoomInTagRepository roomInTagRepository;
+    private final RoomTagRepository roomTagRepository;
+    private final RoomInTagRepository roomInTagRepository;
 
     @Transactional
     public RoomTagDto insert(RoomTagDto roomTagDto) {

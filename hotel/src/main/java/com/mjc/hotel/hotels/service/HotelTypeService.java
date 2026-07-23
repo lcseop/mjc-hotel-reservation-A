@@ -8,6 +8,7 @@ import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -19,12 +20,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HotelTypeService {
-    @Autowired
-    private HotelTypeRepository hotelTypeRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
+    private final HotelTypeRepository hotelTypeRepository;
+    private final HotelRepository hotelRepository;
 
     @Transactional
     public HotelTypeDto insert(HotelTypeDto type) {

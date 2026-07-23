@@ -18,8 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "객실 타입", description = "객실 타입 데이터를 관리합니다.")
 public class RoomTypeRestController {
-
-    @Autowired
     private final RoomTypeService roomTypeService;
 
     @Operation(

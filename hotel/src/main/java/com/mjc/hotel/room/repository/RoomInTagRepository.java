@@ -1,7 +1,6 @@
 package com.mjc.hotel.room.repository;
 
 import com.mjc.hotel.room.entity.RoomInTag;
-import com.mjc.hotel.room.entity.RoomTag;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

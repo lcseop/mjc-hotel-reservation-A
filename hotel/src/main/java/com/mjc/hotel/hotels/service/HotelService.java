@@ -9,24 +9,19 @@ import com.mjc.hotel.promotion.entity.Promotion;
 import com.mjc.hotel.promotion.repository.PromotionRepository;
 import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
 import com.mjc.hotel.review.entity.Review;
-import com.mjc.hotel.review.entity.ReviewCategory;
-import com.mjc.hotel.review.entity.ReviewTag;
 import com.mjc.hotel.review.repository.ReviewCategoryRepository;
 import com.mjc.hotel.review.repository.ReviewRepository;
 import com.mjc.hotel.review.repository.ReviewTagRepository;
 import com.mjc.hotel.review.response.ReviewCategoryResponse;
 import com.mjc.hotel.review.response.ReviewResponse;
 import com.mjc.hotel.review.response.ReviewTagResponse;
-import com.mjc.hotel.room.dto.RoomResponseDto;
 import com.mjc.hotel.room.dto.RoomResponseNoHotelDto;
 import com.mjc.hotel.room.entity.Room;
-import com.mjc.hotel.room.entity.RoomTag;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,34 +30,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HotelService {
-    @Autowired
-    private HotelRepository hotelRepository;
-    @Autowired
-    private HotelPhotoRepository hotelPhotoRepository;
-    @Autowired
-    private HotelTypeRepository hotelTypeRepository;
-    @Autowired
-    private HotelInAmenitiesRepository hotelInAmenitiesRepository;
-    @Autowired
-    private HotelAmenitiesRepository hotelAmenitiesRepository;
-    @Autowired
-    private RoomRepository roomRepository;
-    @Autowired
-    private ReviewRepository reviewRepository;
-    @Autowired
-    private ReviewCategoryRepository reviewCategoryRepository;
-    @Autowired
-    private ReviewTagRepository reviewTagRepository;
-    @Autowired
-    private JPAQueryFactory queryFactory;
-    @Autowired
-    private PromotionRepository promotionRepository;
+    private final HotelRepository hotelRepository;
+    private final HotelPhotoRepository hotelPhotoRepository;
+    private final HotelTypeRepository hotelTypeRepository;
+    private final HotelInAmenitiesRepository hotelInAmenitiesRepository;
+    private final HotelAmenitiesRepository hotelAmenitiesRepository;
+    private final RoomRepository roomRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewCategoryRepository reviewCategoryRepository;
+    private final ReviewTagRepository reviewTagRepository;
+    private final JPAQueryFactory queryFactory;
+    private final PromotionRepository promotionRepository;
 
     @Transactional
     public HotelResponseDto insert(HotelRequestDto hotel) {
@@ -70,7 +54,7 @@ public class HotelService {
         Hotel insert = HotelMapper.clone(null, hotel, false, type);
         Hotel saved = hotelRepository.save(insert);
 
-        return HotelMapper.response(saved, null);
+        return HotelMapper.response(saved);
     }
 
     @Transactional
@@ -96,7 +80,7 @@ public class HotelService {
                 )
                 .toList();
 
-        return HotelMapper.response(saved, photos);
+        return HotelMapper.response(saved);
     }
 
     @Transactional
@@ -108,25 +92,13 @@ public class HotelService {
         }
 
         hotelInAmenitiesRepository.deleteByHotelSid(id);
-        HotelType type = hotelTypeRepository.findById(target.getType().getSid()).orElseThrow();
 
         target.setDeleted(true);
         target.setDeletedAt(LocalDateTime.now());
 
         Hotel saved = hotelRepository.save(target);
 
-        List<HotelPhotoDto> photos = hotelPhotoRepository.findByHotelSid(target.getSid())
-                .stream()
-                .map(h -> HotelPhotoDto
-                        .builder()
-                        .sid(h.getSid())
-                        .hotelId(h.getHotel().getSid())
-                        .imagePath(h.getImagePath())
-                        .build()
-                )
-                .toList();
-
-        return HotelMapper.response(saved, photos);
+        return HotelMapper.response(saved);
     }
 
     public Page<HotelResponseDto> search(HotelSearchRequestDto dto, Pageable pageable) {
@@ -145,7 +117,7 @@ public class HotelService {
     public List<HotelResponseDto> findAllForAdmin() {
         return hotelRepository.findAll().stream()
                 .filter(hotel -> !Boolean.TRUE.equals(hotel.getDeleted()))
-                .map(hotel -> HotelMapper.response(hotel, null))
+                .map(hotel -> HotelMapper.response(hotel))
                 .toList();
     }
 
@@ -156,7 +128,7 @@ public class HotelService {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, hotel.getHotelName() + " is not found");
         }
 
-        return HotelMapper.response(hotel, null);
+        return HotelMapper.response(hotel);
     }
 
 
@@ -183,7 +155,7 @@ public class HotelService {
                                 .roomTypeTitle(r.getRoomTypeId().getTitle())
                                 .roomName(r.getRoomName())
                                 .roomPrice(r.getRoomPrice())
-                                .roomAvailable(r.getRoomAvailable() != null ? r.getRoomAvailable() : true)
+                                .roomAvailable(r.getRoomAvailable() == null || r.getRoomAvailable())
                                 .roomNumber(r.getRoomNumber())
                                 .floor(r.getFloor())
                                 .area(r.getArea())
@@ -229,7 +201,7 @@ public class HotelService {
         return roomRepository.findByHotelIdSid(hotelId).stream()
                 .filter(room -> !Boolean.TRUE.equals(room.getDeleted()))
                 .map(this::findBestPromotion)
-                .filter(promotion -> promotion != null)
+                .filter(Objects::nonNull)
                 .mapToInt(promotion -> PromotionDiscountCalculator.extractDiscountRate(promotion.getDiscountContent()))
                 .max()
                 .orElse(0);

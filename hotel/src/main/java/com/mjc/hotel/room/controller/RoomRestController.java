@@ -21,8 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "객실", description = "객실 데이터의 전반적인 부분을 관리합니다.")
 public class RoomRestController {
-
-    @Autowired
     private final RoomService roomService;
 
     @Operation(

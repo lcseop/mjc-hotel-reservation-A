@@ -76,6 +76,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         notDeletedHotel(h),
                         keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeNameCond(h, req.getHotelTypeNames()),
                         hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
@@ -91,6 +92,7 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
                         notDeletedHotel(h),
                         keywordCond(h, req.getLocation()),
                         starCond(h, req.getStar()),
+                        hotelTypeNameCond(h, req.getHotelTypeNames()),
                         hotelTypeCond(h, req.getRoomTypeIds()),
                         existsAvailableRoom(h, r, res, rc, req)
                 )
@@ -122,6 +124,19 @@ public class HotelRepositoryImpl implements HotelRepositorySub {
         return (typeIds != null && !typeIds.isEmpty())
                 ? h.type.sid.in(typeIds)
                 : null;
+    }
+
+    private BooleanExpression hotelTypeNameCond(QHotel h, List<String> typeNames) {
+        if (typeNames == null || typeNames.isEmpty()) {
+            return null;
+        }
+
+        List<String> normalizedNames = typeNames.stream()
+                .filter(name -> name != null && !name.trim().isEmpty())
+                .map(String::trim)
+                .toList();
+
+        return normalizedNames.isEmpty() ? null : h.type.title.in(normalizedNames);
     }
 
     private BooleanExpression existsAvailableRoom(

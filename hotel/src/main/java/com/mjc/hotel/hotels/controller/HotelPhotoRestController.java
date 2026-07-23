@@ -20,8 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "호텔 이미지", description = "호텔의 이미지 데이터를 관리합니다.")
 public class HotelPhotoRestController {
-    @Autowired
-    private HotelPhotoService hotelPhotoService;
+    private final HotelPhotoService hotelPhotoService;
 
     @Operation(
             summary = "호텔 이미지 생성",
