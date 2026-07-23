@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -349,7 +350,7 @@ public class ReservationService {
     }
 
     private Integer calculateRefundAmount(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
         if (daysUntilCheckIn >= 3) {
             return reservation.getTotalAmount();
         } else if (daysUntilCheckIn >= 1) {
@@ -411,7 +412,7 @@ public class ReservationService {
     }
 
     private List<CancellationPolicyDto> buildCancellationPolicies(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
         Integer totalAmount = reservation.getTotalAmount();
 
         List<CancellationPolicyDto> policies = new ArrayList<>();
@@ -428,17 +429,6 @@ public class ReservationService {
                 .applicable(daysUntilCheckIn >= 1 && daysUntilCheckIn < 3)
                 .build());
         return policies;
-    }
-
-    private void sendConfirmationEmailSafely(Reservation reservation, Member member) {
-        try {
-            EmailLogRequestDto emailRequest = new EmailLogRequestDto();
-            emailRequest.setSid(reservation.getSid());
-            emailRequest.setRecipientEmail(member.getEmail());
-            emailLogService.sendEmailAndLog(emailRequest);
-        } catch (Exception e) {
-
-        }
     }
 
     private void validateCoupon(CouponIssue couponIssue, Member member, Integer totalAmount) {
