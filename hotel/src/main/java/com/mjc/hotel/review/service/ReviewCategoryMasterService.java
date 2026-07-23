@@ -14,6 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ReviewCategoryMasterService {
+    private static final String ERROR_MESSAGE = "Review Category Master Not Found";
     private final ReviewCategoryMasterRepository reviewCategoryMasterRepository;
     
     public ReviewCategoryMasterResponse insert(ReviewCategoryMasterRequest request){
@@ -23,13 +24,12 @@ public class ReviewCategoryMasterService {
         
         ReviewCategoryMaster save = reviewCategoryMasterRepository.save(newReviewCategoryMaster);
 
-        ReviewCategoryMasterResponse result = this.toReviewCategoryMasterResponse(save);
-        return result;
+        return this.toReviewCategoryMasterResponse(save);
     }
 
     public ReviewCategoryMasterResponse update(ReviewCategoryMasterRequest request){
         ReviewCategoryMaster find = reviewCategoryMasterRepository.findById(request.getSid())
-                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Category Master Not Found"));
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,ERROR_MESSAGE));
         
         ReviewCategoryMaster update = ReviewCategoryMaster.builder()
                 .sid(find.getSid())
@@ -38,42 +38,37 @@ public class ReviewCategoryMasterService {
         
         ReviewCategoryMaster save = reviewCategoryMasterRepository.save(update);
 
-        ReviewCategoryMasterResponse result = this.toReviewCategoryMasterResponse(save);
-        return result;
+        return this.toReviewCategoryMasterResponse(save);
     }
 
     public ReviewCategoryMasterResponse findById(Long sid){
         ReviewCategoryMaster find = reviewCategoryMasterRepository.findById(sid)
-                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Category Master Not Found"));
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,ERROR_MESSAGE));
 
-        ReviewCategoryMasterResponse result = this.toReviewCategoryMasterResponse(find);
-        return result;
+        return this.toReviewCategoryMasterResponse(find);
     }
 
     public ReviewCategoryMasterResponse deleteById(Long sid){
         ReviewCategoryMaster find = reviewCategoryMasterRepository.findById(sid)
-                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,"Review Category Master Not Found"));
+                .orElseThrow(() -> new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR,ERROR_MESSAGE));
 
         reviewCategoryMasterRepository.deleteById(find.getSid());
 
-        ReviewCategoryMasterResponse result = this.toReviewCategoryMasterResponse(find);
-        return result;
+        return this.toReviewCategoryMasterResponse(find);
     }
 
     public List<ReviewCategoryMasterResponse> findAll(){
         List<ReviewCategoryMaster> reviewCategoryMasters = reviewCategoryMasterRepository.findAll();
 
-        List<ReviewCategoryMasterResponse> results = reviewCategoryMasters.stream()
+        return reviewCategoryMasters.stream()
                 .map(this::toReviewCategoryMasterResponse)
                 .toList();
-        return results;
     }
 
     private ReviewCategoryMasterResponse toReviewCategoryMasterResponse(ReviewCategoryMaster save) {
-        ReviewCategoryMasterResponse result = ReviewCategoryMasterResponse.builder()
+        return ReviewCategoryMasterResponse.builder()
                 .sid(save.getSid())
                 .reviewCategoryName(save.getReviewCategoryName())
                 .build();
-        return result;
     }
 }
