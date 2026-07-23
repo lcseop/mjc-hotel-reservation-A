@@ -13,7 +13,6 @@ import com.mjc.hotel.promotion.entity.ConditionType;
 import com.mjc.hotel.promotion.entity.Promotion;
 import com.mjc.hotel.promotion.repository.PromotionRepository;
 import com.mjc.hotel.promotion.service.PromotionDiscountCalculator;
-import com.mjc.hotel.refunds.entity.RefundStatus;
 import com.mjc.hotel.refunds.repository.RefundsRepository;
 import com.mjc.hotel.refunds.service.RefundsService;
 import com.mjc.hotel.reservations.dto.*;
@@ -31,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +54,8 @@ public class ReservationService {
     private final PaymentsService paymentsService;
     private final RefundsRepository refundsRepository;
     private final RefundsService refundsService;
+
+    private static final String ACTION_1 = "예약을 찾을 수 없습니다. ID: ";
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
@@ -130,7 +132,7 @@ public class ReservationService {
 
     public ReservationResponseDto getReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
         return convertToResponseDto(reservation);
     }
 
@@ -182,7 +184,7 @@ public class ReservationService {
     @Transactional
     public void cancelReservation(ReservationCancelDto cancelDto) {
         Reservation reservation = reservationRepository.findById(cancelDto.getSid())
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + cancelDto.getSid()));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + cancelDto.getSid()));
 
         if (reservation.getReservationStatus() == ReservationStatus.CANCELLED) {
             throw new IllegalArgumentException("이미 취소된 예약입니다.");
@@ -240,7 +242,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto cancelPendingPaymentReservation(Long reservationId, String reason) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
 
         if (reservation.getReservationStatus() == ReservationStatus.CANCELLED) {
             return convertToResponseDto(reservation);
@@ -290,7 +292,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto checkIn(Long reservationId) {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
 
         if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED
                 && reservation.getReservationStatus() != ReservationStatus.UPCOMING) {
@@ -337,7 +339,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto checkOut(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. ID: " + reservationId));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
 
         if (reservation.getReservationStatus() != ReservationStatus.CHECKED_IN) {
             throw new IllegalArgumentException("체크인 예약만 체크아웃 가능합니다.");
@@ -348,7 +350,7 @@ public class ReservationService {
     }
 
     private Integer calculateRefundAmount(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
         if (daysUntilCheckIn >= 3) {
             return reservation.getTotalAmount();
         } else if (daysUntilCheckIn >= 1) {
@@ -410,7 +412,7 @@ public class ReservationService {
     }
 
     private List<CancellationPolicyDto> buildCancellationPolicies(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(LocalDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
         Integer totalAmount = reservation.getTotalAmount();
 
         List<CancellationPolicyDto> policies = new ArrayList<>();
@@ -427,17 +429,6 @@ public class ReservationService {
                 .applicable(daysUntilCheckIn >= 1 && daysUntilCheckIn < 3)
                 .build());
         return policies;
-    }
-
-    private void sendConfirmationEmailSafely(Reservation reservation, Member member) {
-        try {
-            EmailLogRequestDto emailRequest = new EmailLogRequestDto();
-            emailRequest.setSid(reservation.getSid());
-            emailRequest.setRecipientEmail(member.getEmail());
-            emailLogService.sendEmailAndLog(emailRequest);
-        } catch (Exception e) {
-
-        }
     }
 
     private void validateCoupon(CouponIssue couponIssue, Member member, Integer totalAmount) {
