@@ -30,10 +30,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +46,10 @@ public class TourApiHotelImportService {
     private final RoomTypeRepository roomTypeRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    private static final String PARAM_NUM_OF_ROWS = "numOfRows";
+    private static final String PARAM_PAGE_NO = "pageNo";
+    private static final String PARAM_CONTENT_TYPE_ID = "contentTypeId";
 
     @Value("${tour-api.service-key:}")
     private String serviceKey;
@@ -166,17 +167,17 @@ public class TourApiHotelImportService {
         JsonNode items = areaCode != null
                 ? requestAreaStayItems(areaCode, page, size)
                 : requestItems("/searchKeyword2",
-                param("numOfRows", String.valueOf(size)),
-                param("pageNo", String.valueOf(page)),
-                param("contentTypeId", "32"),
+                param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
+                param(PARAM_PAGE_NO, String.valueOf(page)),
+                param(PARAM_CONTENT_TYPE_ID, "32"),
                 param("keyword", hotelKeyword(safeKeyword))
         );
 
         if (areaCode != null && items.isEmpty()) {
             items = requestItems("/searchKeyword2",
-                    param("numOfRows", String.valueOf(size)),
-                    param("pageNo", String.valueOf(page)),
-                    param("contentTypeId", "32"),
+                    param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
+                    param(PARAM_PAGE_NO, String.valueOf(page)),
+                    param(PARAM_CONTENT_TYPE_ID, "32"),
                     param("keyword", hotelKeyword(safeKeyword))
             );
         }
@@ -213,8 +214,8 @@ public class TourApiHotelImportService {
                     param("contentId", contentId),
                     param("imageYN", "Y"),
                     param("subImageYN", "Y"),
-                    param("numOfRows", "10"),
-                    param("pageNo", "1")
+                    param(PARAM_NUM_OF_ROWS, "10"),
+                    param(PARAM_PAGE_NO, "1")
             );
 
             for (JsonNode image : detailImages) {
@@ -274,15 +275,15 @@ public class TourApiHotelImportService {
 
         JsonNode items = requestItems("/detailCommon2",
                 param("contentId", contentId),
-                param("contentTypeId", contentTypeId == null || contentTypeId.isBlank() ? "32" : contentTypeId),
+                param(PARAM_CONTENT_TYPE_ID, contentTypeId == null || contentTypeId.isBlank() ? "32" : contentTypeId),
                 param("defaultYN", "Y"),
                 param("firstImageYN", "Y"),
                 param("areacodeYN", "Y"),
                 param("addrinfoYN", "Y"),
                 param("mapinfoYN", "Y"),
                 param("overviewYN", "Y"),
-                param("numOfRows", "1"),
-                param("pageNo", "1")
+                param(PARAM_NUM_OF_ROWS, "1"),
+                param(PARAM_PAGE_NO, "1")
         );
 
         if (items.isEmpty()) {
@@ -324,8 +325,8 @@ public class TourApiHotelImportService {
 
     private JsonNode requestAreaStayItems(String areaCode, int page, int size) {
         JsonNode items = requestItems("/searchStay2",
-                param("numOfRows", String.valueOf(size)),
-                param("pageNo", String.valueOf(page)),
+                param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
+                param(PARAM_PAGE_NO, String.valueOf(page)),
                 param("areaCode", areaCode),
                 param("listYN", "Y"),
                 param("arrange", "A")
@@ -336,9 +337,9 @@ public class TourApiHotelImportService {
         }
 
         return requestItems("/areaBasedList2",
-                param("numOfRows", String.valueOf(size)),
-                param("pageNo", String.valueOf(page)),
-                param("contentTypeId", "32"),
+                param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
+                param(PARAM_PAGE_NO, String.valueOf(page)),
+                param(PARAM_CONTENT_TYPE_ID, "32"),
                 param("areaCode", areaCode),
                 param("listYN", "Y"),
                 param("arrange", "A")
@@ -370,25 +371,12 @@ public class TourApiHotelImportService {
 
         String value = keyword.replace(" ", "");
 
-        if (value.contains("서울")) return "1";
-        if (value.contains("인천")) return "2";
-        if (value.contains("대전")) return "3";
-        if (value.contains("대구")) return "4";
-        if (value.contains("광주")) return "5";
-        if (value.contains("부산")) return "6";
-        if (value.contains("울산")) return "7";
-        if (value.contains("세종")) return "8";
-        if (value.contains("경기")) return "31";
-        if (value.contains("강원")) return "32";
-        if (value.contains("충북") || value.contains("충청북")) return "33";
-        if (value.contains("충남") || value.contains("충청남")) return "34";
-        if (value.contains("경북") || value.contains("경상북")) return "35";
-        if (value.contains("경남") || value.contains("경상남")) return "36";
-        if (value.contains("전북") || value.contains("전라북")) return "37";
-        if (value.contains("전남") || value.contains("전라남")) return "38";
-        if (value.contains("제주")) return "39";
-
-        return null;
+        return areaCodes().entrySet()
+                .stream()
+                .filter(e -> value.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     private String hotelKeyword(String keyword) {
@@ -438,11 +426,8 @@ public class TourApiHotelImportService {
     }
 
     private Integer defaultPrice(String title) {
-        int hash = Math.abs(title.hashCode());
-        return BigDecimal.valueOf(90000 + (hash % 9) * 20000L)
-                .divide(BigDecimal.valueOf(1000), 0, RoundingMode.DOWN)
-                .multiply(BigDecimal.valueOf(1000))
-                .intValue();
+        int priceStep = Math.floorMod(title.hashCode(), 9);
+        return 90000 + priceStep * 20000;
     }
 
     private String cleanText(String value) {
@@ -462,5 +447,33 @@ public class TourApiHotelImportService {
 
     private String cut(String value, int maxLength) {
         return value.length() <= maxLength ? value : value.substring(0, maxLength);
+    }
+
+    private Map<String, String> areaCodes() {
+        return Map.ofEntries(
+                Map.entry("서울", "1"),
+                Map.entry("인천", "2"),
+                Map.entry("대전", "3"),
+                Map.entry("대구", "4"),
+                Map.entry("광주", "5"),
+                Map.entry("부산", "6"),
+                Map.entry("울산", "7"),
+                Map.entry("세종", "8"),
+                Map.entry("경기", "31"),
+                Map.entry("강원", "32"),
+                Map.entry("충북", "33"),
+                Map.entry("충청북", "33"),
+                Map.entry("충남", "34"),
+                Map.entry("충청남", "34"),
+                Map.entry("경북", "35"),
+                Map.entry("경상북", "35"),
+                Map.entry("경남", "36"),
+                Map.entry("경상남", "36"),
+                Map.entry("전북", "37"),
+                Map.entry("전라북", "37"),
+                Map.entry("전남", "38"),
+                Map.entry("전라남", "38"),
+                Map.entry("제주", "39")
+        );
     }
 }

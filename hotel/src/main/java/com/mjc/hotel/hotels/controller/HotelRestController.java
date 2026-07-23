@@ -25,8 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "호텔", description = "호텔 데이터 전반을 관리합니다.")
 public class HotelRestController {
-
-    @Autowired
     private final HotelService hotelService;
     private final TourApiHotelImportService tourApiHotelImportService;
 

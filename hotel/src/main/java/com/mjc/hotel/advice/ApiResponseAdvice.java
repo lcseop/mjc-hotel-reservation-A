@@ -28,10 +28,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             return false;
         }
 
-        if (ResponseEntity.class.isAssignableFrom(returnType.getParameterType())) {
-            return false;
-        }
-        return true;
+        return !ResponseEntity.class.isAssignableFrom(returnType.getParameterType());
     }
 
     @Override

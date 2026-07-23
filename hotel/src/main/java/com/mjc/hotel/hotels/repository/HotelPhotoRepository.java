@@ -1,6 +1,5 @@
 package com.mjc.hotel.hotels.repository;
 
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.hotels.entity.HotelPhoto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

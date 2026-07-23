@@ -1,6 +1,5 @@
 package com.mjc.hotel.room.dto;
 
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
 import com.mjc.hotel.room.entity.RoomIdCardEnum;
 import com.mjc.hotel.room.entity.RoomPetAndSmokeEnum;
 import lombok.*;

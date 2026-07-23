@@ -2,8 +2,6 @@ package com.mjc.hotel.hotels.dto;
 
 import lombok.*;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

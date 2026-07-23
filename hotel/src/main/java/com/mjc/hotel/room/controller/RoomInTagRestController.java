@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "객실 태그 매핑", description = "객실과 태그 매핑 데이터를 관리합니다.")
 public class RoomInTagRestController {
-
-    @Autowired
     private final RoomInTagService roomInTagService;
 
     @Operation(
@@ -37,7 +35,7 @@ public class RoomInTagRestController {
             description = "객실과 태그의 매핑 데이터를 수정합니다."
     )
     @PatchMapping
-    public ResponseEntity<ApiResponse<RoomInTagDto>> Update(@RequestBody RoomInTagDto dto) {
+    public ResponseEntity<ApiResponse<RoomInTagDto>> update(@RequestBody RoomInTagDto dto) {
         RoomInTagDto update = roomInTagService.update(dto);
         return ResponseEntity.status(200).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "room in tag update success", update)

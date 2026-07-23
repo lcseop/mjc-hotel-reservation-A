@@ -11,10 +11,8 @@ public class SpringDocConfig {
     @Bean
     public static BeanFactoryPostProcessor removeQuerydslCustomizer() {
         return beanFactory -> {
-            if (beanFactory instanceof DefaultListableBeanFactory dlbf) {
-                if (dlbf.containsBeanDefinition("queryDslQuerydslPredicateOperationCustomizer")) {
+            if (beanFactory instanceof DefaultListableBeanFactory dlbf && dlbf.containsBeanDefinition("queryDslQuerydslPredicateOperationCustomizer")) {
                     dlbf.removeBeanDefinition("queryDslQuerydslPredicateOperationCustomizer");
-                }
             }
         };
     }

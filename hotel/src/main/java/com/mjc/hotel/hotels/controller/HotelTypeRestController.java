@@ -18,8 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "호텔 타입", description = "호텔 타입 데이터를 관리합니다.")
 public class HotelTypeRestController {
-    @Autowired
-    private HotelTypeService hotelTypeService;
+    private final HotelTypeService hotelTypeService;
 
     @Operation(
             summary = "호텔 타입 생성",
