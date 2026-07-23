@@ -1,12 +1,7 @@
 package com.mjc.hotel.room.dto;
 
 import com.mjc.hotel.hotels.dto.HotelInPhotoResponseDto;
-import com.mjc.hotel.hotels.dto.HotelResponseDto;
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.room.entity.*;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.*;
 
 @AllArgsConstructor

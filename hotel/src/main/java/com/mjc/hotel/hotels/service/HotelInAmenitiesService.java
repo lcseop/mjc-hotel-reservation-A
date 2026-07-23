@@ -12,6 +12,7 @@ import com.mjc.hotel.hotels.repository.HotelInAmenitiesRepository;
 import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +21,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HotelInAmenitiesService {
-    @Autowired
-    private HotelInAmenitiesRepository hotelInAmenitiesRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
-    @Autowired
-    private HotelAmenitiesRepository hotelAmenitiesRepository;
+    private final HotelInAmenitiesRepository hotelInAmenitiesRepository;
+    private final HotelRepository hotelRepository;
+    private final HotelAmenitiesRepository hotelAmenitiesRepository;
 
     @Transactional
     public HotelInAmenitiesDto insert(HotelInAmenitiesRequestDto ame) {

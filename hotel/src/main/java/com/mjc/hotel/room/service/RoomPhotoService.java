@@ -7,7 +7,7 @@ import com.mjc.hotel.room.repository.RoomPhotoRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,18 +17,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomPhotoService {
-    @Autowired
-    private RoomPhotoRepository roomPhotoRepository;
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomPhotoRepository roomPhotoRepository;
+    private final RoomRepository roomRepository;
     @Value("${room.images}")
     private String uploadDir;
 

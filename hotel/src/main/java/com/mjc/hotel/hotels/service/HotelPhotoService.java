@@ -10,6 +10,7 @@ import com.mjc.hotel.hotels.repository.HotelRepository;
 import com.mjc.hotel.hotels.repository.HotelTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,12 +27,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HotelPhotoService {
-    @Autowired
-    private HotelPhotoRepository hotelPhotoRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
+    private final HotelPhotoRepository hotelPhotoRepository;
+    private final HotelRepository hotelRepository;
     @Value("${hotel.images}")
     private String uploadDir;
 
@@ -126,7 +126,7 @@ public class HotelPhotoService {
         return fileName.substring(fileName.lastIndexOf("."));
     }
 
-    private Boolean falseValidatePhotoFile(MultipartFile file) {
+    private boolean falseValidatePhotoFile(MultipartFile file) {
         String contentType = file.getContentType();
         return contentType == null || !contentType.startsWith("image/") || file.getSize() > 5 * 1024 * 1024;
     }

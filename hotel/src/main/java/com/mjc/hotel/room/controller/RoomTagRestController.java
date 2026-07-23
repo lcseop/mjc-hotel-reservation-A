@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "객실 태그", description = "객실 태그 데이터를 관리합니다.")
 public class RoomTagRestController {
-
-    @Autowired
     private final RoomTagService roomTagService;
 
     @Operation(

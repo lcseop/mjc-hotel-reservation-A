@@ -96,7 +96,7 @@ function renderHotelTypeFilters(types) {
 
         list.append(
             '<label class="check-row">' +
-                '<input type="checkbox" class="room-type" value="' + escapeHtml(id) + '">' +
+                '<input type="checkbox" class="room-type" value="' + escapeHtml(id) + '" data-title="' + escapeHtml(title) + '">' +
                 '<span>' + escapeHtml(title) + '</span>' +
             '</label>'
         );
@@ -133,6 +133,12 @@ function restoreSearchCondition() {
     if (request.roomTypeIds && request.roomTypeIds.length > 0) {
         $(".room-type").each(function () {
             $(this).prop("checked", request.roomTypeIds.includes(Number($(this).val())));
+        });
+    }
+
+    if (request.hotelTypeNames && request.hotelTypeNames.length > 0) {
+        $(".room-type").each(function () {
+            $(this).prop("checked", request.hotelTypeNames.includes($(this).data("title")));
         });
     }
 
@@ -209,6 +215,12 @@ function makeRequest() {
             return Number($(this).val());
         })
         .get();
+    const hotelTypeNames = $(".room-type:checked")
+        .map(function () {
+            return String($(this).data("title") || "").trim();
+        })
+        .get()
+        .filter(Boolean);
 
     return {
         location: $("#resultLocation").val().trim(),
@@ -219,7 +231,8 @@ function makeRequest() {
         minPrice: minPrice,
         maxPrice: maxPrice,
         star: star,
-        roomTypeIds: roomTypeIds
+        roomTypeIds: [],
+        hotelTypeNames: hotelTypeNames
     };
 
 }

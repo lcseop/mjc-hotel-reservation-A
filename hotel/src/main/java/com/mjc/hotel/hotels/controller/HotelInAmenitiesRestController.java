@@ -19,8 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "호텔 편의 시설 매핑", description = "호텔과 편의 시설 매핑 데이터를 관리합니다.")
 public class HotelInAmenitiesRestController {
-    @Autowired
-    private HotelInAmenitiesService hotelInAmenitiesService;
+    private final HotelInAmenitiesService hotelInAmenitiesService;
 
     @Operation(
             summary = "호텔 안의 편의시설 생성",
