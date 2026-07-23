@@ -10,7 +10,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ReviewTagMasterUpdateRequest {
+public class ReviewTagMasterRequest {
     private Long sid;
     private String reviewTagName;
     private ReviewTagCategory reviewTagCategory;
