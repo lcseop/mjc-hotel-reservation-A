@@ -1,7 +1,9 @@
 package com.mjc.hotel.review.controller;
 
-import com.mjc.hotel.review.entity.ReviewCategoryMaster;
-import com.mjc.hotel.review.repository.ReviewCategoryMasterRepository;
+import com.mjc.hotel.review.request.ReviewCategoryMasterCreateRequest;
+import com.mjc.hotel.review.request.ReviewCategoryMasterUpdateRequest;
+import com.mjc.hotel.review.response.ReviewCategoryMasterResponse;
+import com.mjc.hotel.review.service.ReviewCategoryMasterService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,44 +21,40 @@ import java.util.List;
 @Tag(name = "리뷰 카테고리 마스터", description = "리뷰 항목별 평점 카테고리 마스터 관리 API")
 public class ReviewCategoryMasterController {
 
-    private final ReviewCategoryMasterRepository reviewCategoryMasterRepository;
+    private final ReviewCategoryMasterService reviewCategoryMasterService;
 
     @Operation(summary = "리뷰 카테고리 마스터 목록 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ReviewCategoryMaster>>> findAll() {
+    public ResponseEntity<ApiResponse<List<ReviewCategoryMasterResponse>>> findAll() {
         return ResponseEntity.status(HttpStatus.OK).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review category master search ok", reviewCategoryMasterRepository.findAll())
+                new ApiResponse<>(ResponseCode.SUCCESS, "review category master search ok", reviewCategoryMasterService.findAll())
         );
     }
 
     @Operation(summary = "리뷰 카테고리 마스터 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ReviewCategoryMaster>> create(@RequestBody ReviewCategoryMaster request) {
-        ReviewCategoryMaster saved = reviewCategoryMasterRepository.save(ReviewCategoryMaster.builder()
-                .reviewCategoryName(request.getReviewCategoryName())
-                .build());
+    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> create(@RequestBody ReviewCategoryMasterCreateRequest request) {
+        ReviewCategoryMasterResponse result = reviewCategoryMasterService.insert(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review category master insert ok", saved)
+                new ApiResponse<>(ResponseCode.SUCCESS, "review category master insert ok", result)
         );
     }
 
     @Operation(summary = "리뷰 카테고리 마스터 수정")
     @PatchMapping
-    public ResponseEntity<ApiResponse<ReviewCategoryMaster>> update(@RequestBody ReviewCategoryMaster request) {
-        ReviewCategoryMaster category = reviewCategoryMasterRepository.findById(request.getSid())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리뷰 카테고리입니다. sid=" + request.getSid()));
-        category.setReviewCategoryName(request.getReviewCategoryName());
+    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> update(@RequestBody ReviewCategoryMasterUpdateRequest request) {
+        ReviewCategoryMasterResponse result = reviewCategoryMasterService.update(request);
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review category master update ok", reviewCategoryMasterRepository.save(category))
+                new ApiResponse<>(ResponseCode.SUCCESS, "review category master update ok", result)
         );
     }
 
     @Operation(summary = "리뷰 카테고리 마스터 삭제")
     @DeleteMapping("/{sid}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
-        reviewCategoryMasterRepository.deleteById(sid);
+    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> delete(@PathVariable Long sid) {
+        ReviewCategoryMasterResponse result = reviewCategoryMasterService.deleteById(sid);
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review category master delete ok", null)
+                new ApiResponse<>(ResponseCode.SUCCESS, "review category master delete ok", result)
         );
     }
 }
