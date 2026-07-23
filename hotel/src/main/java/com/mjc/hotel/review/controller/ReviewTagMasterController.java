@@ -1,8 +1,8 @@
 package com.mjc.hotel.review.controller;
 
-import com.mjc.hotel.review.entity.ReviewTagMaster;
-import com.mjc.hotel.review.entity.enums.ReviewTagCategory;
-import com.mjc.hotel.review.repository.ReviewTagMasterRepository;
+import com.mjc.hotel.review.request.ReviewTagMasterRequest;
+import com.mjc.hotel.review.response.ReviewTagMasterResponse;
+import com.mjc.hotel.review.service.ReviewTagMasterService;
 import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,23 +20,21 @@ import java.util.List;
 @Tag(name = "리뷰 태그 마스터", description = "리뷰 작성용 장단점 태그 마스터 조회 API")
 public class ReviewTagMasterController {
 
-    private final ReviewTagMasterRepository reviewTagMasterRepository;
+    private final ReviewTagMasterService reviewTagMasterService;
 
     @Operation(summary = "리뷰 태그 마스터 목록 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ReviewTagMaster>>> findAll() {
+    public ResponseEntity<ApiResponse<List<ReviewTagMasterResponse>>> findAll() {
+        List<ReviewTagMasterResponse> results = reviewTagMasterService.findAll();
         return ResponseEntity.status(HttpStatus.OK).body(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master search ok", reviewTagMasterRepository.findAll())
+                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master search ok", results)
         );
     }
 
     @Operation(summary = "리뷰 태그 마스터 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ReviewTagMaster>> create(@RequestBody ReviewTagMaster request) {
-        ReviewTagMaster saved = reviewTagMasterRepository.save(ReviewTagMaster.builder()
-                .reviewTagName(request.getReviewTagName())
-                .reviewTagCategory(resolveCategory(request.getReviewTagCategory()))
-                .build());
+    public ResponseEntity<ApiResponse<ReviewTagMasterResponse>> create(@RequestBody ReviewTagMasterCreateRequest request) {
+        ReviewTagMasterResponse saved = reviewTagMasterService.insert(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "review tag master insert ok", saved)
         );
@@ -44,26 +42,19 @@ public class ReviewTagMasterController {
 
     @Operation(summary = "리뷰 태그 마스터 수정")
     @PatchMapping
-    public ResponseEntity<ApiResponse<ReviewTagMaster>> update(@RequestBody ReviewTagMaster request) {
-        ReviewTagMaster tag = reviewTagMasterRepository.findById(request.getSid())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리뷰 태그입니다. sid=" + request.getSid()));
-        tag.setReviewTagName(request.getReviewTagName());
-        tag.setReviewTagCategory(resolveCategory(request.getReviewTagCategory()));
+    public ResponseEntity<ApiResponse<ReviewTagMasterResponse>> update(@RequestBody ReviewTagMasterRequest request) {
+        ReviewTagMasterResponse tag = reviewTagMasterService.update(request);
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master update ok", reviewTagMasterRepository.save(tag))
+                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master update ok", tag)
         );
     }
 
     @Operation(summary = "리뷰 태그 마스터 삭제")
     @DeleteMapping("/{sid}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long sid) {
-        reviewTagMasterRepository.deleteById(sid);
+    public ResponseEntity<ApiResponse<ReviewTagMasterResponse>> delete(@PathVariable Long sid) {
+        ReviewTagMasterResponse response = reviewTagMasterService.deleteById(sid);
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master delete ok", null)
+                new ApiResponse<>(ResponseCode.SUCCESS, "review tag master delete ok", response)
         );
-    }
-
-    private ReviewTagCategory resolveCategory(ReviewTagCategory category) {
-        return category != null ? category : ReviewTagCategory.PROS;
     }
 }

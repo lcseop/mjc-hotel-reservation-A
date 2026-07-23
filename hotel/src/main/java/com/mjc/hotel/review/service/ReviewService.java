@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,7 +111,7 @@ public class ReviewService {
                 .member(updatedMember)
                 .amount(accumulationPoint)
                 .pointStatus(PointStatus.ACCUMULATION)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
         pointHistoryRepository.save(pointHistory);
 

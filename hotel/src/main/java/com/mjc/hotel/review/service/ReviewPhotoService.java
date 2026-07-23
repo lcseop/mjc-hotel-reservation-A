@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -81,7 +82,7 @@ public class ReviewPhotoService {
                     .member(updatedMember)
                     .amount(200)
                     .pointStatus(PointStatus.ACCUMULATION)
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                     .build();
             pointHistoryRepository.save(pointHistory);
         }
