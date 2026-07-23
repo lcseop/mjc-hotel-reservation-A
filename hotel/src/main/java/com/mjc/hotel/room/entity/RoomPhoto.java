@@ -1,6 +1,5 @@
 package com.mjc.hotel.room.entity;
 
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

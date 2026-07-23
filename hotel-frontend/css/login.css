@@ -90,6 +90,7 @@ body{
     align-items:center;
     justify-content:center;
     margin:0 auto 18px;
+    text-align:center;
 }
 
 .auth-logo-img{
@@ -97,8 +98,9 @@ body{
     width:174px;
     height:auto;
     max-height:54px;
+    margin:0 auto;
     object-fit:contain;
-    transform:translateX(6px);
+    transform:translateX(28px);
 }
 
 .login-card h3{

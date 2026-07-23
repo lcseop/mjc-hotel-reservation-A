@@ -26,9 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "위시리스트", description = "회원이 호텔에 대해 찜한 목록이 나열됩니다.")
 public class HotelWishlistRestController {
-
-    @Autowired
-    private HotelWishlistService hotelWishlistService;
+    private final HotelWishlistService hotelWishlistService;
 
     @Operation(
             summary = "회원 아이디로 위시리스트 찾기",

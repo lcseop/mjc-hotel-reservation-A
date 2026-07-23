@@ -1,27 +1,22 @@
 package com.mjc.hotel.hotels.service;
 
 import com.mjc.hotel.hotels.dto.HotelAmenitiesDto;
-import com.mjc.hotel.hotels.dto.HotelInAmenitiesDto;
 import com.mjc.hotel.hotels.entity.HotelAmenities;
-import com.mjc.hotel.hotels.entity.HotelInAmenities;
 import com.mjc.hotel.hotels.repository.HotelAmenitiesRepository;
 import com.mjc.hotel.hotels.repository.HotelInAmenitiesRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HotelAmenitiesService {
-    @Autowired
-    private HotelAmenitiesRepository hotelAmenitiesRepository;
-    @Autowired
-    private HotelInAmenitiesRepository hotelInAmenitiesRepository;
+    private final HotelAmenitiesRepository hotelAmenitiesRepository;
+    private final HotelInAmenitiesRepository hotelInAmenitiesRepository;
 
     @Transactional
     public HotelAmenitiesDto insert(HotelAmenitiesDto amenities) {

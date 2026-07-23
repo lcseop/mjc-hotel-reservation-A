@@ -33,6 +33,11 @@ let ADMIN_QR_STREAM = null;
 let ADMIN_QR_TIMER = null;
 let ADMIN_QR_DETECTOR = null;
 let ADMIN_QR_PROCESSING = false;
+let ADMIN_NOTICE_TIMER = null;
+
+window.alert = function (message) {
+    showAdminNotice(message, "info");
+};
 
 const reservations = [
     ["SN-0714-8842", "김민준", "디럭스 더블 101호", "07.14", "07.16", "₩240,000", "예약확정", "green"],
@@ -123,6 +128,7 @@ function renderAdminShell(pageId, auth) {
                 <div><h1>${page.label}${page.id === "dashboard" ? '<span class="trend">● 실시간 업데이트 중</span>' : ""}</h1><p id="adminPageSubtitle">${pageSubtitle(page.id)}</p></div>
                 <div class="head-actions">${headActions(page.id)}</div>
             </section>
+            <div id="adminNoticeHost" class="admin-notice-host" aria-live="polite"></div>
             <section id="adminContent">${renderPage(page.id)}</section>
             <div class="admin-note">${adminPageNote(page.id)}</div>
         </main>
@@ -200,6 +206,9 @@ function renderAdminShell(pageId, auth) {
     });
     $(document).off("click.adminHotelCreate").on("click.adminHotelCreate", "[data-admin-action='open-hotel-create']", function () {
         openHotelManageModal();
+    });
+    $(document).off("click.adminHotelImport").on("click.adminHotelImport", "[data-admin-action='open-hotel-import']", function () {
+        openHotelImportModal();
     });
     $(document).off("click.adminHotelTypeManage").on("click.adminHotelTypeManage", "[data-admin-action='open-hotel-type-manage']", function () {
         openHotelTypeManager();
@@ -628,6 +637,35 @@ function adminPageNote(id) {
     return "현재 화면은 관리자 UI 입니다.";
 }
 
+function showAdminNotice(message, tone) {
+    const text = String(message || "").trim();
+    if (!text) {
+        return;
+    }
+
+    const noticeTone = tone || (/(실패|오류|불가|확인|필수|없습니다)/.test(text) ? "danger" : "info");
+    let host = $("#adminNoticeHost");
+    if (!host.length) {
+        host = $('<div id="adminNoticeHost" class="admin-notice-host floating" aria-live="polite"></div>');
+        $("body").append(host);
+    }
+
+    clearTimeout(ADMIN_NOTICE_TIMER);
+    host.html(`
+        <div class="admin-notice ${noticeTone}">
+            <i class="fa-solid ${noticeTone === "success" ? "fa-circle-check" : noticeTone === "danger" ? "fa-triangle-exclamation" : "fa-circle-info"}"></i>
+            <span>${escapeHtml(text)}</span>
+            <button type="button" class="admin-notice-close" aria-label="안내 닫기"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    `).prop("hidden", false);
+    host.find(".admin-notice-close").on("click", function () {
+        host.empty().prop("hidden", true);
+    });
+    ADMIN_NOTICE_TIMER = setTimeout(function () {
+        host.empty().prop("hidden", true);
+    }, 5200);
+}
+
 function headActions(id) {
     const byPage = {
         dashboard: [["리포트 다운로드", "fa-download", "", "download-dashboard-report"], ["새로고침", "fa-rotate-right", "", "refresh-dashboard"]],
@@ -638,7 +676,7 @@ function headActions(id) {
         sales: [["리포트 다운로드", "fa-download", "", "download-sales-report"]],
         checkin: [["QR 체크인", "fa-qrcode", "primary", "open-qr-checkin"], ["캘린더 보기", "fa-calendar", "", "open-checkin-calendar"], ["리포트 다운로드", "fa-download", "", "download-checkin-report"]],
         reviews: [["리뷰 태그 관리", "fa-tags", "", "open-review-tag-manage"], ["리뷰 카테고리 관리", "fa-list-check", "", "open-review-category-manage"]],
-        settings: [["호텔 타입 관리", "fa-layer-group", "", "open-hotel-type-manage"], ["편의시설 관리", "fa-wand-magic-sparkles", "", "open-hotel-amenity-manage"], ["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
+        settings: [["호텔 타입 관리", "fa-layer-group", "", "open-hotel-type-manage"], ["편의시설 관리", "fa-wand-magic-sparkles", "", "open-hotel-amenity-manage"], ["호텔 불러오기", "fa-cloud-arrow-down", "", "open-hotel-import"], ["호텔 추가", "fa-plus", "primary", "open-hotel-create"]]
     };
     const buttons = byPage[id] || [[getAdminMonthLabel(), "fa-calendar"], ["리포트 다운로드", "fa-download"]];
     const actionButtons = buttons.map(([text, icon, type, action]) => `<button class="admin-btn ${type || ""}" type="button"${action ? ` data-admin-action="${action}"` : ""}><i class="fa-solid ${icon}"></i> ${text}</button>`).join("");
@@ -1815,12 +1853,23 @@ function saveHotelManage() {
         alert("호텔 타입, 이름, 가격, 장소는 필수입니다.");
         return;
     }
+    const submitButton = $("#hotelManageForm button[type='submit']");
+    submitButton.prop("disabled", true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> 저장 중');
     adminPatch("/hotel", payload).then(function (savedHotel) {
         saveHotelAmenitiesAfterSave(savedHotel.sid || payload.sid)
             .then(function () { return saveHotelPhotosAfterSave(savedHotel.sid || payload.sid); })
-            .always(function () { loadAdminHotelManageData(); });
+            .then(function () {
+                showAdminNotice("호텔 정보가 저장되었습니다.", "success");
+            }, function (xhr) {
+                showAdminNotice(getAdminAjaxMessage(xhr, "호텔 부가 정보 저장 중 일부 실패했습니다."), "danger");
+            })
+            .always(function () {
+                submitButton.prop("disabled", false).html('<i class="fa-solid fa-check"></i> 호텔 저장');
+                loadAdminHotelManageData();
+            });
     }, function (xhr) {
         alert(getAdminAjaxMessage(xhr, "호텔 저장에 실패했습니다."));
+        submitButton.prop("disabled", false).html('<i class="fa-solid fa-check"></i> 호텔 저장');
     });
 }
 
@@ -1887,6 +1936,194 @@ function closeHotelManageModal() {
     $("#hotelManageModalRoot").empty();
 }
 
+function openHotelImportModal() {
+    $("#hotelManageModalRoot").html(`
+        <div class="admin-modal-backdrop">
+            <form id="hotelImportForm" class="admin-modal hotel-import-modal">
+                <div class="admin-modal-head">
+                    <div><h2>호텔 불러오기</h2><p>먼저 TourAPI 후보를 조회하고, 선택한 호텔만 저장합니다.</p></div>
+                    <button type="button" class="modal-close" data-hotel-import-close><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="hotel-import-body">
+                    <div class="hotel-import-fields">
+                        <label>
+                            <span><i class="fa-solid fa-magnifying-glass"></i> 검색어</span>
+                            <input id="tourApiKeywordInput" class="admin-input" type="text" value="서울" placeholder="예: 서울, 부산, 라마다">
+                        </label>
+                        <label>
+                            <span><i class="fa-regular fa-file-lines"></i> 페이지</span>
+                            <input id="tourApiPageInput" class="admin-input" type="number" min="1" value="1">
+                        </label>
+                        <label>
+                            <span><i class="fa-solid fa-list-ol"></i> 개수</span>
+                            <input id="tourApiSizeInput" class="admin-input" type="number" min="1" max="100" value="10">
+                        </label>
+                    </div>
+                    <div id="hotelImportStatus" class="hotel-import-status" hidden>
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>호텔 정보를 불러오는 중입니다.</span>
+                    </div>
+                    <div id="hotelImportPreview" class="hotel-import-preview">
+                        <div class="empty-admin-state">검색어를 입력하고 후보 조회를 눌러주세요.</div>
+                    </div>
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="admin-btn" data-hotel-import-close>취소</button>
+                    <button id="hotelImportSearch" type="submit" class="admin-btn"><i class="fa-solid fa-magnifying-glass"></i> 후보 조회</button>
+                    <button id="hotelImportSubmit" type="button" class="admin-btn primary" disabled><i class="fa-solid fa-cloud-arrow-down"></i> 선택 호텔 불러오기</button>
+                </div>
+            </form>
+        </div>
+    `);
+
+    $("[data-hotel-import-close]").on("click", closeHotelManageModal);
+    $("#hotelImportForm").on("submit", function (event) {
+        event.preventDefault();
+        previewTourApiHotelsFromAdmin();
+    });
+    $("#hotelImportSubmit").on("click", importSelectedTourApiHotelsFromAdmin);
+    $("#hotelImportPreview").on("change", ".hotel-import-check", updateHotelImportSelectionState);
+    $("#hotelImportPreview").on("click", "[data-hotel-import-select-all]", function () {
+        $(".hotel-import-check:not(:disabled)").prop("checked", true);
+        updateHotelImportSelectionState();
+    });
+}
+
+function readTourApiImportForm() {
+    const keyword = $("#tourApiKeywordInput").val().trim();
+    const page = Number($("#tourApiPageInput").val()) || 1;
+    const size = Number($("#tourApiSizeInput").val()) || 10;
+
+    if (!keyword) {
+        alert("검색어를 입력해주세요.");
+        $("#tourApiKeywordInput").focus();
+        return;
+    }
+    if (page < 1 || size < 1) {
+        alert("페이지와 개수는 1 이상으로 입력해주세요.");
+        return null;
+    }
+
+    return { keyword, page, size };
+}
+
+function setHotelImportLoading(isLoading, message) {
+    const form = $("#hotelImportForm");
+    const status = $("#hotelImportStatus");
+    form.find("input, button").prop("disabled", isLoading);
+    $("#hotelImportSubmit").prop("disabled", isLoading || $(".hotel-import-check:checked").length === 0);
+    status.find("span").text(message || "호텔 정보를 불러오는 중입니다.");
+    status.prop("hidden", !isLoading);
+}
+
+function previewTourApiHotelsFromAdmin() {
+    const query = readTourApiImportForm();
+    if (!query) {
+        return;
+    }
+
+    $("#hotelImportPreview").html("");
+    setHotelImportLoading(true, "TourAPI 후보를 조회하는 중입니다.");
+
+    $.ajax({
+        url: window.StayNowConfig.apiUrl("/hotel/import/tourapi/preview")
+            + "?keyword=" + encodeURIComponent(query.keyword)
+            + "&page=" + encodeURIComponent(query.page)
+            + "&size=" + encodeURIComponent(query.size),
+        type: "GET",
+        headers: adminAuthHeaders()
+    }).then(function (response) {
+        renderTourApiHotelPreview(unwrapApiResponse(response) || []);
+    }, function (xhr) {
+        $("#hotelImportPreview").html(`<div class="empty-admin-state">${escapeHtml(getAdminAjaxMessage(xhr, "호텔 후보를 불러오지 못했습니다."))}</div>`);
+    }).always(function () {
+        setHotelImportLoading(false);
+    });
+}
+
+function renderTourApiHotelPreview(hotels) {
+    if (!hotels.length) {
+        $("#hotelImportPreview").html('<div class="empty-admin-state">조회된 호텔이 없습니다. 지역명만 입력하거나 다른 키워드를 사용해보세요.</div>');
+        updateHotelImportSelectionState();
+        return;
+    }
+
+    const availableCount = hotels.filter(function (hotel) { return !hotel.alreadyImported; }).length;
+    const list = hotels.map(function (hotel) {
+        const disabled = hotel.alreadyImported ? " disabled" : "";
+        const checked = hotel.alreadyImported ? "" : " checked";
+        const image = hotel.imagePath ? resolveAdminImagePath(hotel.imagePath) : "";
+
+        return `<label class="hotel-import-card ${hotel.alreadyImported ? "imported" : ""}">
+            <input class="hotel-import-check" type="checkbox" value="${escapeHtml(hotel.contentId || "")}"${checked}${disabled}>
+            <span class="hotel-import-thumb">${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(hotel.title || "호텔 이미지")}">` : '<i class="fa-solid fa-hotel"></i>'}</span>
+            <span class="hotel-import-info">
+                <strong>${escapeHtml(hotel.title || "호텔명 없음")}</strong>
+                <small>${escapeHtml(hotel.location || "주소 정보 없음")}</small>
+                <em>${hotel.alreadyImported ? "이미 등록됨" : "저장 가능"}</em>
+            </span>
+        </label>`;
+    }).join("");
+
+    $("#hotelImportPreview").html(`
+        <div class="hotel-import-preview-head">
+            <strong>조회 결과 ${hotels.length}건</strong>
+            <button type="button" class="admin-btn small" data-hotel-import-select-all${availableCount ? "" : " disabled"}>전체 선택</button>
+        </div>
+        <div class="hotel-import-list">${list}</div>
+    `);
+    updateHotelImportSelectionState();
+}
+
+function updateHotelImportSelectionState() {
+    const count = $(".hotel-import-check:checked").length;
+    $("#hotelImportSubmit")
+        .prop("disabled", count === 0)
+        .html(`<i class="fa-solid fa-cloud-arrow-down"></i> 선택 호텔 ${count}건 불러오기`);
+}
+
+function importSelectedTourApiHotelsFromAdmin() {
+    const query = readTourApiImportForm();
+    if (!query) {
+        return;
+    }
+
+    const contentIds = $(".hotel-import-check:checked").map(function () {
+        return this.value;
+    }).get().filter(Boolean);
+
+    if (!contentIds.length) {
+        alert("불러올 호텔을 선택해주세요.");
+        return;
+    }
+
+    setHotelImportLoading(true, "선택한 호텔과 기본 객실을 저장하는 중입니다.");
+
+    $.ajax({
+        url: window.StayNowConfig.apiUrl("/hotel/import/tourapi/selected"),
+        type: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" }, adminAuthHeaders()),
+        data: JSON.stringify({
+            keyword: query.keyword,
+            page: query.page,
+            size: query.size,
+            contentIds: contentIds
+        })
+    }).then(function (response) {
+        const result = unwrapApiResponse(response) || {};
+        showAdminNotice(
+            "호텔 불러오기 완료: 선택 " + contentIds.length + "건, 신규 " + (result.imported ?? 0) + "건, 제외 " + (result.skipped ?? 0) + "건",
+            "success"
+        );
+        closeHotelManageModal();
+        loadAdminHotelManageData();
+    }, function (xhr) {
+        showAdminNotice(getAdminAjaxMessage(xhr, "선택한 호텔을 저장하지 못했습니다."), "danger");
+    }).always(function () {
+        setHotelImportLoading(false);
+    });
+}
+
 function saveHotelCreate() {
     const payload = readHotelPayloadFrom($("#hotelCreateForm"));
     if (!payload.typeId || !payload.hotelName || !payload.hotelPrice || !payload.location) {
@@ -1899,6 +2136,7 @@ function saveHotelCreate() {
         saveHotelCreateAmenities(hotelId)
             .then(function () { return uploadHotelPhotoFiles(hotelId, ADMIN_HOTEL_CREATE_PHOTO_STATE.added.map(function (photo) { return photo.file; })) || $.Deferred().resolve().promise(); })
             .always(function () {
+                showAdminNotice("호텔이 추가되었습니다.", "success");
                 closeHotelManageModal();
                 loadAdminHotelManageData();
             });

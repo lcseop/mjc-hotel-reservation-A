@@ -1,8 +1,6 @@
 package com.mjc.hotel.room.dto;
 
-import com.mjc.hotel.hotels.entity.Hotel;
 import com.mjc.hotel.room.entity.*;
-import jakarta.persistence.*;
 import lombok.*;
 
 @AllArgsConstructor

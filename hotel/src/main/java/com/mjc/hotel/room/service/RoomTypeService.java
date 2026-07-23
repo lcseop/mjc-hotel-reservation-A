@@ -3,26 +3,23 @@ package com.mjc.hotel.room.service;
 import com.mjc.hotel.promotion.repository.PromotionRepository;
 import com.mjc.hotel.room.dto.RoomTypeDto;
 import com.mjc.hotel.room.entity.RoomType;
-import com.mjc.hotel.room.repository.RoomInTagRepository;
 import com.mjc.hotel.room.repository.RoomRepository;
 import com.mjc.hotel.room.repository.RoomTypeRepository;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomTypeService {
-    @Autowired
-    private RoomTypeRepository roomTypeRepository;
-    @Autowired
-    private RoomRepository roomRepository;
-    @Autowired
-    private PromotionRepository promotionRepository;
+    private final RoomTypeRepository roomTypeRepository;
+    private final RoomRepository roomRepository;
+    private final PromotionRepository promotionRepository;
 
     @Transactional
     public RoomTypeDto insert(RoomTypeDto roomTypeDto) {

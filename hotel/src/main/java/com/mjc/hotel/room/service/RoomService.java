@@ -14,6 +14,7 @@ import com.mjc.hotel.room.mapper.RoomMapper;
 import com.mjc.hotel.room.repository.*;
 import com.mjc.hotel.util.ResponseCode;
 import com.mjc.hotel.util.excep.DataNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,22 +23,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomService {
-    @Autowired
-    private RoomRepository roomRepository;
-    @Autowired
-    private HotelRepository hotelRepository;
-    @Autowired
-    private RoomTagRepository roomTagRepository;
-    @Autowired
-    private RoomPhotoRepository roomPhotoRepository;
-    @Autowired
-    private RoomTypeRepository roomTypeRepository;
-    @Autowired
-    private RoomInTagRepository roomInTagRepository;
-    @Autowired
-    private PromotionRepository promotionRepository;
+    private final RoomRepository roomRepository;
+    private final HotelRepository hotelRepository;
+    private final RoomTagRepository roomTagRepository;
+    private final RoomPhotoRepository roomPhotoRepository;
+    private final RoomTypeRepository roomTypeRepository;
+    private final RoomInTagRepository roomInTagRepository;
+    private final PromotionRepository promotionRepository;
 
     @Transactional
     public RoomResponseDto insert(RoomRequestDto room) {
@@ -48,9 +43,7 @@ public class RoomService {
 
         Room saved = roomRepository.save(insert);
 
-        RoomResponseDto dto = response(saved);
-
-        return dto;
+        return response(saved);
     }
 
     @Transactional
@@ -68,9 +61,7 @@ public class RoomService {
 
         Room saved = roomRepository.save(update);
 
-        RoomResponseDto dto = response(saved);
-
-        return dto;
+        return response(saved);
     }
 
     @Transactional
@@ -86,9 +77,7 @@ public class RoomService {
 
         Room saved = roomRepository.save(target);
 
-        RoomResponseDto dto = response(saved);
-
-        return dto;
+        return response(saved);
     }
 
     public RoomResponseDto findById(Long id) {
@@ -137,7 +126,7 @@ public class RoomService {
                             .roomTypeTitle(r.getRoomTypeId().getTitle())
                             .roomName(r.getRoomName())
                             .roomPrice(r.getRoomPrice())
-                            .roomAvailable(r.getRoomAvailable() != null ? r.getRoomAvailable() : true)
+                            .roomAvailable(r.getRoomAvailable() == null || r.getRoomAvailable())
                             .roomNumber(r.getRoomNumber())
                             .floor(r.getFloor())
                             .area(r.getArea())
@@ -164,7 +153,7 @@ public class RoomService {
                 .roomTypeTitle(saved.getRoomTypeId().getTitle())
                 .roomName(saved.getRoomName())
                 .roomPrice(saved.getRoomPrice())
-                .roomAvailable(saved.getRoomAvailable() != null ? saved.getRoomAvailable() : true)
+                .roomAvailable(saved.getRoomAvailable() == null || saved.getRoomAvailable())
                 .roomNumber(saved.getRoomNumber())
                 .floor(saved.getFloor())
                 .area(saved.getArea())
@@ -186,7 +175,7 @@ public class RoomService {
         if (room.getDeleted() != null && room.getDeleted()) {
             throw new DataNotFoundException(ResponseCode.DATA_NOT_FOUND_ERROR, "data not found");
         }
-        room.setRoomAvailable(available != null ? available : true);
+        room.setRoomAvailable(available == null || available);
         return response(roomRepository.save(room));
     }
 
