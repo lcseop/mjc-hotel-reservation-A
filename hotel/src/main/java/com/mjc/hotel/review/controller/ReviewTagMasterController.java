@@ -33,7 +33,7 @@ public class ReviewTagMasterController {
 
     @Operation(summary = "리뷰 태그 마스터 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ReviewTagMasterResponse>> create(@RequestBody ReviewTagMasterCreateRequest request) {
+    public ResponseEntity<ApiResponse<ReviewTagMasterResponse>> create(@RequestBody ReviewTagMasterRequest request) {
         ReviewTagMasterResponse saved = reviewTagMasterService.insert(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "review tag master insert ok", saved)

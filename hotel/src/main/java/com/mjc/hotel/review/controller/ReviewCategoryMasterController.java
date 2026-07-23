@@ -41,7 +41,7 @@ public class ReviewCategoryMasterController {
 
     @Operation(summary = "리뷰 카테고리 마스터 수정")
     @PatchMapping
-    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> update(@RequestBody ReviewCategoryMasterUpdateRequest request) {
+    public ResponseEntity<ApiResponse<ReviewCategoryMasterResponse>> update(@RequestBody ReviewCategoryMasterRequest request) {
         ReviewCategoryMasterResponse result = reviewCategoryMasterService.update(request);
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "review category master update ok", result)
