@@ -2,6 +2,7 @@ package com.mjc.hotel.hotels.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mjc.hotel.hotels.dto.TourApiHotelPreviewDto;
 import com.mjc.hotel.hotels.dto.TourApiImportResponseDto;
 import com.mjc.hotel.hotels.entity.Hotel;
@@ -96,7 +97,7 @@ public class TourApiHotelImportService {
                     .contentId(item.path("contentid").asText(""))
                     .title(title)
                     .location(location)
-                    .imagePath(firstNonBlank(item.path("firstimage").asText(""), item.path("firstimage2").asText("")))
+                    .imagePath(item.path("firstimage").asText(""))
                     .latitude(toDouble(item.path("mapy").asText("")))
                     .longitude(toDouble(item.path("mapx").asText("")))
                     .alreadyImported(hotelRepository.existsByHotelNameAndLocation(title, location))
@@ -165,7 +166,7 @@ public class TourApiHotelImportService {
         String safeKeyword = keyword == null || keyword.isBlank() ? "호텔" : keyword.trim();
         String areaCode = resolveAreaCode(safeKeyword);
         JsonNode items = areaCode != null
-                ? requestAreaStayItems(areaCode, page, size)
+                ? requestAreaStayItems(areaCode, safeKeyword, page, size)
                 : requestItems("/searchKeyword2",
                 param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
                 param(PARAM_PAGE_NO, String.valueOf(page)),
@@ -204,49 +205,22 @@ public class TourApiHotelImportService {
     }
 
     private void savePhotos(Hotel hotel, JsonNode item) {
-        List<String> images = new ArrayList<>();
-        addIfNotBlank(images, item.path("firstimage").asText(""));
-        addIfNotBlank(images, item.path("firstimage2").asText(""));
-
-        String contentId = item.path("contentid").asText("");
-        if (!contentId.isBlank()) {
-            JsonNode detailImages = requestItems("/detailImage2",
-                    param("contentId", contentId),
-                    param("imageYN", "Y"),
-                    param("subImageYN", "Y"),
-                    param(PARAM_NUM_OF_ROWS, "10"),
-                    param(PARAM_PAGE_NO, "1")
-            );
-
-            for (JsonNode image : detailImages) {
-                addIfNotBlank(images, image.path("originimgurl").asText(""));
-                addIfNotBlank(images, image.path("smallimageurl").asText(""));
-            }
+        String image = item.path("firstimage").asText("");
+        if (image == null || image.isBlank() || image.length() > 255) {
+            return;
         }
 
-        images.stream()
-                .filter(image -> image.length() <= 255)
-                .distinct()
-                .limit(8)
-                .forEach(image -> hotelPhotoRepository.save(
-                        HotelPhoto.builder()
-                                .hotel(hotel)
-                                .imagePath(image)
-                                .build()
-                ));
+        hotelPhotoRepository.save(
+                HotelPhoto.builder()
+                        .hotel(hotel)
+                        .imagePath(image.trim())
+                        .build()
+        );
     }
 
     private void saveDefaultRooms(Hotel hotel) {
         RoomType roomType = roomTypeRepository.findById(DEFAULT_ROOM_TYPE_ID).orElseThrow();
-        int basePrice = hotel.getHotelPrice();
-
-        List<Room> rooms = List.of(
-                buildRoom(hotel, roomType, "스탠다드 룸", basePrice, 301, 3, 28, 2),
-                buildRoom(hotel, roomType, "디럭스 더블룸", basePrice + 40000, 501, 5, 36, 3),
-                buildRoom(hotel, roomType, "패밀리 룸", basePrice + 80000, 701, 7, 48, 4)
-        );
-
-        roomRepository.saveAll(rooms);
+        roomRepository.save(buildRoom(hotel, roomType, "스탠다드 룸", hotel.getHotelPrice(), 301, 3, 28, 2));
     }
 
     private Room buildRoom(Hotel hotel, RoomType roomType, String name, int price, int number, int floor, int area, int people) {
@@ -323,8 +297,8 @@ public class TourApiHotelImportService {
         }
     }
 
-    private JsonNode requestAreaStayItems(String areaCode, int page, int size) {
-        JsonNode items = requestItems("/searchStay2",
+    private JsonNode requestAreaStayItems(String areaCode, String keyword, int page, int size) {
+        JsonNode stayItems = requestItems("/searchStay2",
                 param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
                 param(PARAM_PAGE_NO, String.valueOf(page)),
                 param("areaCode", areaCode),
@@ -332,11 +306,7 @@ public class TourApiHotelImportService {
                 param("arrange", "A")
         );
 
-        if (!items.isEmpty()) {
-            return items;
-        }
-
-        return requestItems("/areaBasedList2",
+        JsonNode areaItems = requestItems("/areaBasedList2",
                 param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
                 param(PARAM_PAGE_NO, String.valueOf(page)),
                 param(PARAM_CONTENT_TYPE_ID, "32"),
@@ -344,6 +314,37 @@ public class TourApiHotelImportService {
                 param("listYN", "Y"),
                 param("arrange", "A")
         );
+
+        JsonNode keywordItems = requestItems("/searchKeyword2",
+                param(PARAM_NUM_OF_ROWS, String.valueOf(size)),
+                param(PARAM_PAGE_NO, String.valueOf(page)),
+                param(PARAM_CONTENT_TYPE_ID, "32"),
+                param("areaCode", areaCode),
+                param("keyword", hotelKeyword(keyword))
+        );
+
+        return mergeTourApiItems(size, stayItems, areaItems, keywordItems);
+    }
+
+    private JsonNode mergeTourApiItems(int size, JsonNode... nodes) {
+        ArrayNode merged = objectMapper.createArrayNode();
+        Set<String> contentIds = new HashSet<>();
+
+        for (JsonNode node : nodes) {
+            for (JsonNode item : node) {
+                String contentId = item.path("contentid").asText("");
+                String key = contentId.isBlank() ? item.path("title").asText("") + item.path("addr1").asText("") : contentId;
+                if (key.isBlank() || !contentIds.add(key)) {
+                    continue;
+                }
+                merged.add(item);
+                if (merged.size() >= size) {
+                    return merged;
+                }
+            }
+        }
+
+        return merged;
     }
 
     private String buildQuery(String... params) {

@@ -33,6 +33,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByReservationStatus(ReservationStatus status);
 
+    List<Reservation> findByReservationStatusInAndCheckOutDateBefore(
+            List<ReservationStatus> statuses,
+            LocalDateTime now
+    );
+
     @EntityGraph(attributePaths = {"member", "room", "room.hotelId", "room.roomTypeId"})
     Page<Reservation> findByReservationStatus(ReservationStatus status, Pageable pAgeable);
 

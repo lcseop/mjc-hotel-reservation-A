@@ -130,7 +130,6 @@ function renderAdminShell(pageId, auth) {
             </section>
             <div id="adminNoticeHost" class="admin-notice-host" aria-live="polite"></div>
             <section id="adminContent">${renderPage(page.id)}</section>
-            <div class="admin-note">${adminPageNote(page.id)}</div>
         </main>
     `);
 
@@ -610,31 +609,6 @@ function pageSubtitle(id) {
         settings: "호텔 정보, 편의시설, 타입, 사진 관리"
     };
     return copy[id] || nowLabel;
-}
-
-function adminPageNote(id) {
-    if (id === "dashboard") {
-        return "대시보드에서 여러 정보들을 한 눈에 쉽고 빠르게 파악할 수 있습니다.";
-    }
-    if (id === "sales") {
-        return "월별 매출 상황을 볼 수 있습니다.";
-    }
-    if (id === "reservations") {
-        return "현재 선택된 호텔의 예약에 대해 관리할 수 있습니다.";
-    }
-    if (id === "guests") {
-        return "모든 회원에 대한 관리를 합니다. 선택된 호텔이 있다면 그 호텔의 예약 건수를 볼 수 있습니다.";
-    }
-    if (id === "promotions") {
-        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용됩니다.";
-    }
-    if (id === "reviews") {
-        return "현재 선택된 호텔의 리뷰에 대해 관리할 수 있습니다.";
-    }
-    if (id === "settings") {
-        return "현재 선택된 호텔에 대해 정보를 수정할 수 있습니다.";
-    }
-    return "현재 화면은 관리자 UI 입니다.";
 }
 
 function showAdminNotice(message, tone) {
@@ -1590,7 +1564,7 @@ function saveReviewMaster(config) {
     const payload = config.makePayload(sid || null, name, category);
     const request = sid ? adminPatch(config.endpoint, payload) : adminPost(config.endpoint, payload);
     request.then(function () {
-        resetReviewMasterForm();
+        resetReviewMasterForm(config, category);
         loadReviewMasterItems(config);
     }, function (xhr) {
         alert(getAdminAjaxMessage(xhr, "저장에 실패했습니다."));
@@ -1605,10 +1579,14 @@ function fillReviewMasterForm(item, config) {
     }
 }
 
-function resetReviewMasterForm() {
+function resetReviewMasterForm(config, keepCategory) {
     $("#reviewMasterSid").val("");
     $("#reviewMasterName").val("");
-    $("#reviewMasterCategory").val("PROS");
+    if (config && config.hasCategory) {
+        $("#reviewMasterCategory").val(keepCategory || $("#reviewMasterCategory").val() || "PROS");
+    } else {
+        $("#reviewMasterCategory").val("PROS");
+    }
 }
 
 function deleteReviewMaster(sid, config) {
@@ -1809,16 +1787,51 @@ function bindHotelAmenitySearch(root) {
     $root.find(".hotel-amenity-check input").off("change.hotelAmenitySearch").on("change.hotelAmenitySearch", function () {
         const field = $(this).closest(".hotel-amenities-field");
         const list = field.find("[data-hotel-amenity-list]");
+        const modalBody = $(this).closest(".hotel-create-body");
+        const modal = $(this).closest(".admin-modal");
         const scrollTop = list.scrollTop();
+        const modalBodyScrollTop = modalBody.scrollTop();
+        const modalScrollTop = modal.scrollTop();
         updateHotelAmenityCount(field);
-        requestAnimationFrame(function () {
-            list.scrollTop(scrollTop);
-        });
+        restoreHotelAmenityScroll(list, scrollTop, modalBody, modalBodyScrollTop, modal, modalScrollTop);
+    });
+    $root.find(".hotel-amenity-check").off("mousedown.hotelAmenitySearch").on("mousedown.hotelAmenitySearch", function () {
+        const field = $(this).closest(".hotel-amenities-field");
+        field.data("amenityListScrollTop", field.find("[data-hotel-amenity-list]").scrollTop());
+        field.data("amenityModalBodyScrollTop", $(this).closest(".hotel-create-body").scrollTop());
+        field.data("amenityModalScrollTop", $(this).closest(".admin-modal").scrollTop());
+    });
+    $root.find(".hotel-amenity-check input").off("focus.hotelAmenitySearch").on("focus.hotelAmenitySearch", function () {
+        const field = $(this).closest(".hotel-amenities-field");
+        restoreHotelAmenityScroll(
+            field.find("[data-hotel-amenity-list]"),
+            field.data("amenityListScrollTop"),
+            $(this).closest(".hotel-create-body"),
+            field.data("amenityModalBodyScrollTop"),
+            $(this).closest(".admin-modal"),
+            field.data("amenityModalScrollTop")
+        );
     });
     $root.find(".hotel-amenities-field").each(function () {
         filterHotelAmenityList($(this));
         updateHotelAmenityCount($(this));
     });
+}
+
+function restoreHotelAmenityScroll(list, listTop, modalBody, modalBodyTop, modal, modalTop) {
+    const restore = function () {
+        if (Number.isFinite(Number(listTop))) {
+            list.scrollTop(listTop);
+        }
+        if (modalBody && modalBody.length && Number.isFinite(Number(modalBodyTop))) {
+            modalBody.scrollTop(modalBodyTop);
+        }
+        if (modal && modal.length && Number.isFinite(Number(modalTop))) {
+            modal.scrollTop(modalTop);
+        }
+    };
+    requestAnimationFrame(restore);
+    setTimeout(restore, 0);
 }
 
 function filterHotelAmenityList(field) {
@@ -1932,6 +1945,10 @@ function openHotelManageModal() {
 }
 
 function closeHotelManageModal() {
+    if ($("#hotelImportForm").data("locked")) {
+        showAdminNotice("호텔을 저장하는 중입니다. 완료될 때까지 잠시만 기다려주세요.", "info");
+        return;
+    }
     clearHotelCreatePhotoObjectUrls();
     $("#hotelManageModalRoot").empty();
 }
@@ -1941,7 +1958,7 @@ function openHotelImportModal() {
         <div class="admin-modal-backdrop">
             <form id="hotelImportForm" class="admin-modal hotel-import-modal">
                 <div class="admin-modal-head">
-                    <div><h2>호텔 불러오기</h2><p>먼저 TourAPI 후보를 조회하고, 선택한 호텔만 저장합니다.</p></div>
+                    <div><h2>호텔 불러오기</h2><p>한국관광공사에서 제공하는 전국의 호텔, 모텔, 펜션 등을 불러옵니다.</p></div>
                     <button type="button" class="modal-close" data-hotel-import-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="hotel-import-body">
@@ -1961,7 +1978,13 @@ function openHotelImportModal() {
                     </div>
                     <div id="hotelImportStatus" class="hotel-import-status" hidden>
                         <i class="fa-solid fa-circle-notch fa-spin"></i>
-                        <span>호텔 정보를 불러오는 중입니다.</span>
+                        <div class="hotel-import-status-text">
+                            <span>호텔 정보를 불러오는 중입니다.</span>
+                            <div class="hotel-import-progress" hidden>
+                                <b></b>
+                            </div>
+                        </div>
+                        <strong id="hotelImportProgressText" hidden>0%</strong>
                     </div>
                     <div id="hotelImportPreview" class="hotel-import-preview">
                         <div class="empty-admin-state">검색어를 입력하고 후보 조회를 눌러주세요.</div>
@@ -1970,7 +1993,7 @@ function openHotelImportModal() {
                 <div class="admin-modal-actions">
                     <button type="button" class="admin-btn" data-hotel-import-close>취소</button>
                     <button id="hotelImportSearch" type="submit" class="admin-btn"><i class="fa-solid fa-magnifying-glass"></i> 후보 조회</button>
-                    <button id="hotelImportSubmit" type="button" class="admin-btn primary" disabled><i class="fa-solid fa-cloud-arrow-down"></i> 선택 호텔 불러오기</button>
+                    <button id="hotelImportSubmit" type="button" class="admin-btn primary" hidden disabled><i class="fa-solid fa-cloud-arrow-down"></i> 선택 호텔 불러오기</button>
                 </div>
             </form>
         </div>
@@ -2007,13 +2030,50 @@ function readTourApiImportForm() {
     return { keyword, page, size };
 }
 
-function setHotelImportLoading(isLoading, message) {
+let hotelImportProgressTimer = null;
+
+function setHotelImportLoading(isLoading, message, locked) {
     const form = $("#hotelImportForm");
     const status = $("#hotelImportStatus");
+    form.data("locked", Boolean(isLoading && locked));
     form.find("input, button").prop("disabled", isLoading);
+    if (isLoading && !locked) {
+        $("[data-hotel-import-close]").prop("disabled", false);
+    }
     $("#hotelImportSubmit").prop("disabled", isLoading || $(".hotel-import-check:checked").length === 0);
     status.find("span").text(message || "호텔 정보를 불러오는 중입니다.");
     status.prop("hidden", !isLoading);
+    setHotelImportProgress(0, Boolean(isLoading && locked));
+    if (!isLoading) {
+        clearHotelImportProgressTimer();
+    }
+}
+
+function startHotelImportProgress(totalCount) {
+    clearHotelImportProgressTimer();
+    let progress = 5;
+    setHotelImportProgress(progress, true);
+    const step = Math.max(4, Math.floor(70 / Math.max(1, totalCount)));
+    hotelImportProgressTimer = setInterval(function () {
+        progress = Math.min(92, progress + step);
+        setHotelImportProgress(progress, true);
+        if (progress >= 92) {
+            clearHotelImportProgressTimer();
+        }
+    }, 450);
+}
+
+function clearHotelImportProgressTimer() {
+    if (hotelImportProgressTimer) {
+        clearInterval(hotelImportProgressTimer);
+        hotelImportProgressTimer = null;
+    }
+}
+
+function setHotelImportProgress(progress, visible) {
+    const normalized = Math.max(0, Math.min(100, Number(progress || 0)));
+    $(".hotel-import-progress").prop("hidden", !visible).find("b").css("width", normalized + "%");
+    $("#hotelImportProgressText").prop("hidden", !visible).text(normalized + "%");
 }
 
 function previewTourApiHotelsFromAdmin() {
@@ -2023,7 +2083,7 @@ function previewTourApiHotelsFromAdmin() {
     }
 
     $("#hotelImportPreview").html("");
-    setHotelImportLoading(true, "TourAPI 후보를 조회하는 중입니다.");
+    setHotelImportLoading(true, "TourAPI 후보를 조회하는 중입니다.", false);
 
     $.ajax({
         url: window.StayNowConfig.apiUrl("/hotel/import/tourapi/preview")
@@ -2044,6 +2104,7 @@ function previewTourApiHotelsFromAdmin() {
 function renderTourApiHotelPreview(hotels) {
     if (!hotels.length) {
         $("#hotelImportPreview").html('<div class="empty-admin-state">조회된 호텔이 없습니다. 지역명만 입력하거나 다른 키워드를 사용해보세요.</div>');
+        $("#hotelImportSubmit").prop("hidden", true);
         updateHotelImportSelectionState();
         return;
     }
@@ -2072,6 +2133,7 @@ function renderTourApiHotelPreview(hotels) {
         </div>
         <div class="hotel-import-list">${list}</div>
     `);
+    $("#hotelImportSubmit").prop("hidden", false);
     updateHotelImportSelectionState();
 }
 
@@ -2097,7 +2159,8 @@ function importSelectedTourApiHotelsFromAdmin() {
         return;
     }
 
-    setHotelImportLoading(true, "선택한 호텔과 기본 객실을 저장하는 중입니다.");
+    setHotelImportLoading(true, "선택한 호텔과 기본 객실을 저장하는 중입니다.", true);
+    startHotelImportProgress(contentIds.length);
 
     $.ajax({
         url: window.StayNowConfig.apiUrl("/hotel/import/tourapi/selected"),
@@ -2110,6 +2173,7 @@ function importSelectedTourApiHotelsFromAdmin() {
             contentIds: contentIds
         })
     }).then(function (response) {
+        setHotelImportProgress(100, true);
         const result = unwrapApiResponse(response) || {};
         showAdminNotice(
             "호텔 불러오기 완료: 선택 " + contentIds.length + "건, 신규 " + (result.imported ?? 0) + "건, 제외 " + (result.skipped ?? 0) + "건",
@@ -3060,7 +3124,15 @@ function openRoomModal(room) {
                     </div>
                     <button type="button" class="modal-close" data-room-modal-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
+                <div class="room-modal-quick-actions">
+                    <span></span>
+                    <div>
+                        <button type="button" class="admin-btn" data-room-modal-close>취소</button>
+                        <button type="submit" class="admin-btn primary"><i class="fa-solid fa-floppy-disk"></i> ${isEdit ? "저장" : "추가"}</button>
+                    </div>
+                </div>
                 <div class="admin-form-grid room-form-grid">
+                    <div class="admin-form-full room-form-section-title"><i class="fa-solid fa-bed"></i><span>기본 정보</span></div>
                     <label class="room-type-field admin-form-full"><span>객실 타입</span><div class="room-type-select-row"><select id="roomTypeInput" required>${typeOptions}</select><button type="button" class="admin-btn" data-room-type-manage><i class="fa-solid fa-gear"></i> 타입 관리</button></div></label>
                     <label><span>객실 이름</span><input id="roomNameInput" type="text" maxlength="30" value="${escapeHtml(room ? room.roomName || "" : "")}" required></label>
                     <label><span>객실 가격</span><input id="roomPriceInput" type="number" min="0" step="1000" value="${escapeHtml(room ? room.roomPrice || "" : "")}" required></label>
@@ -3069,6 +3141,7 @@ function openRoomModal(room) {
                     <label><span>층</span><input id="roomFloorInput" type="number" min="1" value="${escapeHtml(room ? room.floor || "" : "")}" required></label>
                     <label><span>넓이(m²)</span><input id="roomAreaInput" type="number" min="1" value="${escapeHtml(room ? room.area || "" : "")}" required></label>
                     <label><span>최대 인원 수</span><input id="roomMaximumPeopleInput" type="number" min="1" value="${escapeHtml(room ? room.maximumPeople || "" : "")}" required></label>
+                    <div class="admin-form-full room-form-section-title"><i class="fa-regular fa-clock"></i><span>이용 조건</span></div>
                     <label><span>체크인 시간</span><input id="roomCheckInInput" type="number" min="0" max="23" value="${escapeHtml(room && room.checkInTime != null ? room.checkInTime : 15)}"></label>
                     <label><span>체크아웃 시간</span><input id="roomCheckOutInput" type="number" min="0" max="23" value="${escapeHtml(room && room.checkOutTime != null ? room.checkOutTime : 11)}"></label>
                     <label><span>주차 가능 여부</span><select id="roomParkingInput">${roomOption("AVAILABLE", "주차 가능", room && room.parking)}${roomOption("UNAVAILABLE", "주차 불가", room && room.parking)}</select></label>
