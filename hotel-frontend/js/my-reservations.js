@@ -133,6 +133,8 @@ function makeReservationCard(reservation) {
     const card = $("<article>").addClass("reservation-card " + state.key);
     const cancelNote = state.key === "cancelled"
         ? '<div class="danger-note"><i class="fa-solid fa-circle-info"></i> 취소된 예약입니다. 환불 상태는 결제 내역에서 확인해주세요.</div>'
+        : state.key === "no-show"
+            ? '<div class="danger-note"><i class="fa-solid fa-circle-info"></i> 숙박 기간이 지나 노쇼 처리된 예약입니다.</div>'
         : "";
     const leftAction = makeLeftAction(reservation, state, reviewed);
 
@@ -186,7 +188,7 @@ function goHotelDetail(hotelId) {
 }
 
 function makeLeftAction(reservation, state, reviewed) {
-    if (state.key === "cancelled") {
+    if (state.key === "cancelled" || state.key === "no-show") {
         return "";
     }
 
@@ -372,7 +374,8 @@ function sortReservations(items) {
 function getReservationState(reservation) {
     const status = reservation.reservationStatus;
     if (status === "PENDING") return { key: "pending", group: "PENDING", label: "결제 대기" };
-    if (status === "CANCELLED" || status === "NO_SHOW") return { key: "cancelled", group: "CANCELLED", label: "취소됨" };
+    if (status === "CANCELLED") return { key: "cancelled", group: "CANCELLED", label: "취소됨" };
+    if (status === "NO_SHOW") return { key: "no-show", group: "CANCELLED", label: "노쇼" };
     if (status === "CHECKED_IN") return { key: "checked-in", group: "UPCOMING", label: "투숙 중" };
     if (status === "CHECKED_OUT" || status === "COMPLETED") return { key: "completed", group: "COMPLETED", label: "완료된 여행" };
     return { key: "upcoming", group: "UPCOMING", label: "예정된 여행" };
