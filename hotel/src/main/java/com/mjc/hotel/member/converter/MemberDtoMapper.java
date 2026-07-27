@@ -37,9 +37,9 @@ public class MemberDtoMapper {
                 .name(dto.getName())
                 .phone(dto.getPhone())
                 .email(dto.getEmail())
-                .status(resolveStatus(dto.getStatus()))
-                .role(resolveRole(dto.getRole()))
-                .emailVerified(resolveBoolean(dto.getEmailVerified()))
+                .status(MemberStatus.ACTIVE)
+                .role(MemberRole.USER)
+                .emailVerified(false)
                 .point(5000)
                 .build();
     }
@@ -124,15 +124,4 @@ public class MemberDtoMapper {
                 .build();
     }
 
-    private MemberStatus resolveStatus(MemberStatus status) {
-        return status != null ? status : MemberStatus.ACTIVE;
-    }
-
-    private MemberRole resolveRole(MemberRole role) {
-        return role != null ? role : MemberRole.USER;
-    }
-
-    private Boolean resolveBoolean(Boolean value) {
-        return value != null ? value : false;
-    }
 }

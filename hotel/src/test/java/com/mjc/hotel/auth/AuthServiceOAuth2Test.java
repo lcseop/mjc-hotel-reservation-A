@@ -15,6 +15,7 @@ import com.mjc.hotel.member.entity.MemberStatus;
 import com.mjc.hotel.member.repository.MemberAuthAccountRepository;
 import com.mjc.hotel.member.repository.MemberRepository;
 import com.mjc.hotel.member.service.MemberService;
+import com.mjc.hotel.mail.service.EmailVerificationService;
 import com.mjc.hotel.term.repository.TermRepository;
 import com.mjc.hotel.util.JwtProvider;
 import com.mjc.hotel.util.excep.AuthenticationFailedException;
@@ -38,6 +39,7 @@ class AuthServiceOAuth2Test {
             "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
     );
     private final RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
+    private final EmailVerificationService emailVerificationService = mock(EmailVerificationService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final AuthService authService = new AuthService(
             authAccountRepository,
@@ -47,7 +49,8 @@ class AuthServiceOAuth2Test {
             mock(MemberDtoMapper.class),
             passwordEncoder,
             jwtProvider,
-            refreshTokenService
+            refreshTokenService,
+            emailVerificationService
     );
 
     @Test

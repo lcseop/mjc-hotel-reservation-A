@@ -7,6 +7,7 @@ import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
+import com.mjc.hotel.mail.service.EmailVerificationService;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
 import com.mjc.hotel.member.entity.MemberAuthProvider;
@@ -40,10 +41,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public Member signup(MemberSignupRequestDto request) {
         validatePasswordConfirm(request);
+        if (!emailVerificationService.consumeVerification(request.getEmail())) {
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+        }
 
         List<MemberTermAgreement> termAgreements = Collections.emptyList();
 
@@ -60,13 +65,12 @@ public class AuthService {
         MemberSignupRequestDto.AuthAccountRequest authAccountRequest = resolveAuthAccountRequest(request);
         MemberAuthAccount authAccount = memberDtoMapper.toAuthAccount(authAccountRequest);
         if (authAccount != null) {
-            authAccount.setPasswordHash(resolvePasswordHash(
-                    authAccountRequest.getPassword(),
-                    authAccountRequest.getPasswordHash()
-            ));
+            authAccount.setPasswordHash(resolvePasswordHash(authAccountRequest.getPassword()));
         }
 
-        return memberService.createMember(memberDtoMapper.toEntity(request), authAccount, termAgreements);
+        Member verifiedMember = memberDtoMapper.toEntity(request);
+        verifiedMember.setEmailVerified(true);
+        return memberService.createMember(verifiedMember, authAccount, termAgreements);
     }
 
     @Transactional
@@ -202,11 +206,11 @@ public class AuthService {
         return new AuthenticationFailedException("유효하지 않은 refresh token입니다.");
     }
 
-    private String resolvePasswordHash(String password, String passwordHash) {
+    private String resolvePasswordHash(String password) {
         if (password != null && !password.isBlank()) {
             return passwordEncoder.encode(password);
         }
-        return passwordHash;
+        throw new IllegalArgumentException("비밀번호는 필수입니다.");
     }
 
     private void validatePasswordConfirm(MemberSignupRequestDto request) {

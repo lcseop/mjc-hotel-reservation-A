@@ -82,6 +82,13 @@ public class EmailVerificationService {
         return Boolean.parseBoolean(redisTemplate.opsForValue().get(VERIFIED_PREFIX + normalizedEmail));
     }
 
+    public boolean consumeVerification(String email) {
+        String normalizedEmail = normalizeEmail(email);
+        return Boolean.parseBoolean(
+                redisTemplate.opsForValue().getAndDelete(VERIFIED_PREFIX + normalizedEmail)
+        );
+    }
+
     private String normalizeEmail(String email) {
         if (email == null || !email.contains("@")) {
             throw new IllegalArgumentException("올바른 이메일을 입력해주세요.");

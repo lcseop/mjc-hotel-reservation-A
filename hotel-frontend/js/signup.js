@@ -379,16 +379,10 @@ function makeSignupPayload(formData, terms) {
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        status: "ACTIVE",
-        role: "USER",
-        emailVerified: true,
-        phoneVerified: false,
-        point: 0,
         authAccount: {
             provider: "LOCAL",
             providerUserId: formData.email,
-            password: formData.password,
-            passwordHash: null
+            password: formData.password
         },
         termAgreements: makeTermAgreements(terms, formData.marketingAgree)
     };
