@@ -3254,6 +3254,7 @@ a {
     gap: 12px;
     max-height: 334px;
     overflow-y: auto;
+    overflow-anchor: none;
     padding: 14px;
     border: 1px solid #d8e5f0;
     border-radius: 14px;
@@ -3571,6 +3572,7 @@ a {
     padding: 28px 30px 0;
     max-height: 72vh;
     overflow-y: auto;
+    overflow-anchor: none;
 }
 
 @media (max-width: 760px) {
@@ -3722,16 +3724,6 @@ a {
 
 .settings-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.admin-note {
-    margin-top: 28px;
-    padding: 18px 20px;
-    border: 1px solid #bfe6ff;
-    border-radius: 14px;
-    color: #256c99;
-    background: #eef9ff;
-    font-weight: 800;
 }
 
 .admin-error {

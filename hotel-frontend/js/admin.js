@@ -130,7 +130,6 @@ function renderAdminShell(pageId, auth) {
             </section>
             <div id="adminNoticeHost" class="admin-notice-host" aria-live="polite"></div>
             <section id="adminContent">${renderPage(page.id)}</section>
-            <div class="admin-note">${adminPageNote(page.id)}</div>
         </main>
     `);
 
@@ -610,31 +609,6 @@ function pageSubtitle(id) {
         settings: "호텔 정보, 편의시설, 타입, 사진 관리"
     };
     return copy[id] || nowLabel;
-}
-
-function adminPageNote(id) {
-    if (id === "dashboard") {
-        return "대시보드에서 여러 정보들을 한 눈에 쉽고 빠르게 파악할 수 있습니다.";
-    }
-    if (id === "sales") {
-        return "월별 매출 상황을 볼 수 있습니다.";
-    }
-    if (id === "reservations") {
-        return "현재 선택된 호텔의 예약에 대해 관리할 수 있습니다.";
-    }
-    if (id === "guests") {
-        return "모든 회원에 대한 관리를 합니다. 선택된 호텔이 있다면 그 호텔의 예약 건수를 볼 수 있습니다.";
-    }
-    if (id === "promotions") {
-        return "프로모션은 전체 호텔의 동일 객실 타입에 공통 적용됩니다.";
-    }
-    if (id === "reviews") {
-        return "현재 선택된 호텔의 리뷰에 대해 관리할 수 있습니다.";
-    }
-    if (id === "settings") {
-        return "현재 선택된 호텔에 대해 정보를 수정할 수 있습니다.";
-    }
-    return "현재 화면은 관리자 UI 입니다.";
 }
 
 function showAdminNotice(message, tone) {
@@ -1813,16 +1787,51 @@ function bindHotelAmenitySearch(root) {
     $root.find(".hotel-amenity-check input").off("change.hotelAmenitySearch").on("change.hotelAmenitySearch", function () {
         const field = $(this).closest(".hotel-amenities-field");
         const list = field.find("[data-hotel-amenity-list]");
+        const modalBody = $(this).closest(".hotel-create-body");
+        const modal = $(this).closest(".admin-modal");
         const scrollTop = list.scrollTop();
+        const modalBodyScrollTop = modalBody.scrollTop();
+        const modalScrollTop = modal.scrollTop();
         updateHotelAmenityCount(field);
-        requestAnimationFrame(function () {
-            list.scrollTop(scrollTop);
-        });
+        restoreHotelAmenityScroll(list, scrollTop, modalBody, modalBodyScrollTop, modal, modalScrollTop);
+    });
+    $root.find(".hotel-amenity-check").off("mousedown.hotelAmenitySearch").on("mousedown.hotelAmenitySearch", function () {
+        const field = $(this).closest(".hotel-amenities-field");
+        field.data("amenityListScrollTop", field.find("[data-hotel-amenity-list]").scrollTop());
+        field.data("amenityModalBodyScrollTop", $(this).closest(".hotel-create-body").scrollTop());
+        field.data("amenityModalScrollTop", $(this).closest(".admin-modal").scrollTop());
+    });
+    $root.find(".hotel-amenity-check input").off("focus.hotelAmenitySearch").on("focus.hotelAmenitySearch", function () {
+        const field = $(this).closest(".hotel-amenities-field");
+        restoreHotelAmenityScroll(
+            field.find("[data-hotel-amenity-list]"),
+            field.data("amenityListScrollTop"),
+            $(this).closest(".hotel-create-body"),
+            field.data("amenityModalBodyScrollTop"),
+            $(this).closest(".admin-modal"),
+            field.data("amenityModalScrollTop")
+        );
     });
     $root.find(".hotel-amenities-field").each(function () {
         filterHotelAmenityList($(this));
         updateHotelAmenityCount($(this));
     });
+}
+
+function restoreHotelAmenityScroll(list, listTop, modalBody, modalBodyTop, modal, modalTop) {
+    const restore = function () {
+        if (Number.isFinite(Number(listTop))) {
+            list.scrollTop(listTop);
+        }
+        if (modalBody && modalBody.length && Number.isFinite(Number(modalBodyTop))) {
+            modalBody.scrollTop(modalBodyTop);
+        }
+        if (modal && modal.length && Number.isFinite(Number(modalTop))) {
+            modal.scrollTop(modalTop);
+        }
+    };
+    requestAnimationFrame(restore);
+    setTimeout(restore, 0);
 }
 
 function filterHotelAmenityList(field) {
@@ -1949,7 +1958,7 @@ function openHotelImportModal() {
         <div class="admin-modal-backdrop">
             <form id="hotelImportForm" class="admin-modal hotel-import-modal">
                 <div class="admin-modal-head">
-                    <div><h2>호텔 불러오기</h2><p>먼저 TourAPI 후보를 조회하고, 선택한 호텔만 저장합니다.</p></div>
+                    <div><h2>호텔 불러오기</h2><p>한국관광공사에서 제공하는 전국의 호텔, 모텔, 펜션 등을 불러옵니다.</p></div>
                     <button type="button" class="modal-close" data-hotel-import-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="hotel-import-body">
