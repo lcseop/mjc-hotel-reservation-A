@@ -2088,8 +2088,45 @@ a {
     width: min(900px, 100%);
 }
 
+.room-modal-quick-actions {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 26px;
+    border-top: 1px solid #edf2f7;
+    border-bottom: 1px solid #e5edf7;
+    background: rgba(248, 251, 255, .96);
+    backdrop-filter: blur(8px);
+}
+
+.room-modal-quick-actions span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.room-modal-quick-actions span i {
+    color: #1aa6f7;
+}
+
+.room-modal-quick-actions div {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
 .room-form-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 20px;
 }
 
 .room-form-grid label {
@@ -2097,6 +2134,28 @@ a {
     border: 1px solid #edf2f7;
     border-radius: 14px;
     background: #fbfdff;
+}
+
+.room-form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #eff8ff, #f8fbff);
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 950;
+}
+
+.room-form-section-title i {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 11px;
+    background: #e0f2fe;
+    color: #0ea5e9;
 }
 
 .room-form-grid label span {
@@ -3347,6 +3406,39 @@ a {
     background: #eff9ff;
     color: #087ab5;
     font-weight: 850;
+}
+
+.hotel-import-status-text {
+    display: grid;
+    gap: 7px;
+    flex: 1;
+    min-width: 0;
+}
+
+.hotel-import-progress {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #dbeafe;
+}
+
+.hotel-import-progress[hidden],
+#hotelImportProgressText[hidden] {
+    display: none;
+}
+
+.hotel-import-progress b {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5b6df8, #14b8ff);
+    transition: width .25s ease;
+}
+
+#hotelImportProgressText {
+    color: #0f8fd8;
+    font-size: 13px;
 }
 
 .hotel-import-status[hidden] {
