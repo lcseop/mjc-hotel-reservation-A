@@ -197,3 +197,236 @@ WHERE NOT EXISTS (SELECT 1 FROM coupon WHERE coupon_name = '신규가입 10000�
 INSERT INTO coupon (coupon_name, discount_type, discount_value, min_order_amount, start_date, end_date, total_quantity)
 SELECT '여름 특가 10% 쿠폰', 'PERCENT', 10, 100000, NOW(), DATE_ADD(NOW(), INTERVAL 60 DAY), 500
 WHERE NOT EXISTS (SELECT 1 FROM coupon WHERE coupon_name = '여름 특가 10% 쿠폰');
+
+INSERT INTO members (name, phone, email, status, role, email_verified, member_point, created_at, updated_at, deleted)
+SELECT '관리자', '010-0000-0001', 'admin@staynow.kr', 'ACTIVE', 'ADMIN', true, 50000, NOW(), NOW(), false
+WHERE NOT EXISTS (SELECT 1 FROM members WHERE email = 'admin@staynow.kr');
+
+INSERT INTO members (name, phone, email, status, role, email_verified, member_point, created_at, updated_at, deleted)
+SELECT '테스트 사용자', '010-1234-5678', 'user@staynow.kr', 'ACTIVE', 'USER', true, 15000, NOW(), NOW(), false
+WHERE NOT EXISTS (SELECT 1 FROM members WHERE email = 'user@staynow.kr');
+
+INSERT INTO member_auth_accounts (member_id, provider, provider_user_id, password_hash, created_at, updated_at, deleted)
+SELECT m.sid, 'LOCAL', m.email, '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NOW(), NOW(), false
+FROM members m
+WHERE m.email = 'admin@staynow.kr'
+AND NOT EXISTS (
+    SELECT 1 FROM member_auth_accounts a
+    WHERE a.member_id = m.sid AND a.provider = 'LOCAL' AND a.deleted = false
+);
+
+INSERT INTO member_auth_accounts (member_id, provider, provider_user_id, password_hash, created_at, updated_at, deleted)
+SELECT m.sid, 'LOCAL', m.email, '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NOW(), NOW(), false
+FROM members m
+WHERE m.email = 'user@staynow.kr'
+AND NOT EXISTS (
+    SELECT 1 FROM member_auth_accounts a
+    WHERE a.member_id = m.sid AND a.provider = 'LOCAL' AND a.deleted = false
+);
+
+INSERT INTO member_term_agreements (member_id, term_id, is_agreed, agreed_at, created_at, updated_at, deleted)
+SELECT m.sid, t.sid, true, NOW(), NOW(), NOW(), false
+FROM members m, terms t
+WHERE m.email IN ('admin@staynow.kr', 'user@staynow.kr')
+AND t.term_type IN ('SERVICE', 'PRIVACY', 'MARKETING')
+AND NOT EXISTS (
+    SELECT 1 FROM member_term_agreements a
+    WHERE a.member_id = m.sid AND a.term_id = t.sid AND a.deleted = false
+);
+
+INSERT INTO hotel_in_amenities (hotel_id, amenities_id, created_at, updated_at, deleted)
+SELECT h.sid, a.sid, NOW(), NOW(), false
+FROM hotel h, hotel_amenities a
+WHERE h.hotel_name IN ('그랜드 서울 호텔', '골든 서울 호텔', '오션뷰 블루 리조트', '지구 풀빌라 스테이')
+AND a.title IN ('무료 와이파이', '무료 주차', '조식 포함')
+AND NOT EXISTS (
+    SELECT 1 FROM hotel_in_amenities ia
+    WHERE ia.hotel_id = h.sid AND ia.amenities_id = a.sid AND ia.deleted = false
+);
+
+INSERT INTO hotel_in_amenities (hotel_id, amenities_id, created_at, updated_at, deleted)
+SELECT h.sid, a.sid, NOW(), NOW(), false
+FROM hotel h, hotel_amenities a
+WHERE h.hotel_name IN ('오션뷰 블루 리조트', '지구 풀빌라 스테이')
+AND a.title IN ('수영장', '피트니스')
+AND NOT EXISTS (
+    SELECT 1 FROM hotel_in_amenities ia
+    WHERE ia.hotel_id = h.sid AND ia.amenities_id = a.sid AND ia.deleted = false
+);
+
+INSERT INTO coupon_issue (coupon_id, member_id, is_used, used_at)
+SELECT c.sid, m.sid, false, null
+FROM coupon c, members m
+WHERE c.coupon_name = '신규가입 10000원 할인 쿠폰'
+AND m.email IN ('admin@staynow.kr', 'user@staynow.kr')
+AND NOT EXISTS (
+    SELECT 1 FROM coupon_issue ci
+    WHERE ci.coupon_id = c.sid AND ci.member_id = m.sid
+);
+
+INSERT INTO coupon_issue (coupon_id, member_id, is_used, used_at)
+SELECT c.sid, m.sid, false, null
+FROM coupon c, members m
+WHERE c.coupon_name = '여름 특가 10% 쿠폰'
+AND m.email = 'user@staynow.kr'
+AND NOT EXISTS (
+    SELECT 1 FROM coupon_issue ci
+    WHERE ci.coupon_id = c.sid AND ci.member_id = m.sid
+);
+
+INSERT INTO reservations (
+    member_id, room_id, reservation_number, check_in_date, check_out_date, adults, children,
+    reservation_status, original_Amount, discount_Amount, coupon_discount, point_discount, earned_Point,
+    total_amount, special_requests, check_in_qr, total_nights, guest_name, created_at, updated_at, deleted
+)
+SELECT m.sid, r.sid, 'RSV-DEMO-UPCOMING',
+       DATE_ADD(CURDATE(), INTERVAL 3 DAY) + INTERVAL 15 HOUR,
+       DATE_ADD(CURDATE(), INTERVAL 4 DAY) + INTERVAL 11 HOUR,
+       2, 0, 'CONFIRMED', r.room_price, 0, 0, 0, 0,
+       r.room_price, '조용한 객실 요청', 'QR-RSV-DEMO-UPCOMING', 1, m.name, NOW(), NOW(), false
+FROM members m, room r
+JOIN hotel h ON h.sid = r.hotel_id
+WHERE m.email = 'user@staynow.kr'
+AND h.hotel_name = '그랜드 서울 호텔'
+AND r.room_number = 101
+AND NOT EXISTS (SELECT 1 FROM reservations WHERE reservation_number = 'RSV-DEMO-UPCOMING');
+
+INSERT INTO reservations (
+    member_id, room_id, reservation_number, check_in_date, check_out_date, adults, children,
+    reservation_status, original_Amount, discount_Amount, coupon_discount, point_discount, earned_Point,
+    total_amount, special_requests, check_in_qr, total_nights, guest_name, created_at, updated_at, deleted
+)
+SELECT m.sid, r.sid, 'RSV-DEMO-REVIEW',
+       DATE_SUB(CURDATE(), INTERVAL 8 DAY) + INTERVAL 15 HOUR,
+       DATE_SUB(CURDATE(), INTERVAL 7 DAY) + INTERVAL 11 HOUR,
+       2, 0, 'CHECKED_OUT', r.room_price, 30000, 10000, 5000, 120,
+       GREATEST(0, r.room_price - 45000), '늦은 체크인 예정', 'QR-RSV-DEMO-REVIEW', 1, m.name, DATE_SUB(NOW(), INTERVAL 10 DAY), NOW(), false
+FROM members m, room r
+JOIN hotel h ON h.sid = r.hotel_id
+WHERE m.email = 'user@staynow.kr'
+AND h.hotel_name = '골든 서울 호텔'
+AND r.room_number = 201
+AND NOT EXISTS (SELECT 1 FROM reservations WHERE reservation_number = 'RSV-DEMO-REVIEW');
+
+INSERT INTO reservations (
+    member_id, room_id, reservation_number, check_in_date, check_out_date, adults, children,
+    reservation_status, original_Amount, discount_Amount, coupon_discount, point_discount, earned_Point,
+    total_amount, special_requests, check_in_qr, total_nights, guest_name, created_at, updated_at, deleted
+)
+SELECT m.sid, r.sid, 'RSV-DEMO-CHECKIN',
+       CURDATE() + INTERVAL 15 HOUR,
+       DATE_ADD(CURDATE(), INTERVAL 1 DAY) + INTERVAL 11 HOUR,
+       1, 0, 'UPCOMING', r.room_price, 0, 0, 0, 0,
+       r.room_price, null, 'QR-RSV-DEMO-CHECKIN', 1, m.name, NOW(), NOW(), false
+FROM members m, room r
+JOIN hotel h ON h.sid = r.hotel_id
+WHERE m.email = 'admin@staynow.kr'
+AND h.hotel_name = '제주 시티 호텔'
+AND r.room_number = 901
+AND NOT EXISTS (SELECT 1 FROM reservations WHERE reservation_number = 'RSV-DEMO-CHECKIN');
+
+INSERT INTO point_history (reservation_id, member_id, amount, point_status, created_at, updated_at, deleted)
+SELECT res.sid, m.sid, 120, 'ACCUMULATION', NOW(), NOW(), false
+FROM reservations res
+JOIN members m ON m.sid = res.member_id
+WHERE res.reservation_number = 'RSV-DEMO-REVIEW'
+AND NOT EXISTS (
+    SELECT 1 FROM point_history ph
+    WHERE ph.reservation_id = res.sid AND ph.point_status = 'ACCUMULATION'
+);
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '청결도'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '청결도');
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '서비스'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '서비스');
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '위치'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '위치');
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '시설'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '시설');
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '가성비'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '가성비');
+
+INSERT INTO review_category_master (review_category_name)
+SELECT '조식'
+WHERE NOT EXISTS (SELECT 1 FROM review_category_master WHERE review_category_name = '조식');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '청결함', 'PROS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '청결함');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '친절한 직원', 'PROS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '친절한 직원');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '위치 좋음', 'PROS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '위치 좋음');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '소음', 'CONS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '소음');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '주차 불편', 'CONS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '주차 불편');
+
+INSERT INTO review_tag_master (review_tag_name, review_tag_category)
+SELECT '조식 대기', 'CONS'
+WHERE NOT EXISTS (SELECT 1 FROM review_tag_master WHERE review_tag_name = '조식 대기');
+
+INSERT INTO review (hotel_id, member_id, reservation_id, rating, travel_type, content, like_count, dislike_count, created_at, updated_at, deleted)
+SELECT h.sid, m.sid, res.sid, 5, 'COUPLE', '객실이 깔끔하고 직원 응대가 친절했습니다. 위치도 좋아서 다음에도 이용하고 싶어요.', 8, 1, DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(), false
+FROM reservations res
+JOIN members m ON m.sid = res.member_id
+JOIN room r ON r.sid = res.room_id
+JOIN hotel h ON h.sid = r.hotel_id
+WHERE res.reservation_number = 'RSV-DEMO-REVIEW'
+AND NOT EXISTS (SELECT 1 FROM review WHERE reservation_id = res.sid AND deleted = false);
+
+INSERT INTO review_category (review_id, review_category_master_id, rating)
+SELECT rv.sid, cm.sid, 5
+FROM review rv, review_category_master cm
+WHERE rv.content = '객실이 깔끔하고 직원 응대가 친절했습니다. 위치도 좋아서 다음에도 이용하고 싶어요.'
+AND cm.review_category_name IN ('청결도', '서비스', '위치')
+AND NOT EXISTS (
+    SELECT 1 FROM review_category rc
+    WHERE rc.review_id = rv.sid AND rc.review_category_master_id = cm.sid
+);
+
+INSERT INTO review_category (review_id, review_category_master_id, rating)
+SELECT rv.sid, cm.sid, 4
+FROM review rv, review_category_master cm
+WHERE rv.content = '객실이 깔끔하고 직원 응대가 친절했습니다. 위치도 좋아서 다음에도 이용하고 싶어요.'
+AND cm.review_category_name IN ('시설', '가성비', '조식')
+AND NOT EXISTS (
+    SELECT 1 FROM review_category rc
+    WHERE rc.review_id = rv.sid AND rc.review_category_master_id = cm.sid
+);
+
+INSERT INTO review_tag (review_id, review_tag_master_id)
+SELECT rv.sid, tm.sid
+FROM review rv, review_tag_master tm
+WHERE rv.content = '객실이 깔끔하고 직원 응대가 친절했습니다. 위치도 좋아서 다음에도 이용하고 싶어요.'
+AND tm.review_tag_name IN ('청결함', '친절한 직원', '위치 좋음', '조식 대기')
+AND NOT EXISTS (
+    SELECT 1 FROM review_tag rt
+    WHERE rt.review_id = rv.sid AND rt.review_tag_master_id = tm.sid
+);
+
+INSERT INTO review_answer (review_id, review_answer, created_at, updated_at, deleted)
+SELECT rv.sid, '소중한 리뷰 감사합니다. 다음 방문 때도 편안한 숙박이 되도록 준비하겠습니다.', NOW(), NOW(), false
+FROM review rv
+WHERE rv.content = '객실이 깔끔하고 직원 응대가 친절했습니다. 위치도 좋아서 다음에도 이용하고 싶어요.'
+AND NOT EXISTS (
+    SELECT 1 FROM review_answer ra
+    WHERE ra.review_id = rv.sid AND ra.deleted = false
+);

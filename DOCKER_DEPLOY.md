@@ -62,3 +62,13 @@ docker compose logs -f redis
 - MariaDB 컨테이너 내부 포트는 `3306`, 호스트 노출 포트는 기본 `33306`입니다.
 - 업로드 파일은 Docker volume `staynow-upload-data`에 저장됩니다.
 - DB 데이터는 Docker volume `staynow-mariadb-data`에 저장됩니다.
+
+# 초기화 계정
+
+## 관리자
+- 아이디 : admin@staynow.kr
+- 비밀번호 : password
+
+## 사용자
+- 아이디 : user@staynow.kr
+- 비밀번호 : password
