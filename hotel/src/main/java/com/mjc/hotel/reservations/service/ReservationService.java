@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -137,7 +136,7 @@ public class ReservationService {
     }
 
     public List<ReservationResponseDto> getAllReservations() {
-        return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
+        return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).toList();
     }
 
     public Page<ReservationResponseDto> searchReservations(
