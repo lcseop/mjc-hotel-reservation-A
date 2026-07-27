@@ -2175,17 +2175,47 @@ function importSelectedTourApiHotelsFromAdmin() {
     }).then(function (response) {
         setHotelImportProgress(100, true);
         const result = unwrapApiResponse(response) || {};
-        showAdminNotice(
-            "호텔 불러오기 완료: 선택 " + contentIds.length + "건, 신규 " + (result.imported ?? 0) + "건, 제외 " + (result.skipped ?? 0) + "건",
-            "success"
-        );
+        setHotelImportLoading(false);
         closeHotelManageModal();
         loadAdminHotelManageData();
+        showHotelImportResultModal(
+            "success",
+            "호텔 불러오기 완료",
+            "선택 " + contentIds.length + "건 중 신규 " + (result.imported ?? 0) + "건을 불러왔고, " + (result.skipped ?? 0) + "건은 제외됐습니다."
+        );
     }, function (xhr) {
-        showAdminNotice(getAdminAjaxMessage(xhr, "선택한 호텔을 저장하지 못했습니다."), "danger");
+        setHotelImportLoading(false);
+        showHotelImportResultModal(
+            "danger",
+            "호텔 불러오기 실패",
+            getAdminAjaxMessage(xhr, "선택한 호텔을 저장하지 못했습니다.")
+        );
     }).always(function () {
         setHotelImportLoading(false);
     });
+}
+
+function showHotelImportResultModal(tone, title, message) {
+    const resultTone = tone === "danger" ? "danger" : "success";
+    const icon = resultTone === "danger" ? "fa-triangle-exclamation" : "fa-circle-check";
+    const root = $("#hotelImportResultRoot");
+    const container = root.length ? root : $('<div id="hotelImportResultRoot"></div>').appendTo("body");
+
+    container.html(`
+        <div class="admin-modal-backdrop nested hotel-import-result-backdrop">
+            <div class="hotel-import-result-modal ${resultTone}" role="status" aria-live="polite">
+                <span class="hotel-import-result-icon"><i class="fa-solid ${icon}"></i></span>
+                <div>
+                    <strong>${escapeHtml(title)}</strong>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            </div>
+        </div>
+    `);
+
+    setTimeout(function () {
+        container.empty();
+    }, resultTone === "danger" ? 2600 : 1800);
 }
 
 function saveHotelCreate() {
