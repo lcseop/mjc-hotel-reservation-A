@@ -46,6 +46,6 @@ Thumbs.db
 *~
 
 # Archives
-*.zip
+# *.zip
 *.tar
 *.gz
