@@ -644,7 +644,7 @@ a {
 .admin-notice-host {
     position: sticky;
     top: 86px;
-    z-index: 70;
+    z-index: 140;
     margin: -6px 0 18px;
 }
 
