@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +34,7 @@ public class HotelWishlistRestController {
             description = "회원이 찜한 호텔 목록을 나열합니다."
     )
     @GetMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberId)")
     public ResponseEntity<ApiResponse<List<HotelWishlistResponseDto>>> findByMember(@RequestParam Long memberId) {
         return ResponseEntity.ok(new ApiResponse<>(
                 ResponseCode.SUCCESS,
@@ -46,6 +48,7 @@ public class HotelWishlistRestController {
             description = "회원이 호텔 아이디를 받아 그 호텔에 대해 찜했는지 확인합니다."
     )
     @GetMapping("/status")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberId)")
     public ResponseEntity<ApiResponse<HotelWishlistResponseDto>> status(@RequestParam Long memberId,
                                                                         @RequestParam Long hotelId) {
         return ResponseEntity.ok(new ApiResponse<>(
@@ -60,6 +63,7 @@ public class HotelWishlistRestController {
             description = "위시리스트를 등록합니다."
     )
     @PostMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #dto.memberId)")
     public ResponseEntity<ApiResponse<HotelWishlistResponseDto>> add(@RequestBody HotelWishlistRequestDto dto) {
         return ResponseEntity.status(201).body(new ApiResponse<>(
                 ResponseCode.SUCCESS,
@@ -73,6 +77,7 @@ public class HotelWishlistRestController {
             description = "회원과 호텔 아이디를 받아 두 아이디가 일치하는 위시리스트를 삭제합니다."
     )
     @DeleteMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberId)")
     public ResponseEntity<ApiResponse<HotelWishlistResponseDto>> deleteByMemberAndHotel(@RequestParam Long memberId,
                                                                                         @RequestParam Long hotelId) {
         return ResponseEntity.ok(new ApiResponse<>(
@@ -87,6 +92,7 @@ public class HotelWishlistRestController {
             description = "위시리스트 ID를 바탕으로 위시리스트를 삭제합니다."
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("@apiAuthorization.ownsWishlist(authentication, #id)")
     public ResponseEntity<ApiResponse<HotelWishlistResponseDto>> deleteById(@PathVariable Long id) {
         return ResponseEntity.ok(new ApiResponse<>(
                 ResponseCode.SUCCESS,

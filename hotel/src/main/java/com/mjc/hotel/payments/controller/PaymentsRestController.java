@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class PaymentsRestController {
             description = "토스 결제창 호출 전 결제 요청 정보를 저장합니다."
     )
     @PostMapping("/toss/ready")
+    @PreAuthorize("@apiAuthorization.isSelf(authentication, #dto.memberId) and @apiAuthorization.ownsReservation(authentication, #dto.reservationId)")
     public ResponseEntity<ApiResponse<TossPaymentReadyResponseDto>> readyTossPayment(@RequestBody TossPaymentReadyRequestDto dto) {
         return ResponseEntity.status(201).body(
                 new ApiResponse<>(ResponseCode.SUCCESS, "toss payment ready success", paymentsService.readyTossPayment(dto))
@@ -58,6 +60,7 @@ public class PaymentsRestController {
             description = "토스 결제 성공 후 paymentKey, orderId, amount를 검증하고 승인합니다."
     )
     @PostMapping("/toss/confirm")
+    @PreAuthorize("@apiAuthorization.ownsReservation(authentication, #dto.reservationId) and @apiAuthorization.ownsPaymentOrder(authentication, #dto.orderId)")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> confirmTossPayment(@RequestBody TossPaymentConfirmRequestDto dto) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "toss payment confirm success", paymentsDtoMapper.toResponseDto(paymentsService.confirmTossPayment(dto)))
@@ -69,6 +72,7 @@ public class PaymentsRestController {
             description = "토스 결제 실패 또는 취소 정보를 저장합니다."
     )
     @PostMapping("/toss/fail")
+    @PreAuthorize("@apiAuthorization.ownsPaymentOrder(authentication, #dto.orderId)")
     public ResponseEntity<ApiResponse<PaymentsResponseDto>> failTossPayment(@RequestBody TossPaymentFailRequestDto dto) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "toss payment fail saved", paymentsDtoMapper.toResponseDto(paymentsService.failTossPayment(dto)))

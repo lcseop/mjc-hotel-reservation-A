@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,6 +64,7 @@ public class MemberRestController {
     )
 
     @GetMapping("/{sid}")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #sid)")
     public ResponseEntity<ApiResponse<MemberResponseDto>> getMember(@PathVariable Long sid) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "member select success", memberDtoMapper.toResponseDto(memberService.getMember(sid)))
@@ -74,11 +77,21 @@ public class MemberRestController {
     )
 
     @PatchMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #dto.sid)")
     public ResponseEntity<ApiResponse<MemberResponseDto>> update(
-            @RequestBody MemberRequestDto dto
+            @RequestBody MemberRequestDto dto,
+            Authentication authentication
     ) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         return ResponseEntity.ok(
-                new ApiResponse<>(ResponseCode.SUCCESS, "member update success", memberDtoMapper.toResponseDto(memberService.updateMember(dto.getSid(), memberDtoMapper.toEntity(dto))))
+                new ApiResponse<>(
+                        ResponseCode.SUCCESS,
+                        "member update success",
+                        memberDtoMapper.toResponseDto(admin
+                                ? memberService.updateMember(dto.getSid(), memberDtoMapper.toEntity(dto))
+                                : memberService.updateMemberProfile(dto.getSid(), memberDtoMapper.toEntity(dto)))
+                )
         );
     }
 

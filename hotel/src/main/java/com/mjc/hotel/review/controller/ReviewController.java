@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class ReviewController {
             description = "리뷰를 만듭니다."
     )
     @PostMapping
+    @PreAuthorize("@apiAuthorization.isSelf(authentication, #request.memberId) and @apiAuthorization.ownsReservation(authentication, #request.reservationId)")
     public ResponseEntity<ApiResponse<ReviewResponse>> insert(@RequestBody ReviewCreateRequest request){
         ReviewResponse response = reviewService.insertReview(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -51,6 +53,7 @@ public class ReviewController {
             description = "리뷰를 수정합니다."
     )
     @PatchMapping
+    @PreAuthorize("@apiAuthorization.ownsReview(authentication, #request.sid)")
     public ResponseEntity<ApiResponse<ReviewResponse>> update(@RequestBody ReviewUpdateRequest request){
         ReviewResponse response = reviewService.updateReview(request);
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -74,6 +77,7 @@ public class ReviewController {
             description = "리뷰를 삭제합니다."
     )
     @DeleteMapping("/{sid}")
+    @PreAuthorize("@apiAuthorization.ownsReview(authentication, #sid)")
     public ResponseEntity<ApiResponse<ReviewResponse>> delete(@PathVariable Long sid){
         ReviewResponse response = reviewService.deleteReviewId(sid);
         return ResponseEntity.status(HttpStatus.OK).body(

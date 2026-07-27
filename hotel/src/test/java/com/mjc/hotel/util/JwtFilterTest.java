@@ -2,6 +2,7 @@ package com.mjc.hotel.util;
 
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberStatus;
+import com.mjc.hotel.member.entity.MemberRole;
 import com.mjc.hotel.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +47,20 @@ class JwtFilterTest {
         when(jwtProvider.validateAccessToken("access-token")).thenReturn(true);
         when(jwtProvider.getName("access-token")).thenReturn(email);
         when(memberRepository.findActiveByEmail(email)).thenReturn(Optional.of(
-                Member.builder().email(email).status(MemberStatus.ACTIVE).build()
+                Member.builder()
+                        .email(email)
+                        .status(MemberStatus.ACTIVE)
+                        .role(MemberRole.USER)
+                        .build()
         ));
         MockHttpServletResponse response = filter("Bearer access-token");
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName())
                 .isEqualTo(email);
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                .extracting("authority")
+                .containsExactly("ROLE_USER");
     }
 
     @Test

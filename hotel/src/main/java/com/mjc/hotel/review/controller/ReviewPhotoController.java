@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class ReviewPhotoController {
             description = "리뷰 사진 모두를 추가합니다."
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@apiAuthorization.ownsReview(authentication, #request.reviewId)")
     public ResponseEntity<ApiResponse<List<ReviewPhotoResponse>>> insert(@ModelAttribute ReviewPhotoCreateRequest request) {
         List<ReviewPhotoResponse> responses = reviewPhotoService.insertReviewPhotos(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -42,6 +44,7 @@ public class ReviewPhotoController {
             description = "리뷰 사진 수정시 원래 사진은 논리 삭제하고 수정된 사진으로 새로 수정합니다."
     )
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@apiAuthorization.ownsReviewPhoto(authentication, #request.sid) and @apiAuthorization.ownsReview(authentication, #request.reviewId)")
     public ResponseEntity<ApiResponse<ReviewPhotoResponse>> update(@ModelAttribute ReviewPhotoUpdateRequest request) {
         ReviewPhotoResponse response = reviewPhotoService.updateReviewPhoto(request);
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -65,6 +68,7 @@ public class ReviewPhotoController {
             description = "리뷰 사진 삭제시 사진을 삭제합니다."
     )
     @DeleteMapping("{sid}")
+    @PreAuthorize("@apiAuthorization.ownsReviewPhoto(authentication, #sid)")
     public ResponseEntity<ApiResponse<ReviewPhotoResponse>> delete(@PathVariable Long sid) {
         ReviewPhotoResponse response = reviewPhotoService.deleteReviewImage(sid);
         return ResponseEntity.status(HttpStatus.OK).body(

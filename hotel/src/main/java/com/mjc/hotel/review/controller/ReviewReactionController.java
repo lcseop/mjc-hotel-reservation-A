@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class ReviewReactionController {
             description = "특정 리뷰에 대한 특정 멤버의 좋아요 싫어요 여부를 생성합니다."
     )
     @PostMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #request.memberId)")
     public ResponseEntity<ApiResponse<ReviewReactionResponse>> insert(@RequestBody ReviewReactionRequest request){
         ReviewReactionResponse response = reviewReactionService.addReviewReaction(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -36,6 +38,7 @@ public class ReviewReactionController {
             description = "특정 리뷰에 대한 특정 멤버의 좋아요, 싫어요, 취소 여부를 새 상태로 변경합니다."
     )
     @PatchMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #request.memberId)")
     public ResponseEntity<ApiResponse<ReviewReactionResponse>> update(@RequestBody ReviewReactionRequest request){
         ReviewReactionResponse response = reviewReactionService.updateReviewReaction(request);
         return ResponseEntity.status(HttpStatus.OK).body(

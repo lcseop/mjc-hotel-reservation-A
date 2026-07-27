@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,6 +35,7 @@ public class MemberAuthAccountRestController {
     )
 
     @PostMapping("/api/member-auth-accounts")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MemberAuthAccountResponseDto>> insertAuthAccount(
             @RequestBody MemberAuthAccountRequestDto request
     ) {
@@ -52,6 +54,7 @@ public class MemberAuthAccountRestController {
     )
 
     @GetMapping("/api/member-auth-accounts/{sid}")
+    @PreAuthorize("@apiAuthorization.ownsAuthAccount(authentication, #sid)")
     public ResponseEntity<ApiResponse<MemberAuthAccountResponseDto>> getAuthAccount(@PathVariable Long sid) {
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -68,6 +71,7 @@ public class MemberAuthAccountRestController {
     )
 
     @GetMapping("/api/member/{memberSid}/auth-accounts")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberSid)")
     public ResponseEntity<ApiResponse<List<MemberAuthAccountResponseDto>>> getAuthAccountsByMember(
             @PathVariable Long memberSid
     ) {
@@ -86,6 +90,7 @@ public class MemberAuthAccountRestController {
     )
 
     @PatchMapping("/api/member-auth-accounts")
+    @PreAuthorize("@apiAuthorization.ownsAuthAccount(authentication, #request.sid)")
     public ResponseEntity<ApiResponse<MemberAuthAccountResponseDto>> updateAuthAccount(
             @RequestBody MemberAuthAccountRequestDto request
     ) {
@@ -104,6 +109,7 @@ public class MemberAuthAccountRestController {
     )
 
     @DeleteMapping("/api/member-auth-accounts/{sid}")
+    @PreAuthorize("@apiAuthorization.ownsAuthAccount(authentication, #sid)")
     public ResponseEntity<ApiResponse<Void>> deleteAuthAccount(@PathVariable Long sid) {
         memberService.deleteAuthAccount(sid);
         return ResponseEntity.ok(

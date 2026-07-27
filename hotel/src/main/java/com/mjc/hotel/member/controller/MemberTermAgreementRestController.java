@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,6 +35,7 @@ public class MemberTermAgreementRestController {
     )
 
     @PostMapping("/api/member-term-agreements")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #request.memberSid)")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> insertTermAgreement(
             @RequestBody MemberTermAgreementRequestDto request
     ) {
@@ -52,6 +54,7 @@ public class MemberTermAgreementRestController {
     )
 
     @GetMapping("/api/member-term-agreements/{sid}")
+    @PreAuthorize("@apiAuthorization.ownsTermAgreement(authentication, #sid)")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> getTermAgreement(@PathVariable Long sid) {
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -68,6 +71,7 @@ public class MemberTermAgreementRestController {
     )
 
     @GetMapping("/api/member/{memberSid}/term-agreements")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberSid)")
     public ResponseEntity<ApiResponse<List<MemberTermAgreementResponseDto>>> getTermAgreementsByMember(
             @PathVariable Long memberSid
     ) {
@@ -86,6 +90,7 @@ public class MemberTermAgreementRestController {
     )
 
     @PatchMapping("/api/member-term-agreements")
+    @PreAuthorize("@apiAuthorization.ownsTermAgreement(authentication, #request.sid)")
     public ResponseEntity<ApiResponse<MemberTermAgreementResponseDto>> updateTermAgreement(
             @RequestBody MemberTermAgreementRequestDto request
     ) {
@@ -104,6 +109,7 @@ public class MemberTermAgreementRestController {
     )
 
     @DeleteMapping("/api/member-term-agreements/{sid}")
+    @PreAuthorize("@apiAuthorization.ownsTermAgreement(authentication, #sid)")
     public ResponseEntity<ApiResponse<Void>> deleteTermAgreement(@PathVariable Long sid) {
         memberService.deleteTermAgreement(sid);
         return ResponseEntity.ok(

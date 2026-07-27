@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -167,6 +168,7 @@ public class HotelRestController {
             description = "한국관광공사 TourAPI를 이용해 호텔 데이터를 가져와 호텔/사진/기본 객실로 저장합니다."
     )
     @PostMapping("/import/tourapi")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TourApiImportResponseDto>> importTourApiHotels(
             @RequestParam(defaultValue = "서울 호텔") String keyword,
             @RequestParam(defaultValue = "1") Integer page,
@@ -183,6 +185,7 @@ public class HotelRestController {
             description = "한국관광공사 TourAPI에서 호텔 후보 목록만 조회합니다. DB에는 저장하지 않습니다."
     )
     @GetMapping("/import/tourapi/preview")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<TourApiHotelPreviewDto>>> previewTourApiHotels(
             @RequestParam(defaultValue = "서울") String keyword,
             @RequestParam(defaultValue = "1") Integer page,
@@ -199,6 +202,7 @@ public class HotelRestController {
             description = "미리보기 목록에서 선택한 TourAPI 호텔만 저장하고 기본 객실까지 생성합니다."
     )
     @PostMapping("/import/tourapi/selected")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TourApiImportResponseDto>> importSelectedTourApiHotels(
             @RequestBody TourApiImportRequestDto dto
     ) {

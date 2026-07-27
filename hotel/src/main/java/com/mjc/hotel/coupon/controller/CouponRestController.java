@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -82,6 +83,7 @@ public class CouponRestController {
             description = "예약 화면에서 사용할 수 있는 회원의 미사용 쿠폰을 가져옵니다."
     )
     @GetMapping("/member/{memberId}")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberId)")
     public ResponseEntity<ApiResponse<List<CouponIssueResponseDto>>> findUsableByMember(@PathVariable Long memberId) {
         List<CouponIssueResponseDto> coupons = couponService.findUsableByMember(memberId);
         return ResponseEntity.ok(

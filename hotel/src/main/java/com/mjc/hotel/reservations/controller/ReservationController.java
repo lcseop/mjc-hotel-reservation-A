@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class ReservationController {
     private final GenericResponseService responseBuilder;
 
     @PostMapping
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #requestDto.memberId)")
     @Operation(summary = "예약 생성", description = "새로운 예약을 생성합니다")
     public ResponseEntity<ReservationResponseDto> createReservation(
             @Valid @RequestBody ReservationRequestDto requestDto) {
@@ -43,6 +45,7 @@ public class ReservationController {
     }
 
     @GetMapping("/{reservationId}")
+    @PreAuthorize("@apiAuthorization.ownsReservation(authentication, #reservationId)")
     @Operation(summary = "예약 조회", description = "예약 ID로 예약 정보를 조회합니다")
     public ResponseEntity<ReservationResponseDto> getReservation(
             @PathVariable Long reservationId) {
@@ -51,6 +54,7 @@ public class ReservationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "예약 목록 조회", description = "모든 예약 목록을 조회합니다")
     public ResponseEntity<List<ReservationResponseDto>> getAllReservations() {
         List<ReservationResponseDto> response = reservationService.getAllReservations();
@@ -58,6 +62,7 @@ public class ReservationController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("@apiAuthorization.canSearchReservations(authentication, #memberId)")
     @Operation(summary = "예약 검색", description = "상태/회원 기준으로 예약을 페이징 조회합니다")
     public ResponseEntity<Page<ReservationResponseDto>> searchReservations(
             @RequestParam(required = false) ReservationStatus status,
@@ -76,6 +81,7 @@ public class ReservationController {
     }
 
     @GetMapping("/point-history")
+    @PreAuthorize("@apiAuthorization.isSelfOrAdmin(authentication, #memberId)")
     @Operation(summary = "포인트 이력 조회", description = "회원 기준으로 포인트 적립/사용 이력을 페이징 조회합니다")
     public ResponseEntity<Page<PointHistoryResponseDto>> getPointHistories(
             @RequestParam Long memberId,
@@ -85,6 +91,7 @@ public class ReservationController {
     }
 
     @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "예약 통계", description = "관리자 대시보드용 예약 통계를 조회합니다")
     public ResponseEntity<ReservationStatsDto> getReservationStats() {
         ReservationStatsDto response = reservationService.getReservationStats();
@@ -92,6 +99,7 @@ public class ReservationController {
     }
 
     @PostMapping("/cancel")
+    @PreAuthorize("@apiAuthorization.ownsReservation(authentication, #cancelDto.sid)")
     @Operation(summary = "예약 취소", description = "예약을 취소하고 환불을 처리합니다")
     public ResponseEntity<Void> cancelReservation(
             @Valid @RequestBody ReservationCancelDto cancelDto) {
@@ -100,6 +108,7 @@ public class ReservationController {
     }
 
     @PatchMapping("/{reservationId}/payment-cancel")
+    @PreAuthorize("@apiAuthorization.ownsReservation(authentication, #reservationId)")
     @Operation(summary = "결제 대기 예약 취소", description = "결제 실패/취소된 대기 예약을 정리합니다")
     public ResponseEntity<ReservationResponseDto> cancelPendingPaymentReservation(
             @PathVariable Long reservationId,
@@ -110,6 +119,7 @@ public class ReservationController {
     }
 
     @PatchMapping("/{reservationId}/check-in")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "체크인", description = "예약에 대한 체크인을 처리합니다")
     public ResponseEntity<ReservationResponseDto> checkIn(
             @PathVariable Long reservationId) {
@@ -118,6 +128,7 @@ public class ReservationController {
     }
 
     @PatchMapping("/check-in/qr")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "QR 체크인", description = "체크인 QR 값으로 예약 체크인을 처리합니다")
     public ResponseEntity<ReservationResponseDto> checkInByQr(
             @RequestBody Map<String, String> request) {
@@ -126,6 +137,7 @@ public class ReservationController {
     }
 
     @PatchMapping("/{reservationId}/check-out")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "체크아웃", description = "예약에 대한 체크아웃을 처리합니다")
     public ResponseEntity<ReservationResponseDto> checkOut(
             @PathVariable Long reservationId) {

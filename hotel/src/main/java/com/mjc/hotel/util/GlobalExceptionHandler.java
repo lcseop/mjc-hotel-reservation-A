@@ -6,11 +6,19 @@ import com.mjc.hotel.member.withdrawal.exception.SocialUnlinkException;
 import com.mjc.hotel.member.withdrawal.exception.WithdrawalConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<String>> accessDeniedHandler(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new ApiResponse<>(ResponseCode.AUTHENTICATION_ERROR, "access denied", "접근 권한이 없습니다.")
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
