@@ -71,6 +71,10 @@ file:
 springdoc:
   enable-querydsl: false
 
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+
 review:
   images: D:/review/images/ #리뷰 사진 저장할 임시 경로
 

@@ -3,9 +3,13 @@ package com.mjc.hotel.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
@@ -15,9 +19,13 @@ public class JwtProvider {
 	private static final String ACCESS_TOKEN_TYPE = "access";
 	private static final String REFRESH_TOKEN_TYPE = "refresh";
 
-	private static final String SECRET_KEY = "secret-my-secretkey-hello-secret-my-secretkey-hello";
 	private static final long ACCESS_TOKEN_TIME = 1000L * 60 * 60;
 	private static final long REFRESH_TOKEN_TIME = 1000L * 60 * 60 * 24 * 14;
+	private final SecretKey signingKey;
+
+	public JwtProvider(@Value("${security.jwt.secret}") String encodedSecretKey) {
+		this.signingKey = createSigningKey(encodedSecretKey);
+	}
 
 	public String createAccessToken(String name) {
 		return createToken(name, ACCESS_TOKEN_TYPE, ACCESS_TOKEN_TIME);
@@ -35,9 +43,9 @@ public class JwtProvider {
 						.claim(TOKEN_TYPE_CLAIM, tokenType)
 						.setIssuedAt(now)
 						.setExpiration(new Date(now.getTime() + expirationMillis))
-						.signWith(
-										Keys.hmacShaKeyFor(SECRET_KEY.getBytes()),
-										SignatureAlgorithm.HS256
+							.signWith(
+											signingKey,
+											SignatureAlgorithm.HS256
 						)
 						.compact();
 
@@ -83,12 +91,25 @@ public class JwtProvider {
 
 	private Claims getClaims(String token) {
 		return Jwts.parserBuilder()
-						.setSigningKey(
-										Keys.hmacShaKeyFor(SECRET_KEY.getBytes())
-						)
-						.build()
-						.parseClaimsJws(token)
-						.getBody();
+							.setSigningKey(signingKey)
+							.build()
+							.parseClaimsJws(token)
+							.getBody();
+	}
+
+	private SecretKey createSigningKey(String encodedSecretKey) {
+		if (encodedSecretKey == null || encodedSecretKey.isBlank()) {
+			throw new IllegalStateException("security.jwt.secret must be configured.");
+		}
+
+		try {
+			return Keys.hmacShaKeyFor(Decoders.BASE64.decode(encodedSecretKey));
+		} catch (IllegalArgumentException | WeakKeyException exception) {
+			throw new IllegalStateException(
+					"security.jwt.secret must be a Base64-encoded key of at least 256 bits.",
+					exception
+			);
+		}
 	}
 
 }

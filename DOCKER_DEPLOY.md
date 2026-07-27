@@ -6,7 +6,7 @@
 cp docker.env.example .env
 ```
 
-`.env`에서 Docker Hub ID, DB/Redis 비밀번호, Gmail 앱 비밀번호, Toss 키와 Google OAuth 정보를 서버 환경에 맞게 수정합니다.
+`.env`에서 Docker Hub ID, DB/Redis 비밀번호, Gmail 앱 비밀번호, Toss 키, Google OAuth 정보와 `JWT_SECRET`을 서버 환경에 맞게 수정합니다. `JWT_SECRET`은 `openssl rand -base64 32`로 생성한 고유 값을 사용해야 합니다.
 
 Google Cloud Console에는 `https://<배포-도메인>/login/oauth2/code/google`을 승인된 리다이렉트 URI로 등록합니다. `.env`의 `OAUTH2_FRONTEND_CALLBACK_URL`은 `https://<배포-도메인>/oauth-callback.html`로 설정합니다.
 

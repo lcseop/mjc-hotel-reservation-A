@@ -50,6 +50,7 @@ services:
       TZ: Asia/Seoul
       SERVER_PORT: 33000
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-oauth}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be a Base64-encoded key of at least 256 bits}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
