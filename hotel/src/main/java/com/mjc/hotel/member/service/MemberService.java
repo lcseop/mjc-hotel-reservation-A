@@ -90,6 +90,14 @@ public class MemberService {
     }
 
     @Transactional
+    public Member updateMemberProfile(Long sid, Member requestMember) {
+        Member member = getMember(sid);
+        member.setName(requestMember.getName());
+        member.setPhone(requestMember.getPhone());
+        return member;
+    }
+
+    @Transactional
     public Member createMember(
             Member member,
             MemberAuthAccount authAccount,
@@ -117,18 +125,14 @@ public class MemberService {
     public MemberAuthAccount createAuthAccount(MemberAuthAccountRequestDto request) {
         Member member = getMember(request.getMemberSid());
         MemberAuthAccount authAccount = memberDtoMapper.toAuthAccount(request, member);
-        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword(), request.getPasswordHash()));
+        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword()));
         return memberAuthAccountRepository.save(authAccount);
     }
 
     @Transactional
     public MemberAuthAccount updateAuthAccount(Long sid, MemberAuthAccountRequestDto request) {
         MemberAuthAccount authAccount = findAuthAccount(sid);
-        authAccount.setMember(getMember(request.getMemberSid()));
-        authAccount.setProvider(request.getProvider());
-        authAccount.setProviderUserId(request.getProviderUserId());
-        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword(), request.getPasswordHash()));
-        authAccount.setLastLoginAt(request.getLastLoginAt());
+        authAccount.setPasswordHash(resolvePasswordHash(request.getPassword()));
 
         return authAccount;
     }
@@ -143,7 +147,6 @@ public class MemberService {
     @Transactional
     public MemberTermAgreement updateTermAgreement(Long sid, MemberTermAgreementRequestDto request) {
         MemberTermAgreement termAgreement = findTermAgreement(sid);
-        termAgreement.setMember(getMember(request.getMemberSid()));
         termAgreement.setTerm(findTerm(request.getTermSid()));
         termAgreement.setIsAgreed(request.getIsAgreed());
         termAgreement.setAgreedAt(request.getAgreedAt());
@@ -185,11 +188,11 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. sid=" + sid));
     }
 
-    private String resolvePasswordHash(String password, String passwordHash) {
+    private String resolvePasswordHash(String password) {
         if (password != null && !password.isBlank()) {
             return passwordEncoder.encode(password);
         }
-        return passwordHash;
+        throw new IllegalArgumentException("비밀번호는 필수입니다.");
     }
 
     private void prepareRequiredMemberValues(Member member) {
