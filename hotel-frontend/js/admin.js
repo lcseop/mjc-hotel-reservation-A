@@ -3403,6 +3403,7 @@ function clearRoomPhotoObjectUrls() {
 }
 
 function resolveAdminImagePath(path) {
+    path = window.StayNowConfig.safeImageUrl(path, "");
     if (!path) return "";
     if (/^(https?:)?\/\//.test(path) || path.startsWith("data:") || path.startsWith("blob:")) return path;
     if (path.startsWith("/")) return window.StayNowConfig.assetUrl(path);
@@ -5532,7 +5533,9 @@ function processAdminQrCheckin(qrValue) {
                 "예약번호: " + escapeHtml(reservation.reservationNumber || "-") + "<br>" +
                 "호텔: " + escapeHtml(reservation.hotelName || "호텔명 없음") + "<br>" +
                 "투숙객: " + escapeHtml(reservation.guestName || reservation.memberName || "투숙객"),
-                false
+                false,
+                false,
+                true
             );
             loadAdminCheckinData();
         }, function (xhr) {
@@ -5543,12 +5546,12 @@ function processAdminQrCheckin(qrValue) {
         });
 }
 
-function showAdminQrResult(message, isError, isMuted) {
+function showAdminQrResult(message, isError, isMuted, allowHtml) {
     $("#adminQrResult")
         .removeClass("empty error muted")
         .toggleClass("error", Boolean(isError))
         .toggleClass("muted", Boolean(isMuted))
-        .html(message);
+        .html(allowHtml ? message : escapeHtml(message));
 }
 
 function loadDashboardRoomsAndReviews(baseData) {

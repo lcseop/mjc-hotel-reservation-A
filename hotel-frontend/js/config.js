@@ -3,7 +3,7 @@
         && window.location.port
         && !["80", "33000"].includes(window.location.port);
     const defaultApiBase = localFrontend ? "http://localhost:33000/api" : "/api";
-    const API_BASE = window.STAYNOW_API_BASE || defaultApiBase;
+    const API_BASE = String(window.STAYNOW_API_BASE || defaultApiBase).replace(/\/+$/, "");
     const ASSET_BASE = API_BASE.startsWith("http") ? API_BASE.replace(/\/api$/, "") : "";
     let refreshPromise = null;
 
@@ -31,6 +31,8 @@
         getAuth: getStoredAuth,
         saveAuth: saveStoredAuth,
         clearAuth: clearStoredAuth,
+        safeRedirectUrl: safeRedirectUrl,
+        safeImageUrl: safeImageUrl,
         authHeaders: function () {
             const auth = getStoredAuth();
             return auth && auth.token ? { Authorization: auth.token } : {};
@@ -38,6 +40,36 @@
         refreshAccessToken: refreshAccessToken,
         logout: logoutWithRefreshToken
     };
+
+    function safeRedirectUrl(value, fallback) {
+        const fallbackUrl = fallback || "index.html";
+        const target = String(value || "").trim();
+
+        if (!target || /[\r\n\\]/.test(target)) return fallbackUrl;
+        if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(target)) return fallbackUrl;
+        if (/^(?:javascript|data|vbscript):/i.test(target)) return fallbackUrl;
+        if (target.startsWith("/") || target.includes("..")) return fallbackUrl;
+
+        const path = target.split(/[?#]/)[0];
+        if (!/^[a-z0-9._/-]+\.html$/i.test(path)) return fallbackUrl;
+
+        return target;
+    }
+
+    function safeImageUrl(value, fallback) {
+        const fallbackUrl = fallback || "";
+        const target = String(value || "").trim().replaceAll("\\", "/");
+
+        if (!target || /[\r\n]/.test(target)) return fallbackUrl;
+        if (/^(?:javascript|vbscript):/i.test(target)) return fallbackUrl;
+        if (/^data:/i.test(target)) {
+            return /^data:image\/(?:png|jpe?g|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(target)
+                ? target
+                : fallbackUrl;
+        }
+
+        return target;
+    }
 
     function getAuthStorage() {
         return localStorage.getItem("staynowAuth") ? localStorage : sessionStorage;

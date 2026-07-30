@@ -783,7 +783,7 @@ function recommendButton() {
         goHotelSearch(makePresetSearchRequest(recommendations[currentIndex].request));
     });
 
-    $(".recommend .section-header a").click(function (e) {
+    $(".recommend-refresh").click(function (e) {
         e.preventDefault();
         currentIndex = (currentIndex + 1) % recommendations.length;
         renderRecommendation(recommendations[currentIndex]);
@@ -1092,6 +1092,7 @@ function loadDealImage(hotelId) {
 }
 
 function normalizeImagePath(imagePath) {
+    imagePath = window.StayNowConfig.safeImageUrl(imagePath, "https://gunsancci.korcham.net/images/no-image01.gif");
 
     if (!imagePath) {
         return "https://gunsancci.korcham.net/images/no-image01.gif";

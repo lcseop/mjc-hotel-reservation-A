@@ -10,7 +10,7 @@ $(function () {
 
     if (!wishlistAuth || !wishlistAuth.memberSid) {
         alert("위시리스트를 보려면 로그인이 필요합니다.");
-        sessionStorage.setItem("afterLoginRedirect", location.href);
+        sessionStorage.setItem("afterLoginRedirect", location.pathname.split("/").pop() + location.search + location.hash);
         location.href = "login.html";
         return;
     }

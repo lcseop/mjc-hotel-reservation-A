@@ -60,9 +60,6 @@
         }
 
         const trimmed = value.trim();
-        return /^[A-Za-z0-9._/-]+(?:\?[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]*)?$/.test(trimmed)
-            && !trimmed.startsWith("/")
-            && !trimmed.includes("://")
-            && !trimmed.startsWith("..");
+        return window.StayNowConfig.safeRedirectUrl(trimmed, "index.html") === trimmed;
     }
 })(window, window.jQuery);

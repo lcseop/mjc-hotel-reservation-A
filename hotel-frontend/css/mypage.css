@@ -1548,21 +1548,21 @@ textarea {
     background: #f8fafc;
 }
 
-.review-write-modal footer p {
+.review-write-modal .write-modal-footer p {
     margin: 0;
     color: #64748b;
     font-size: 12px;
     font-weight: 800;
 }
 
-.review-write-modal footer div {
+.review-write-modal .write-modal-footer div {
     display: flex;
     flex-shrink: 0;
     flex-wrap: nowrap;
     gap: 10px;
 }
 
-.review-write-modal footer button {
+.review-write-modal .write-modal-footer button {
     height: 44px;
     min-width: 88px;
     padding: 0 22px;
@@ -2116,11 +2116,11 @@ textarea {
         align-items: stretch;
     }
 
-    .review-write-modal footer div {
+    .review-write-modal .write-modal-footer div {
         width: 100%;
     }
 
-    .review-write-modal footer button {
+    .review-write-modal .write-modal-footer button {
         flex: 1;
     }
 }
