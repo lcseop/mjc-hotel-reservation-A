@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: ${MARIADB_DATABASE:-hotel}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-1234}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set MARIADB_ROOT_PASSWORD}
       TZ: Asia/Seoul
     ports:
       - "${MARIADB_PORT:-33306}:3306"
@@ -22,8 +22,8 @@ services:
     container_name: staynow-redis
     restart: unless-stopped
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-mjc813pass}
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-mjc813pass}"]
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}"]
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
@@ -59,13 +59,13 @@ services:
       OAUTH2_FRONTEND_CALLBACK_URL: ${OAUTH2_FRONTEND_CALLBACK_URL:-http://localhost/oauth-callback.html}
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE:-hotel}
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MARIADB_ROOT_PASSWORD:-1234}
+      SPRING_DATASOURCE_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set MARIADB_ROOT_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-mjc813pass}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:-test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:?set TOSS_SECRET_KEY}
       FILE_UPLOAD_DIR: /app/uploads
       REVIEW_IMAGES: /app/uploads/review/
       ROOM_IMAGES: /app/uploads/room/

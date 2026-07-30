@@ -13,7 +13,7 @@ spring:
   datasource:
     url: jdbc:mariadb://localhost:33306/hotel
     username: root
-    password: 1234
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
     driver-class-name: org.mariadb.jdbc.Driver
   mail:
     host: smtp.gmail.com
@@ -31,7 +31,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: mjc813pass
+      password: ${SPRING_DATA_REDIS_PASSWORD:mjc813pass}
   jpa:
     defer-datasource-initialization: true
     hibernate:
@@ -81,11 +81,11 @@ hotel:
   images: D:/hotel/images/ #호텔 사진 저장할 임시 경로
 
 tour-api:
-  service-key: b150552048fb26688f074a89f2c3993e1014fd98825c18dd6cb31f27c410fbda
+  service-key: ${TOUR_API_SERVICE_KEY:}
   base-url: https://apis.data.go.kr/B551011/KorService2
   mobile-os: ETC
   mobile-app: StayNow
 
 toss:
   payments:
-    secret-key: ${TOSS_SECRET_KEY:test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6}
+    secret-key: ${TOSS_SECRET_KEY:}

@@ -53,7 +53,7 @@ function bindEvent() {
         $(this).addClass("active");
     });
 
-    $(document).on("click", ".room-price a", function (e) {
+    $(document).on("click", ".room-price button", function (e) {
         e.preventDefault();
 
         const roomId = $(this).data("room-id");
@@ -65,7 +65,7 @@ function bindEvent() {
 
         if (!auth || !auth.memberSid) {
             alert("예약을 진행하려면 로그인이 필요합니다.");
-            sessionStorage.setItem("afterLoginRedirect", location.href);
+            sessionStorage.setItem("afterLoginRedirect", location.pathname.split("/").pop() + location.search + location.hash);
             location.href = "login.html";
             return;
         }
@@ -209,7 +209,7 @@ function toggleWishlist() {
 
     if (!auth || !auth.memberSid) {
         alert("위시리스트를 사용하려면 로그인이 필요합니다.");
-        sessionStorage.setItem("afterLoginRedirect", location.href);
+        sessionStorage.setItem("afterLoginRedirect", location.pathname.split("/").pop() + location.search + location.hash);
         location.href = "login.html";
         return;
     }
@@ -632,7 +632,7 @@ function drawRooms(rooms) {
 
                 <div class="room-price">
                     ${priceHtml}
-                    <a href="#" data-room-id="${room.sid}">이 객실 선택</a>
+                    <button type="button" data-room-id="${room.sid}">이 객실 선택</button>
                 </div>
             </article>
         `);
@@ -1508,6 +1508,8 @@ function drawStars(count) {
 }
 
 function normalizeImagePath(imagePath) {
+    imagePath = window.StayNowConfig.safeImageUrl(imagePath, FALLBACK_IMAGE);
+
     if (!imagePath) {
         return FALLBACK_IMAGE;
     }
