@@ -409,8 +409,16 @@ function bindAdminNotificationMenu() {
         renderAdminNotificationState();
     });
 
-    $("#adminNotificationList").off("click.adminNotifications").on("click.adminNotifications", "[data-admin-notification-id]", function () {
-        saveAdminReadNotifications([String($(this).data("adminNotificationId"))]);
+    $("#adminNotificationList").off("click.adminNotifications").on("click.adminNotifications", "[data-admin-notification-id]", function (event) {
+        if ($(event.target).closest("[data-admin-delete-notification]").length) {
+            return;
+        }
+        const $item = $(this);
+        const hotelId = $item.attr("data-admin-notification-hotel-id");
+        if (hotelId) {
+            localStorage.setItem(ADMIN_SELECTED_HOTEL_KEY, String(hotelId));
+        }
+        saveAdminReadNotifications([String($item.data("adminNotificationId"))]);
     });
 
     $("#adminNotificationList").off("click.adminDeleteNotification").on("click.adminDeleteNotification", "[data-admin-delete-notification]", function (event) {
@@ -472,12 +480,14 @@ function loadAdminNotifications() {
 function buildAdminNotifications(reservations) {
     const items = [];
     reservations.slice(0, 8).forEach(function (reservation) {
+        const hotelId = getAdminReservationHotelId(reservation);
         if (isToday(reservation.createdAt)) {
             items.push(makeAdminNotification(
                 "new-" + reservation.sid,
                 "새 예약이 들어왔습니다",
                 (reservation.guestName || reservation.memberName || "고객") + " · " + makeAdminRoomName(reservation),
-                "admin-reservations.html"
+                "admin-reservations.html",
+                hotelId
             ));
         }
         if (isToday(reservation.checkInDate) && ["CONFIRMED", "UPCOMING", "PENDING"].includes(reservation.reservationStatus)) {
@@ -485,7 +495,8 @@ function buildAdminNotifications(reservations) {
                 "checkin-" + reservation.sid,
                 "오늘 체크인 예정",
                 formatAdminShortDate(reservation.checkInDate) + " · " + (reservation.guestName || reservation.memberName || "고객"),
-                "admin-reservations.html"
+                "admin-checkin.html",
+                hotelId
             ));
         }
         if (reservation.reservationStatus === "CANCELLED" || reservation.reservationStatus === "NO_SHOW") {
@@ -493,7 +504,8 @@ function buildAdminNotifications(reservations) {
                 "cancel-" + reservation.sid,
                 "취소/노쇼 예약 확인",
                 (reservation.reservationNumber || "RSV-" + reservation.sid) + " · " + formatAdminStatus(reservation.reservationStatus),
-                "admin-reservations.html"
+                "admin-reservations.html",
+                hotelId
             ));
         }
     });
@@ -501,13 +513,30 @@ function buildAdminNotifications(reservations) {
     return items.slice(0, 10);
 }
 
-function makeAdminNotification(id, title, message, link) {
+function makeAdminNotification(id, title, message, link, hotelId) {
     return {
         id,
         title,
         message,
-        link
+        link,
+        hotelId
     };
+}
+
+function getAdminReservationHotelId(reservation) {
+    const candidates = [
+        reservation && reservation.hotelId,
+        reservation && reservation.hotelSid,
+        reservation && reservation.hotel && reservation.hotel.sid,
+        reservation && reservation.hotel && reservation.hotel.hotelId,
+        reservation && reservation.roomHotelId,
+        reservation && reservation.room && reservation.room.hotelId,
+        reservation && reservation.room && reservation.room.hotel && reservation.room.hotel.sid,
+        reservation && reservation.room && reservation.room.hotel && reservation.room.hotel.hotelId
+    ].filter(function (value) {
+        return value != null && value !== "";
+    });
+    return candidates.length ? candidates[0] : "";
 }
 
 function renderAdminNotifications(items) {
@@ -523,7 +552,7 @@ function renderAdminNotifications(items) {
     const readIds = getAdminReadNotifications();
     return visibleItems.map(function (item) {
         const unread = !readIds.has(item.id);
-        return `<div class="notification-item ${unread ? "unread" : ""}" data-admin-notification-id="${escapeHtml(item.id)}">
+        return `<div class="notification-item ${unread ? "unread" : ""}" data-admin-notification-id="${escapeHtml(item.id)}" data-admin-notification-hotel-id="${escapeHtml(item.hotelId || "")}">
             <a href="${escapeHtml(item.link)}">
                 <span class="notification-dot"></span>
                 <span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.message)}</small></span>
