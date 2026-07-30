@@ -1488,6 +1488,12 @@ a {
     height: 34px;
 }
 
+.icon-btn.danger {
+    color: #ef4444;
+    border-color: #ffe0e0;
+    background: #fff5f5;
+}
+
 .task-list,
 .timeline,
 .policy-list {
@@ -1867,6 +1873,43 @@ a {
     gap: 8px;
 }
 
+.room-card-head-side {
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-end !important;
+    gap: 8px !important;
+}
+
+.room-card-tools {
+    display: inline-flex !important;
+    justify-content: flex-end;
+    gap: 6px !important;
+}
+
+.room-card-tools button {
+    width: 30px;
+    height: 30px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    color: #3182f6;
+    background: #f5f9ff;
+    cursor: pointer;
+}
+
+.room-card-tools button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(49, 130, 246, .14);
+}
+
+.room-card-tools button.danger {
+    color: #ef4444;
+    border-color: #ffe0e0;
+    background: #fff5f5;
+}
+
 .room-card-title-stack {
     align-items: flex-start !important;
     flex-direction: column;
@@ -2070,7 +2113,7 @@ a {
 }
 
 .room-action-lock {
-    width: 100%;
+    flex: 1.1 1 0;
     padding: 11px 12px;
     border-radius: 12px;
     color: #94a3b8;
