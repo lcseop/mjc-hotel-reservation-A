@@ -2885,11 +2885,66 @@ function bindRoomFilters() {
         .on("click.adminRoomEdit", "[data-room-edit]", function (event) {
             event.preventDefault();
             const roomId = $(this).attr("data-room-edit");
-            const room = (ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.rooms : []).find(function (item) {
-                return String(item.sid) === String(roomId);
-            });
+            const room = findAdminRoomById(roomId);
             if (room) openRoomModal(room);
+        })
+        .off("click.adminRoomClone")
+        .on("click.adminRoomClone", "[data-room-clone]", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openRoomCloneModal($(this).attr("data-room-clone"));
+        })
+        .off("click.adminRoomDelete")
+        .on("click.adminRoomDelete", "[data-room-delete]", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            deleteAdminRoom($(this).attr("data-room-delete"));
         });
+}
+
+function findAdminRoomById(roomId) {
+    return (ADMIN_ROOM_STATE ? ADMIN_ROOM_STATE.rooms : []).find(function (item) {
+        return String(item.sid) === String(roomId);
+    });
+}
+
+function openRoomCloneModal(roomId) {
+    const room = findAdminRoomById(roomId);
+    if (!room) {
+        alert("복제할 객실 정보를 찾지 못했습니다.");
+        return;
+    }
+    const clonedRoom = Object.assign({}, room, {
+        sid: null,
+        _cloneMode: true,
+        _cloneSourceNumber: room.roomNumber,
+        roomNumber: ""
+    });
+    openRoomModal(clonedRoom);
+}
+
+function deleteAdminRoom(roomId) {
+    const room = findAdminRoomById(roomId);
+    if (!room) {
+        alert("삭제할 객실 정보를 찾지 못했습니다.");
+        return;
+    }
+    if (room.adminStatus !== "available" && room.adminStatus !== "blocked") {
+        alert("사용 중이거나 예약된 객실은 삭제할 수 없습니다.");
+        return;
+    }
+    if (!confirm((room.roomNumber || "") + "호 객실을 삭제할까요?")) return;
+
+    $.ajax({
+        url: window.StayNowConfig.apiUrl("/room/" + roomId),
+        type: "DELETE",
+        headers: adminAuthHeaders()
+    }).done(function () {
+        showAdminNotice("객실을 삭제했습니다.", "success");
+        loadAdminRoomData();
+    }).fail(function (xhr) {
+        alert(getAdminAjaxMessage(xhr, "객실 삭제에 실패했습니다. 연결된 예약 정보가 있으면 삭제할 수 없습니다."));
+    });
 }
 
 function getRoomFilterValues() {
@@ -3022,10 +3077,12 @@ function renderRoomListView(rooms) {
             <td><span class="status ${roomStatusTone(room.adminStatus)}">${escapeHtml(room.adminStatusLabel)}</span></td>
             <td>${escapeHtml(guest)}</td>
             <td>${price ? formatAdminWon(price) : "-"}</td>
-            <td>${canManage ? `<div class="row-actions">
-                <button class="icon-btn" type="button" title="${room.adminAvailable ? "예약 불가" : "예약 가능"}" data-room-availability="${escapeHtml(room.sid)}" data-available="${!room.adminAvailable}"><i class="fa-solid ${room.adminAvailable ? "fa-ban" : "fa-check"}"></i></button>
-                <button class="icon-btn" type="button" title="수정" data-room-edit="${escapeHtml(room.sid)}"><i class="fa-solid fa-pen"></i></button>
-            </div>` : `<span class="muted">변경 불가</span>`}</td>
+            <td><div class="row-actions">
+                ${canManage ? `<button class="icon-btn" type="button" title="${room.adminAvailable ? "예약 불가" : "예약 가능"}" data-room-availability="${escapeHtml(room.sid)}" data-available="${!room.adminAvailable}"><i class="fa-solid ${room.adminAvailable ? "fa-ban" : "fa-check"}"></i></button>` : ""}
+                <button class="icon-btn" type="button" title="복제" data-room-clone="${escapeHtml(room.sid)}"><i class="fa-regular fa-copy"></i></button>
+                ${canManage ? `<button class="icon-btn" type="button" title="수정" data-room-edit="${escapeHtml(room.sid)}"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn danger" type="button" title="삭제" data-room-delete="${escapeHtml(room.sid)}"><i class="fa-solid fa-trash"></i></button>` : `<span class="muted">변경 불가</span>`}
+            </div></td>
         </tr>`;
     }).join("");
 
@@ -3051,11 +3108,16 @@ function renderRoomCard(room) {
         ? (room.adminStatus === "use" ? ("~ " + formatAdminShortDate(reservation.checkOutDate) + " 체크아웃") : (formatAdminShortDate(reservation.checkInDate) + " 체크인 예정"))
         : "";
     const price = Number(room.discountedRoomPrice || room.roomPrice || 0);
-    const toggleText = room.adminAvailable ? "예약 불가" : "예약 가능";
+    const toggleText = room.adminAvailable ? "예약 불가로 변경" : "예약 가능으로 변경";
     const actionIcon = room.adminAvailable ? "fa-ban" : "fa-check";
     const sizeText = room.roomSize || room.size ? escapeHtml(room.roomSize || room.size) + "㎡" : "-";
 
     const roomTitle = room.roomName || room.roomTypeTitle || "객실";
+    const cardTools = `<div class="room-card-tools">
+        <button type="button" title="객실 복제" data-room-clone="${escapeHtml(room.sid)}"><i class="fa-regular fa-copy"></i></button>
+        ${canToggle ? `<button type="button" title="객실 수정" data-room-edit="${escapeHtml(room.sid)}"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" class="danger" title="객실 삭제" data-room-delete="${escapeHtml(room.sid)}"><i class="fa-solid fa-trash"></i></button>` : ""}
+    </div>`;
 
     return `<article class="admin-room-card ${escapeHtml(room.adminStatus)}">
         <div class="room-card-head">
@@ -3063,7 +3125,10 @@ function renderRoomCard(room) {
                 <small>${escapeHtml(roomTitle)}</small>
                 <span><span class="room-dot"></span><strong>${escapeHtml(room.roomNumber || "-")}호</strong></span>
             </div>
-            <span class="room-status-chip">${escapeHtml(room.adminStatusLabel)}</span>
+            <div class="room-card-head-side">
+                ${cardTools}
+                <span class="room-status-chip">${escapeHtml(room.adminStatusLabel)}</span>
+            </div>
         </div>
         <div class="room-type-line"><i class="fa-solid fa-bed"></i>${escapeHtml(room.roomTypeTitle || room.roomName || "객실")}</div>
         ${reservation ? `<div class="room-guest-box">
@@ -3078,8 +3143,6 @@ function renderRoomCard(room) {
         <div class="room-card-actions">
             ${canToggle ? `<button type="button" data-room-availability="${escapeHtml(room.sid)}" data-available="${!room.adminAvailable}">
                 <i class="fa-solid ${actionIcon}"></i>${escapeHtml(toggleText)}
-            </button><button type="button" class="soft" data-room-edit="${escapeHtml(room.sid)}">
-                <i class="fa-solid fa-pen"></i>수정
             </button>` : `<span class="room-action-lock">예약 진행 중인 객실은 변경할 수 없습니다</span>`}
         </div>
     </article>`;
@@ -3130,7 +3193,8 @@ function countRoomsByStatus(rooms) {
 }
 
 function openRoomModal(room) {
-    const isEdit = Boolean(room);
+    const isClone = Boolean(room && room._cloneMode);
+    const isEdit = Boolean(room && room.sid && !isClone);
     const state = ADMIN_ROOM_STATE || {};
     const selectedHotel = state.selectedHotel || {};
     const roomTypes = state.roomTypes || [];
@@ -3149,8 +3213,8 @@ function openRoomModal(room) {
             <form id="roomForm" class="admin-modal room-modal">
                 <div class="admin-modal-head">
                     <div>
-                        <h2>${isEdit ? "객실 수정" : "객실 추가"}</h2>
-                        <p>${escapeHtml(selectedHotel.hotelName || "선택 호텔")}의 객실 정보를 관리합니다.</p>
+                        <h2>${isEdit ? "객실 수정" : (isClone ? "객실 복제" : "객실 추가")}</h2>
+                        <p>${escapeHtml(isClone ? ((room._cloneSourceNumber || room.roomNumber || "선택한") + "호 객실 정보를 복사했습니다. 객실 번호와 사진을 확인해주세요.") : ((selectedHotel.hotelName || "선택 호텔") + "의 객실 정보를 관리합니다."))}</p>
                     </div>
                     <button type="button" class="modal-close" data-room-modal-close><i class="fa-solid fa-xmark"></i></button>
                 </div>
@@ -3167,7 +3231,7 @@ function openRoomModal(room) {
                     <label><span>객실 이름</span><input id="roomNameInput" type="text" maxlength="30" value="${escapeHtml(room ? room.roomName || "" : "")}" required></label>
                     <label><span>객실 가격</span><input id="roomPriceInput" type="number" min="0" step="1000" value="${escapeHtml(room ? room.roomPrice || "" : "")}" required></label>
                     <label><span>예약 가능 여부</span><select id="roomAvailableInput"><option value="true"${!room || room.adminAvailable !== false ? " selected" : ""}>예약 가능</option><option value="false"${room && room.adminAvailable === false ? " selected" : ""}>예약 불가</option></select></label>
-                    <label><span>객실 번호</span><input id="roomNumberInput" type="number" min="1" value="${escapeHtml(room ? room.roomNumber || "" : "")}" required></label>
+                    <label><span>객실 번호</span><input id="roomNumberInput" type="number" min="1" value="${escapeHtml(room ? room.roomNumber || "" : "")}" placeholder="${isClone ? "새 객실 번호 입력" : ""}" required></label>
                     <label><span>층</span><input id="roomFloorInput" type="number" min="1" value="${escapeHtml(room ? room.floor || "" : "")}" required></label>
                     <label><span>넓이(m²)</span><input id="roomAreaInput" type="number" min="1" value="${escapeHtml(room ? room.area || "" : "")}" required></label>
                     <label><span>최대 인원 수</span><input id="roomMaximumPeopleInput" type="number" min="1" value="${escapeHtml(room ? room.maximumPeople || "" : "")}" required></label>
@@ -3200,7 +3264,7 @@ function openRoomModal(room) {
     initRoomPhotoManager(room);
     $("#roomForm").on("submit", function (event) {
         event.preventDefault();
-        saveRoom(room);
+        saveRoom(isEdit ? room : null);
     });
 }
 
