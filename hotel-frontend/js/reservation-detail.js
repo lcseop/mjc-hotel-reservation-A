@@ -268,7 +268,8 @@ function mergeDetailLocal(reservation) {
 
 function getDetailState(reservation) {
     const status = reservation.reservationStatus;
-    if (status === "CANCELLED" || status === "NO_SHOW") return { key: "cancelled", label: "취소됨" };
+    if (status === "CANCELLED") return { key: "cancelled", label: "취소됨" };
+    if (status === "NO_SHOW") return { key: "no-show", label: "노쇼" };
     if (status === "CHECKED_OUT" || status === "COMPLETED") return { key: "completed", label: "완료된 여행" };
     return { key: "upcoming", label: "예정된 여행" };
 }
