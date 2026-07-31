@@ -236,7 +236,8 @@ function formatMyReviewDate(value) {
 
 function normalizeMyReviewImagePath(imagePath) {
     if (!imagePath) return "";
-    const normalizedPath = String(imagePath).replaceAll("\\", "/");
+    const normalizedPath = window.StayNowConfig.safeImageUrl(imagePath, "");
+    if (!normalizedPath) return "";
     if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://") || normalizedPath.startsWith("data:")) {
         return normalizedPath;
     }

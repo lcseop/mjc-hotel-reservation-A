@@ -1,5 +1,10 @@
 $(function () {
     renderAuthHeader();
+    document.addEventListener("component:loaded", function (event) {
+        if (event.detail && event.detail.id === "header") {
+            renderAuthHeader();
+        }
+    });
     setTimeout(renderAuthHeader, 200);
 
     function closeMobileMenu() {

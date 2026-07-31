@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
+    private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
+    private static final String ACTION_1 = "예약을 찾을 수 없습니다. ID: ";
 
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
@@ -54,8 +57,6 @@ public class ReservationService {
     private final PaymentsService paymentsService;
     private final RefundsRepository refundsRepository;
     private final RefundsService refundsService;
-
-    private static final String ACTION_1 = "예약을 찾을 수 없습니다. ID: ";
 
     @Transactional
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
@@ -130,16 +131,21 @@ public class ReservationService {
     }
 
 
+    @Transactional
     public ReservationResponseDto getReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
+        applyExpiredReservationStatus(reservation);
         return convertToResponseDto(reservation);
     }
 
+    @Transactional
     public List<ReservationResponseDto> getAllReservations() {
+        refreshExpiredNoShowReservations();
         return reservationRepository.findAllWithDetails().stream().map(this::convertToResponseDto).collect(Collectors.toList());
     }
 
+    @Transactional
     public Page<ReservationResponseDto> searchReservations(
             ReservationStatus status,
             Long memberId,
@@ -151,6 +157,7 @@ public class ReservationService {
             LocalDateTime dateTo,
             Pageable pageable
     ){
+        refreshExpiredNoShowReservations();
         Page<Reservation> page = reservationRepository.searchAdminReservations(
                 status,
                 memberId,
@@ -294,6 +301,8 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException(ACTION_1 + reservationId));
 
+        applyExpiredReservationStatus(reservation);
+
         if (reservation.getReservationStatus() != ReservationStatus.CONFIRMED
                 && reservation.getReservationStatus() != ReservationStatus.UPCOMING) {
             throw new IllegalArgumentException("확정된 예약만 체크인 가능합니다.");
@@ -350,7 +359,7 @@ public class ReservationService {
     }
 
     private Integer calculateRefundAmount(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = daysUntilCheckIn(reservation);
         if (daysUntilCheckIn >= 3) {
             return reservation.getTotalAmount();
         } else if (daysUntilCheckIn >= 1) {
@@ -411,8 +420,26 @@ public class ReservationService {
         return member != null && member.getPoint() != null ? member.getPoint() : 0;
     }
 
+    private void refreshExpiredNoShowReservations() {
+        List<Reservation> expiredReservations = reservationRepository.findByReservationStatusInAndCheckOutDateBefore(
+                List.of(ReservationStatus.CONFIRMED, ReservationStatus.UPCOMING),
+                LocalDateTime.now(SERVICE_ZONE)
+        );
+        expiredReservations.forEach(this::applyExpiredReservationStatus);
+    }
+
+    private void applyExpiredReservationStatus(Reservation reservation) {
+        if (reservation.getCheckOutDate() == null || reservation.getCheckOutDate().isAfter(LocalDateTime.now(SERVICE_ZONE))) {
+            return;
+        }
+        if (reservation.getReservationStatus() == ReservationStatus.CONFIRMED
+                || reservation.getReservationStatus() == ReservationStatus.UPCOMING) {
+            reservation.setReservationStatus(ReservationStatus.NO_SHOW);
+        }
+    }
+
     private List<CancellationPolicyDto> buildCancellationPolicies(Reservation reservation) {
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(ZonedDateTime.now(), reservation.getCheckInDate());
+        long daysUntilCheckIn = daysUntilCheckIn(reservation);
         Integer totalAmount = reservation.getTotalAmount();
 
         List<CancellationPolicyDto> policies = new ArrayList<>();
@@ -429,6 +456,12 @@ public class ReservationService {
                 .applicable(daysUntilCheckIn >= 1 && daysUntilCheckIn < 3)
                 .build());
         return policies;
+    }
+
+    private long daysUntilCheckIn(Reservation reservation) {
+        ZonedDateTime now = ZonedDateTime.now(SERVICE_ZONE);
+        ZonedDateTime checkInDate = reservation.getCheckInDate().atZone(SERVICE_ZONE);
+        return ChronoUnit.DAYS.between(now, checkInDate);
     }
 
     private void validateCoupon(CouponIssue couponIssue, Member member, Integer totalAmount) {

@@ -828,6 +828,7 @@ function loadHotelThumbnails(hotels) {
 }
 
 function normalizeImagePath(imagePath) {
+    imagePath = window.StayNowConfig.safeImageUrl(imagePath, getFallbackImage());
 
     if (
         imagePath.startsWith("http://") ||

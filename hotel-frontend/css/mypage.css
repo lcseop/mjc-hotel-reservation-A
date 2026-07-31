@@ -1003,6 +1003,11 @@ textarea {
     color: #ef4444;
 }
 
+.status-chip.no-show {
+    background: #fff7ed;
+    color: #f97316;
+}
+
 .reservation-meta {
     display: grid;
     grid-template-columns: 1.1fr 1.1fr .8fr 1fr .9fr;
@@ -1543,21 +1548,21 @@ textarea {
     background: #f8fafc;
 }
 
-.review-write-modal footer p {
+.review-write-modal .write-modal-footer p {
     margin: 0;
     color: #64748b;
     font-size: 12px;
     font-weight: 800;
 }
 
-.review-write-modal footer div {
+.review-write-modal .write-modal-footer div {
     display: flex;
     flex-shrink: 0;
     flex-wrap: nowrap;
     gap: 10px;
 }
 
-.review-write-modal footer button {
+.review-write-modal .write-modal-footer button {
     height: 44px;
     min-width: 88px;
     padding: 0 22px;
@@ -1677,6 +1682,16 @@ textarea {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 20px;
+}
+
+.section-heading.account-heading {
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.section-heading.account-heading > div {
+    min-width: 0;
+    text-align: left;
 }
 
 .section-heading h2 {
@@ -2101,11 +2116,11 @@ textarea {
         align-items: stretch;
     }
 
-    .review-write-modal footer div {
+    .review-write-modal .write-modal-footer div {
         width: 100%;
     }
 
-    .review-write-modal footer button {
+    .review-write-modal .write-modal-footer button {
         flex: 1;
     }
 }

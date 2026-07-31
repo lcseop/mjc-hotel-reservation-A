@@ -546,10 +546,14 @@ main{
     font-size:30px;
     margin-top:4px;
 }
-.section-header a{
+.section-header a,
+.section-header button{
+    border:0;
+    background:transparent;
     text-decoration:none;
     color:#3b82f6;
     font-weight:600;
+    cursor:pointer;
 }
 .category-tab{display:flex;gap:8px;}
 .category-tab button{

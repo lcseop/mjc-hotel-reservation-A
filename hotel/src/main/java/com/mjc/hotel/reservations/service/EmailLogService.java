@@ -110,7 +110,7 @@ public class EmailLogService {
             case CANCELLATION_NOTICE -> String.format(
                     "%s님, 예약이 취소되었습니다.%n예약번호: %s", reservation.getGuestName(), reservation.getReservationNumber());
             case CHECK_IN_QR -> String.format(
-                    "%s님, 체크인 QR코드입니다.\n예약번호: %s\nQR코드: %s",
+                    "%s님, 체크인 QR코드입니다.%n예약번호: %s%nQR코드: %s",
                     reservation.getGuestName(), reservation.getReservationNumber(), reservation.getCheckInQr());
         };
     }

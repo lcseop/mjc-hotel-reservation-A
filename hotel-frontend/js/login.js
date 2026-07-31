@@ -83,9 +83,12 @@ function requestLogin(payload) {
             }
 
             saveLoginData(loginData);
-            const redirectUrl = sessionStorage.getItem("afterLoginRedirect");
+            const redirectUrl = window.StayNowConfig.safeRedirectUrl(
+                sessionStorage.getItem("afterLoginRedirect"),
+                "index.html"
+            );
             sessionStorage.removeItem("afterLoginRedirect");
-            location.href = redirectUrl || "index.html";
+            location.href = redirectUrl;
 
         },
 

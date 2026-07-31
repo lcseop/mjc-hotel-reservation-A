@@ -42,7 +42,10 @@ function handleOAuthCallback() {
 
     saveOAuthLoginData(loginData);
 
-    const redirectUrl = sessionStorage.getItem("afterLoginRedirect") || "index.html";
+    const redirectUrl = window.StayNowConfig.safeRedirectUrl(
+        sessionStorage.getItem("afterLoginRedirect"),
+        "index.html"
+    );
     clearOAuthState();
 
     location.replace(redirectUrl);
