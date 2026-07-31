@@ -56,13 +56,13 @@ class MemberMappingTests {
     }
 
     @Test
-    void usesIdentityGeneratedMemberId() throws Exception {
-        Field memberId = field("memberId");
+    void usesIdentityGeneratedsid() throws Exception {
+        Field sid = field("sid");
 
-        assertNotNull(memberId.getAnnotation(Id.class));
+        assertNotNull(sid.getAnnotation(Id.class));
         assertEquals(GenerationType.IDENTITY,
-                memberId.getAnnotation(GeneratedValue.class).strategy());
-        assertEquals("member_id", memberId.getAnnotation(Column.class).name());
+                sid.getAnnotation(GeneratedValue.class).strategy());
+        assertEquals("member_id", sid.getAnnotation(Column.class).name());
     }
 
     @Test
@@ -207,7 +207,7 @@ public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
-    private Long memberId;
+    private Long sid;
 
     @Column(name = "name", length = 50)
     private String name;

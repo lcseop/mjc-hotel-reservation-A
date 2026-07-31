@@ -174,15 +174,15 @@ class MemberTermRepositoryTests {
                         .build()
         );
 
-        assertNotNull(member.getMemberId());
-        assertNotNull(term.getTermId());
+        assertNotNull(member.getSid());
+        assertNotNull(term.getSid());
 
-        Long memberId = member.getMemberId();
-        Long termId = term.getTermId();
+        Long sid = member.getSid();
+        Long sid = term.getSid();
         entityManager.clear();
 
-        Member savedMember = memberRepository.findById(memberId).orElseThrow();
-        Term savedTerm = termRepository.findById(termId).orElseThrow();
+        Member savedMember = memberRepository.findById(sid).orElseThrow();
+        Term savedTerm = termRepository.findById(sid).orElseThrow();
 
         assertEquals("repository-test@example.com", savedMember.getEmail());
         assertEquals(MemberStatus.ACTIVE, savedMember.getStatus());

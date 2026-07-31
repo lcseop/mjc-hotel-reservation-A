@@ -1,0 +1,258 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: #edf4fb;
+    color: #111827;
+    font-family: "Pretendard", "맑은 고딕", Arial, sans-serif;
+}
+
+button,
+textarea {
+    font: inherit;
+}
+
+.staff-page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 34px 24px 80px;
+}
+
+.staff-hero {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 34px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #14213d, #0ea5e9);
+    color: #fff;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .16);
+}
+
+.staff-hero p {
+    margin-bottom: 8px;
+    color: #bae6fd;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.staff-hero h1 {
+    font-size: 40px;
+}
+
+.staff-hero span {
+    display: block;
+    margin-top: 10px;
+    color: #dbeafe;
+    font-weight: 800;
+}
+
+.staff-hero > i {
+    width: 84px;
+    height: 84px;
+    display: grid;
+    place-items: center;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .16);
+    font-size: 42px;
+}
+
+.scan-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(360px, .8fr);
+    gap: 22px;
+    margin-top: 24px;
+}
+
+.scanner-card,
+.manual-card {
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .07);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.section-title h2 {
+    font-size: 24px;
+}
+
+.section-title span {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.camera-box {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #0f172a;
+}
+
+#scannerVideo {
+    width: 100%;
+    height: 100%;
+    display: none;
+    object-fit: cover;
+}
+
+.camera-box.active #scannerVideo {
+    display: block;
+}
+
+.camera-placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 14px;
+    color: #cbd5e1;
+    text-align: center;
+}
+
+.camera-placeholder i {
+    font-size: 44px;
+}
+
+.camera-box.active .camera-placeholder {
+    display: none;
+}
+
+.scan-frame {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(260px, 62%);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border: 3px solid #38bdf8;
+    border-radius: 22px;
+    box-shadow: 0 0 0 999px rgba(15, 23, 42, .34);
+    pointer-events: none;
+}
+
+.scanner-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.scanner-actions button,
+.submit-btn {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: #0ea5e9;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+#stopScanBtn {
+    background: #64748b;
+}
+
+.manual-card label {
+    display: block;
+}
+
+.manual-card label span {
+    display: block;
+    margin-bottom: 8px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.manual-card textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 14px;
+    resize: vertical;
+    border: 1px solid #dbe5f0;
+    border-radius: 14px;
+    outline: none;
+    color: #111827;
+}
+
+.manual-card textarea:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, .12);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 14px;
+    background: linear-gradient(135deg, #6366f1, #0ea5e9);
+}
+
+.result-box {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 14px;
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 800;
+    line-height: 1.6;
+}
+
+.result-box.empty {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.result-box.error {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #dc2626;
+}
+
+@media (max-width: 900px) {
+    .scan-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .staff-page {
+        padding: 24px 14px 64px;
+    }
+
+    .staff-hero {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 24px;
+    }
+
+    .staff-hero h1 {
+        font-size: 32px;
+    }
+}

@@ -1,0 +1,2884 @@
+{
+  "info": {
+    "_postman_id": "a8c5325b-d655-4cca-aa8f-f6f9bcf6a4e5",
+    "name": "Hotel_Reservation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53671660",
+    "_collection_link": "https://go.postman.co/collection/53671660-a8c5325b-d655-4cca-aa8f-f6f9bcf6a4e5?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "로그인",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hello@staynow.kr\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원가입",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"홍길동\",\n  \"phone\": \"010-0000-0000\",\n  \"email\": \"hello@staynow.kr\",\n  \"password\": \"password123\",\n  \"passwordConfirm\": \"password123\",\n  \"termAgreements\": [\n    { \"sid\": 1, \"isAgreed\": true },\n    { \"sid\": 2, \"isAgreed\": true },\n    { \"sid\": 3, \"isAgreed\": false }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/auth/signup",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "로그아웃",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "refresh token",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "payment",
+      "item": [
+        {
+          "name": "결제_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reservationId\": 1,\n    \"memberId\": 1,\n    \"paymentAmount\": 180000.00,\n    \"paymentMethod\": \"CARD\",\n    \"paymentStatus\": \"COMPLETED\",\n    \"transactionNo\": \"TXN-TEST-001\",\n    \"point\": 1800\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/payments/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "payments",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "결제_부분_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/payments/183",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "payments",
+                "183"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "결제_목록_조회",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reservationId\": 1,\n    \"memberId\": 1,\n    \"paymentAmount\": 180000.00,\n    \"paymentMethod\": \"CARD\",\n    \"paymentStatus\": \"COMPLETED\",\n    \"transactionNo\": \"TXN-TEST-001\",\n    \"paidAt\": \"2026-06-27T17:40:00\",\n    \"point\": 1800\n}"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "결제_수정",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"paymentAmount\": 170000.00,\n    \"paymentMethod\": \"CARD\",\n    \"paymentStatus\": \"COMPLETED\",\n    \"transactionNo\": \"TXN-PAYMENT-UPDATE-001\",\n    \"paidAt\": \"2026-06-27T18:40:00\",\n    \"point\": 1700\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/payments/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "payments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "결제_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/payments/183",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "payments",
+                "183"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "refund",
+      "item": [
+        {
+          "name": "환불_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"paymentId\": 1,\n    \"memberId\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-001\",\n    \"idempotencyKey\": \"IDEMPOTENCY-001\",\n    \"refundAmount\": 50000.00,\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": null,\n    \"completedAt\": null,\n    \"failedAt\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/refunds/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "refunds",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "환불_부분_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/refunds/88",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "refunds",
+                "88"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "환불_목록_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/refunds",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "refunds"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "환불_수정",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"paymentId\": 1,\n    \"memberId\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 완료\",\n    \"status\": \"COMPLETED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/refunds/56",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "refunds",
+                "56"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "환불_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"paymentId\": 1,\n    \"memberId\": 1,\n    \"pgTransactionKey\": \"PG-REFUND-UPDATE\",\n    \"idempotencyKey\": \"IDEMPOTENCY-REFUND-UPDATE\",\n    \"refundAmount\": 50000.00,\n    \"reason\": \"환불 사유 수정\",\n    \"status\": \"REQUESTED\",\n    \"requestedAt\": \"2026-06-29T14:30:00\",\n    \"completedAt\": null,\n    \"failedAt\": null,\n    \"failureReason\": null\n  }"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/refunds/88",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "refunds",
+                "88"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "member",
+      "item": [
+        {
+          "name": "memberTermAccount",
+          "item": [
+            {
+              "name": "회원_약관_동의_생성",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": true,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/member-term-agreements",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-term-agreements"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "회원_약관_동의_단건_조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member-term-agreements/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-term-agreements",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "회원별_약관_동의_목록_조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member/1/term-agreements",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member",
+                    "1",
+                    "term-agreements"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "회원_약관_동의_수정",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"memberSid\": 1,\n  \"termSid\": 1,\n  \"isAgreed\": false,\n  \"agreedAt\": \"2026-06-30T15:00:00\",\n  \"withdrawnAt\": \"2026-06-30T15:10:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/member-term-agreements/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-term-agreements",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "회원_약관_동의_삭제",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member-term-agreements/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-term-agreements",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "memberAuthAccount",
+          "item": [
+            {
+              "name": "로그인_인증_정보_생성",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"memberSid\": 1,\n  \"provider\": \"LOCAL\",\n  \"providerUserId\": \"member@example.com\",\n  \"passwordHash\": \"password-hash\",\n  \"lastLoginAt\": \"2026-06-30T15:00:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/member-auth-accounts",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-auth-accounts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "로그인_인증_정보_단건_조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member-auth-accounts/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-auth-accounts",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "회원별_로그인_인증_정보_목록_조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member/1/auth-accounts",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member",
+                    "1",
+                    "auth-accounts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "로그인_인증_정보_수정",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"memberSid\": 1,\n  \"provider\": \"KAKAO\",\n  \"providerUserId\": \"kakao-member-id\",\n  \"passwordHash\": \"updated-password-hash\",\n  \"lastLoginAt\": \"2026-06-30T15:10:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/member-auth-accounts/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-auth-accounts",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "로그인_인증_정보_삭제",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/member-auth-accounts/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "member-auth-accounts",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "회원_생성",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"test12345\",\n  \"phone\": \"01022223333\",\n  \"email\": \"test1234@gmail.com\",\n  \"status\": \"ACTIVE\",\n  \"role\": \"ADMIN\",\n  \"emailVerified\": false,\n  \"point\": 100\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_부분_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member/25",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "25"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_목록_조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/member",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_수정",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"sid\": 36,\n    \"name\": \"홍길동동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false,\n    \"point\": 1000\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "회원_삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"홍길동\",\n    \"phone\": \"010-1234-5678\",\n    \"email\": \"hong@example.com\",\n    \"status\": \"ACTIVE\",\n    \"role\": \"USER\",\n    \"emailVerified\": false\n  }"
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/36",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "36"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "hotel",
+      "item": [
+        {
+          "name": "amenities",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\" : \"수영장\",\r\n    \"description\" : \"연중무휴\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelame",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelame"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : \"10\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelame",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelame"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelame/11",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelame",
+                    "11"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelame/5",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelame",
+                    "5"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "inAmenities",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteliname",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteliname"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 3,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteliname",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteliname"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteliname/4",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteliname",
+                    "4"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteliname/3",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteliname",
+                    "3"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "photo",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"hotelId\" : 1,\r\n    \"imagePath\" : \"https://www.take-hotel.com/TakeHotel_common/images/homepage/index/slider_01.jpg\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelphoto",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelphoto"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"imagePath\" : \"https://www.take-hotel.com/TakeHotel_common/images/homepage/index/slider_01.jpg\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelphoto",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelphoto"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelphoto/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelphoto",
+                    "1"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hotelphoto/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hotelphoto",
+                    "1"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "type",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\" : \"모텔\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteltype",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteltype"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"title\" : \"펜션\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteltype",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteltype"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteltype/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteltype",
+                    "1"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/hoteltype/2",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "hoteltype",
+                    "2"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"amenitiesId\" : 2\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:33000/api/hoteliname",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "33000",
+                      "path": [
+                        "api",
+                        "hoteliname"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Method"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Access-Control-Request-Headers"
+                    },
+                    {
+                      "key": "X-Content-Type-Options",
+                      "value": "nosniff"
+                    },
+                    {
+                      "key": "X-XSS-Protection",
+                      "value": "0"
+                    },
+                    {
+                      "key": "Cache-Control",
+                      "value": "no-cache, no-store, max-age=0, must-revalidate"
+                    },
+                    {
+                      "key": "Pragma",
+                      "value": "no-cache"
+                    },
+                    {
+                      "key": "Expires",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Frame-Options",
+                      "value": "DENY"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 01 Jul 2026 07:28:10 GMT"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=60"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"code\": \"SUCCESS\",\n    \"message\": \"hotel in amenities update success\",\n    \"data\": {\n        \"sid\": 2,\n        \"hotelId\": 1,\n        \"hotelName\": \"골든 서울 호텔\",\n        \"amenitiesId\": 2,\n        \"amenitiesTitle\": \"피트니스 센터\"\n    }\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "insert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"typeId\": 1,\r\n    \"photoId\": 1,\r\n    \"hotelName\": \"호텔\",\r\n    \"hotelPrice\": 150000,\r\n    \"location\": \"지구\",\r\n    \"starRating\": 5,\r\n    \"description\": \"테스트 호텔입니다.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/hotel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"sid\": 2,\r\n    \"typeId\": 1,\r\n    \"photoId\": 1,\r\n    \"hotelName\": \"서울 골든 호텔\",\r\n    \"hotelPrice\": 200000,\r\n    \"location\": \"서울 강서구\",\r\n    \"starRating\": 4,\r\n    \"description\": \"서울에 있는 호텔입니다.\",\r\n    \"latitude\" : 37.53065,\r\n    \"longitude\" : 126.83607\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/hotel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/hotel/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "search",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"location\" : \"서울\",\r\n    \"checkIn\" : \"2026-06-29T10:12:30\",\r\n    \"checkOut\" : \"2026-07-01T10:12:30\",\r\n    \"people\" : 1,\r\n    \"minPrice\" : 0,\r\n    \"maxPrice\" : 999999,\r\n    \"star\" : 5,\r\n    \"roomTypeIds\" : [\r\n        1\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/hotel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findHotelInRooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/hotel/inroom/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel",
+                "inroom",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findHotelInAmenities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/hotel/iname/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel",
+                "iname",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findHotelInReviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/hotel/inreview/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel",
+                "inreview",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findHotelInPhotos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/hotel/inimage/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "hotel",
+                "inimage",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "room",
+      "item": [
+        {
+          "name": "tag",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\": \"도시뷰\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtag",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtag"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"title\" : \"오션뷰\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtag",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtag"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtag/3",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtag",
+                    "3"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtag/2",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtag",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "inTag",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"roomId\" : 1,\r\n    \"roomTagId\" : 4\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomintag",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomintag"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"roomId\" : 1,\r\n    \"roomTagId\" : 2\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomintag",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomintag"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomintag/5",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomintag",
+                    "5"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomintag/4",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomintag",
+                    "4"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "photo",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"roomId\" : 1,\r\n    \"imagePath\" : \"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMe3FWG4GhjjOtiqDkYuZ0Osf74pfwN_-NYEKAwb4z5vjhHD_EIiWBUM8&s=10\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomphoto",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomphoto"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"roomId\" : 1,\r\n    \"imagePath\" : \"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMe3FWG4GhjjOtiqDkYuZ0Osf74pfwN_-NYEKAwb4z5vjhHD_EIiWBUM8&s=10\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomphoto",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomphoto"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomphoto/5",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomphoto",
+                    "5"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomphoto/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomphoto",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "type",
+          "item": [
+            {
+              "name": "insert",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\" : \"더블\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtype",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtype"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"sid\" : 2,\r\n    \"title\" : \"트리플\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtype",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtype"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtype/2",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtype",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "findById",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:33000/api/roomtype/2",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "33000",
+                  "path": [
+                    "api",
+                    "roomtype",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "insert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"hotelId\" : 1,\r\n    \"roomTagId\" : 1,\r\n    \"roomPhotoId\" : 1,\r\n    \"roomTypeId\" : 1,\r\n    \"roomName\" : \"디럭스 더블룸\",\r\n    \"roomPrice\" : 60000,\r\n    \"roomNumber\" : 501,\r\n    \"floor\" : 5,\r\n    \"area\" : 38,\r\n    \"maximumPeople\" : 5,\r\n    \"checkInTime\" : 15,\r\n    \"checkOutTime\" : 11,\r\n    \"parking\" : \"발렛파킹 주차\",\r\n    \"pet\" : \"LIMITED\",\r\n    \"smoke\" : \"BAN\",\r\n    \"idCard\" : \"ESSENTIAL\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/room",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"sid\" : 2,\r\n    \"hotelId\" : 1,\r\n    \"roomTagId\" : 1,\r\n    \"roomPhotoId\" : 1,\r\n    \"roomTypeId\" : 1,\r\n    \"roomName\" : \"스탠다드\",\r\n    \"roomPrice\" : 60000,\r\n    \"roomNumber\" : 501,\r\n    \"floor\" : 5,\r\n    \"area\" : 38,\r\n    \"maximumPeople\" : 5,\r\n    \"checkInTime\" : 15,\r\n    \"checkOutTime\" : 11,\r\n    \"parking\" : \"발렛파킹 주차\",\r\n    \"pet\" : \"LIMITED\",\r\n    \"smoke\" : \"BAN\",\r\n    \"idCard\" : \"ESSENTIAL\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/room",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/room/5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room",
+                "5"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/room/in/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room",
+                "in",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findRoomInPhotos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/room/inimage/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room",
+                "inimage",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findRoomInTags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/room/intag/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room",
+                "intag",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "findByRoomType",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:33000/api/room/type/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "room",
+                "type",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "password_reset",
+      "item": [
+        {
+          "name": "비밀번호_변경_인증번호 발송",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset/send-code",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset",
+                "send-code"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "인증번호_일치여부_확인",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\",\n    \"code\": \"437443\"\n  }\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset/verify-code",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset",
+                "verify-code"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "비밀번호_변경",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"sosekee1110@gmail.com\",\n    \"code\": \"437443\",\n    \"newPassword\": \"!a831829\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:33000/api/member/password-reset",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "33000",
+              "path": [
+                "api",
+                "member",
+                "password-reset"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,19 @@
 package com.mjc.hotel.config;
 
+import com.mjc.hotel.auth.oauth.handler.OAuth2LoginFailureHandler;
+import com.mjc.hotel.auth.oauth.handler.OAuth2LoginSuccessHandler;
+import com.mjc.hotel.auth.oauth.service.SocialOAuth2UserService;
+import com.mjc.hotel.auth.oauth.service.SocialOidcUserService;
 import com.mjc.hotel.util.JwtFilter;
-import com.mjc.hotel.util.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,31 +28,62 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final SocialOidcUserService socialOidcUserService;
+    private final SocialOAuth2UserService socialOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oauth2LoginFailureHandler;
+    private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
+            authorizationCodeTokenResponseClient;
 
     @Bean
+    @Profile("!oauth")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .httpBasic(basic -> basic.disable())
-                .formLogin(form -> form.disable())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // 테스트시에만 permitAll
-//                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
-                            .permitAll().anyRequest().authenticated()
+        configureCommonSecurity(http)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/members/me/withdraw").authenticated()
+                        .anyRequest().permitAll()
                 );
 
         return http.build();
     }
 
     @Bean
+    @Profile("oauth")
+    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
+        configureCommonSecurity(http)
+                .oauth2Login(oauth2 -> oauth2
+                        .tokenEndpoint(tokenEndpoint -> tokenEndpoint
+                                .accessTokenResponseClient(authorizationCodeTokenResponseClient)
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(socialOidcUserService)
+                                .userService(socialOAuth2UserService)
+                        )
+                        .successHandler(oauth2LoginSuccessHandler)
+                        .failureHandler(oauth2LoginFailureHandler)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/members/me/withdraw").authenticated()
+                        .anyRequest().permitAll()
+                );
+
+        return http.build();
+    }
+
+    private HttpSecurity configureCommonSecurity(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(basic -> basic.disable())
+                .formLogin(form -> form.disable())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
@@ -57,8 +93,4 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

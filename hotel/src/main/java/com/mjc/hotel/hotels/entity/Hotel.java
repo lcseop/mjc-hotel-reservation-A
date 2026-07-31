@@ -1,5 +1,6 @@
 package com.mjc.hotel.hotels.entity;
 
+import com.mjc.hotel.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,37 +12,37 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class Hotel {
+public class Hotel extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sid;
 
-    @JoinColumn(name = "type_id", nullable = false)
+    @JoinColumn(name = "type_id", nullable = false, comment = "호텔 타입")
     @ManyToOne(fetch = FetchType.LAZY)
     private HotelType type;
 
-    @JoinColumn(name = "photo_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private HotelPhoto photo;
-
-    @JoinColumn(name = "amenities_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private HotelAmenities amenities;
-
-    @Column(name = "hotel_name", length = 50, nullable = false)
+    @Column(name = "hotel_name", length = 50, nullable = false, comment = "호텔 이름")
     private String hotelName;
 
-    @Column(name = "hotel_price", nullable = false)
+    @Column(name = "hotel_price", nullable = false, comment = "호텔 대표 가격")
     private Integer hotelPrice;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 50, nullable = false, comment = "위치")
     private String location;
 
-    @Column(name = "star_rating")
+    @Column(name = "star_rating", comment = "성급")
     private Integer starRating;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", comment = "호텔 설명")
     private String description;
+
+    @Column(comment = "경도")
+    private Double latitude;
+
+    @Column(comment = "위도")
+    private Double longitude;
+
+
 
 }

@@ -1,0 +1,59 @@
+package com.mjc.hotel.auth.dto;
+
+import com.mjc.hotel.member.entity.MemberAuthProvider;
+import com.mjc.hotel.member.entity.MemberRole;
+import com.mjc.hotel.member.entity.MemberStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Builder
+@Getter
+@Setter
+public class MemberSignupRequestDto {
+    private String name;
+    private String phone;
+    private String email;
+    private String password;
+    private String passwordConfirm;
+    private MemberAuthProvider provider;
+    private String providerUserId;
+    private MemberStatus status;
+    private MemberRole role;
+    private Boolean emailVerified;
+    private Boolean phoneVerified;
+    private AuthAccountRequest authAccount;
+    private List<TermAgreementRequest> termAgreements;
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    @Builder
+    @Getter
+    @Setter
+    public static class AuthAccountRequest {
+        private MemberAuthProvider provider;
+        private String providerUserId;
+        private String password;
+        private String passwordHash;
+    }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    @Builder
+    @Getter
+    @Setter
+    public static class TermAgreementRequest {
+        private Long sid;
+        private Boolean isAgreed;
+    }
+}

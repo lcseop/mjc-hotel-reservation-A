@@ -1,4 +1,11 @@
 spring:
+  session:
+    timeout: 10m
+    redis:
+      namespace: staynow:session
+      flush-mode: on_save
+  profiles:
+    active: oauth
   servlet:
     multipart:
       max-file-size: 10MB
@@ -6,9 +13,27 @@ spring:
   datasource:
     url: jdbc:mariadb://localhost:33306/hotel
     username: root
-    password: 1234
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
     driver-class-name: org.mariadb.jdbc.Driver
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${SPRING_DATA_REDIS_PASSWORD:mjc813pass}
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
       # create-drop, update, validate, none
@@ -18,6 +43,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      mode: always
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -27,7 +55,37 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 server:
+  servlet:
+    session:
+      cookie:
+        name: STAYNOW_SESSION
+        http-only: true
+        same-site: lax
+        secure: false #https 적용 후에는 true로 변경
   port: 33000
+  forward-headers-strategy: framework
 
 file:
   upload-dir: uploads
+
+springdoc:
+  enable-querydsl: false
+
+review:
+  images: D:/review/images/ #리뷰 사진 저장할 임시 경로
+
+room:
+  images: D:/room/images/ #객실 사진 저장할 임시 경로
+
+hotel:
+  images: D:/hotel/images/ #호텔 사진 저장할 임시 경로
+
+tour-api:
+  service-key: ${TOUR_API_SERVICE_KEY:}
+  base-url: https://apis.data.go.kr/B551011/KorService2
+  mobile-os: ETC
+  mobile-app: StayNow
+
+toss:
+  payments:
+    secret-key: ${TOSS_SECRET_KEY:}

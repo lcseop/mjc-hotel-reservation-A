@@ -45,7 +45,7 @@ class TermMappingTests {
         assertNotNull(type.getAnnotation(Entity.class));
         assertEquals("terms", type.getAnnotation(Table.class).name());
 
-        Field id = field("termId");
+        Field id = field("sid");
         assertNotNull(id.getAnnotation(Id.class));
         assertEquals(GenerationType.IDENTITY, id.getAnnotation(GeneratedValue.class).strategy());
         assertEquals("term_id", id.getAnnotation(Column.class).name());
@@ -121,7 +121,7 @@ public class Term {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "term_id")
-    private Long termId;
+    private Long sid;
 
     @Column(name = "term_type", length = 30)
     private String termType;
@@ -191,7 +191,7 @@ class MemberTermAgreementMappingTests {
         Class<?> type = type();
         assertNotNull(type.getAnnotation(Entity.class));
         assertEquals("member_term_agreements", type.getAnnotation(Table.class).name());
-        Field id = field("agreementId");
+        Field id = field("sid");
         assertNotNull(id.getAnnotation(Id.class));
         assertEquals(GenerationType.IDENTITY, id.getAnnotation(GeneratedValue.class).strategy());
         assertEquals("agreement_id", id.getAnnotation(Column.class).name());
@@ -274,7 +274,7 @@ public class MemberTermAgreement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "agreement_id")
-    private Long agreementId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -348,7 +348,7 @@ class MemberAuthAccountMappingTests {
         Class<?> type = type();
         assertNotNull(type.getAnnotation(Entity.class));
         assertEquals("member_auth_accounts", type.getAnnotation(Table.class).name());
-        Field id = field("authAccountId");
+        Field id = field("sid");
         assertNotNull(id.getAnnotation(Id.class));
         assertEquals(GenerationType.IDENTITY, id.getAnnotation(GeneratedValue.class).strategy());
         assertEquals("auth_account_id", id.getAnnotation(Column.class).name());
@@ -441,7 +441,7 @@ public class MemberAuthAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "auth_account_id")
-    private Long authAccountId;
+    private Long sid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")

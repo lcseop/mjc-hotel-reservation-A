@@ -1,0 +1,65 @@
+<link rel="stylesheet" href="component/header.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<header class="site-header">
+    <div class="header-inner">
+        <a href="index.html" class="logo-link" aria-label="StayNow 홈으로 이동">
+            <img class="header-logo-img" src="images/logo/Logo_Normal.png" alt="StayNow">
+        </a>
+
+        <div class="right-menu">
+            <a href="wishlist.html" class="menu-btn wishlist-link auth-only" hidden>
+                <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                위시리스트
+            </a>
+
+            <div class="user-menu">
+                <button type="button" class="user-btn auth-user-btn">
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    <span class="auth-user-name">로그인</span>
+                    <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true" hidden></i>
+                </button>
+
+                <div class="user-dropdown">
+                    <p class="auth-user-email">로그인이 필요합니다</p>
+                    <a href="login.html" class="login-link">로그인하기</a>
+                    <a href="my-reservations.html" class="auth-menu-link auth-only"><i class="fa-regular fa-calendar-check"></i> 마이페이지</a>
+                    <a href="account-settings.html" class="auth-menu-link auth-only"><i class="fa-regular fa-user"></i> 내 정보</a>
+                    <a href="admin-dashboard.html" class="auth-menu-link auth-only admin-only"><i class="fa-solid fa-table-cells-large"></i> 관리자 대시보드</a>
+                    <button type="button" class="logout-btn">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="hamburger" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mobileMenu">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+    </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-buttons">
+
+        <a href="wishlist.html" class="menu-btn wishlist-link auth-only" hidden>
+            <i class="fa-regular fa-heart" aria-hidden="true"></i>
+            위시리스트
+        </a>
+
+        <div class="mobile-user-panel">
+            <button type="button" class="user-btn auth-user-btn">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <span class="auth-user-name">로그인</span>
+                <i class="fa-solid fa-chevron-down auth-chevron" aria-hidden="true" hidden></i>
+            </button>
+
+            <div class="user-dropdown">
+                <p class="auth-user-email">로그인이 필요합니다</p>
+                <a href="login.html" class="login-link">로그인하기</a>
+                <a href="my-reservations.html" class="auth-menu-link auth-only"><i class="fa-regular fa-calendar-check"></i> 마이페이지</a>
+                <a href="account-settings.html" class="auth-menu-link auth-only"><i class="fa-regular fa-user"></i> 내 정보</a>
+                <a href="admin-dashboard.html" class="auth-menu-link auth-only admin-only"><i class="fa-solid fa-table-cells-large"></i> 관리자 대시보드</a>
+                <button type="button" class="logout-btn">로그아웃</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,7 @@
 package com.mjc.hotel.advice;
 
 import com.mjc.hotel.util.ApiResponse;
+import com.mjc.hotel.util.ResponseCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -27,10 +28,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             return false;
         }
 
-        if (ResponseEntity.class.isAssignableFrom(returnType.getParameterType())) {
-            return false;
-        }
-        return true;
+        return !ResponseEntity.class.isAssignableFrom(returnType.getParameterType());
     }
 
     @Override
@@ -40,7 +38,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         }
 
         return new ApiResponse<>(
-                true, "success", body
+                ResponseCode.SUCCESS, "success", body
         );
     }
 }

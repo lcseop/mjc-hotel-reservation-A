@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="icon" type="image/png" href="images/icon/Favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/index.css">
+    <title>호텔 예약 시스템</title>
+</head>
+<body>
+    <navbar>
+        <div id="header"></div>
+    </navbar>
+
+    <header class="hero">
+        <div class="hero-content">
+
+            <p class="sub-title">
+                완벽한 여행의 시작,
+            </p>
+
+            <h1>
+                최고의 호텔을
+                <span>최저가로</span>
+            </h1>
+
+            <p class="description">
+                전 세계 수십만 개 이상의 호텔을 비교하고 예약하세요.
+            </p>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <h2>500,000+</h2>
+                    <p>제휴 호텔</p>
+                </div>
+
+                <div class="stat">
+                    <h2>2,400만+</h2>
+                    <p>누적 이용자</p>
+                </div>
+
+                <div class="stat">
+                    <h2>4.9 ★</h2>
+                    <p>평균 평점</p>
+                </div>
+
+                <div class="stat">
+                    <h2>최대 80%</h2>
+                    <p>할인 혜택</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="search-box">
+
+            <div class="search-form">
+
+                <div class="search-item location">
+                    <label>여행지 / 호텔명</label>
+                    <div class="location-input-wrap">
+                        <input type="text" id="searchLocation" value="서울특별시" placeholder="서울특별시" autocomplete="off" aria-controls="searchSuggestions" aria-expanded="false">
+                        <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
+                    </div>
+                </div>
+
+                <div class="search-item date-range">
+                    <label>숙박 기간</label>
+                    <button type="button" class="date-range-toggle" id="dateRangeToggle" aria-expanded="false" aria-controls="dateRangePicker">
+                        <span id="dateRangeText">날짜 선택</span>
+                        <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                    </button>
+                    <input type="hidden" id="searchCheckIn">
+                    <input type="hidden" id="searchCheckOut">
+                    <div class="date-range-picker" id="dateRangePicker" hidden></div>
+                </div>
+
+                <div class="search-item">
+                    <label>인원</label>
+
+                    <div class="guest-picker">
+                        <button type="button" id="guestToggle" class="guest-toggle">
+                            성인 2명 · 어린이 0명
+                        </button>
+
+                        <div id="guestPopover" class="guest-popover">
+                            <div class="guest-row">
+                                <div>
+                                    <strong>성인</strong>
+                                    <span>만 13세 이상</span>
+                                </div>
+
+                                <div class="guest-stepper">
+                                    <button type="button" class="guest-minus" data-target="adult">-</button>
+                                    <span id="adultCount">2</span>
+                                    <button type="button" class="guest-plus" data-target="adult">+</button>
+                                </div>
+                            </div>
+
+                            <div class="guest-row">
+                                <div>
+                                    <strong>어린이</strong>
+                                    <span>만 12세 이하</span>
+                                </div>
+
+                                <div class="guest-stepper">
+                                    <button type="button" class="guest-minus" data-target="child">-</button>
+                                    <span id="childCount">0</span>
+                                    <button type="button" class="guest-plus" data-target="child">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="hotel-search.html" class="search-btn" id="searchLink">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    검색
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <main>
+
+        <!-- ================= 여행 유형 ================= -->
+        <section class="travel-type section">
+
+            <div class="section-header">
+                <div>
+                    <span class="section-eng">HOTEL TYPE</span>
+                    <h2>호텔 유형별 찾기</h2>
+                </div>
+
+            </div>
+
+            <div class="travel-grid">
+
+                <div class="travel-card type-image-card hotel-type-card" role="button" tabindex="0" aria-label="호텔 유형 검색" data-tooltip="호텔 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Hotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Hotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">호텔</strong>
+                    </span>
+                    <span class="sr-only">호텔</span>
+                </div>
+
+                <div class="travel-card type-image-card pension-type-card" role="button" tabindex="0" aria-label="펜션·풀빌라 유형 검색" data-tooltip="펜션 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Pension-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Pension-Button-Image.png" alt="">
+                        <strong class="type-card-label">펜션</strong>
+                    </span>
+                    <span class="sr-only">펜션·풀빌라</span>
+                </div>
+
+                <div class="travel-card type-image-card resort-type-card" role="button" tabindex="0" aria-label="리조트 유형 검색" data-tooltip="리조트 유형으로 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/Resort-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/Resort-Button-Image.png" alt="">
+                        <strong class="type-card-label">리조트</strong>
+                    </span>
+                    <span class="sr-only">리조트·글램핑</span>
+                </div>
+
+                <div class="travel-card type-image-card five-star-type-card" role="button" tabindex="0" aria-label="5성급 호텔 유형 검색" data-tooltip="5성급 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/FiveStarHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/FiveStarHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">5성</strong>
+                    </span>
+                    <span class="sr-only">특급 호텔</span>
+                </div>
+
+                <div class="travel-card type-image-card couple-type-card" role="button" tabindex="0" aria-label="커플 호텔 유형 검색" data-tooltip="커플 관련 호텔 검색">
+                    <span class="type-card-art">
+                        <img class="type-card-bg" src="images/button/CoupleHotel-Button-Background.png" alt="">
+                        <img class="type-card-figure" src="images/button/CoupleHotel-Button-Image.png" alt="">
+                        <strong class="type-card-label">커플</strong>
+                    </span>
+                    <span class="sr-only">커플·허니문</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= 인기 여행지 ================= -->
+
+        <section class="popular section">
+
+            <div class="section-header">
+                <div>
+                    <span class="section-eng">POPULAR HOTELS</span>
+                    <h2>지금 인기 호텔</h2>
+                </div>
+            </div>
+
+            <div class="hotel-grid">
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= 오늘의 특가 ================= -->
+
+        <section class="flash section">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="section-eng">FLASH DEALS</span>
+                    <h2>오늘의 특가</h2>
+                </div>
+
+            </div>
+
+
+            <div class="deal-grid"></div>
+
+        </section>
+
+
+
+        <!-- ================= 추천 ================= -->
+
+        <section class="recommend section">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="section-eng">AI PICK</span>
+                    <h2>김민준님을 위한 맞춤 추천</h2>
+                </div>
+
+                <button type="button" class="recommend-refresh">다시 추천받기</button>
+
+            </div>
+
+            <div class="recommend-banner">
+
+                <div class="recommend-text">
+
+                    <h2>올여름 최고의 휴양지</h2>
+
+                    <p>
+                        AI가 최근 예약 데이터를 분석하여
+                        가장 적합한 여행지를 추천합니다.
+                    </p>
+
+                    <button>추천 보기</button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+<script src="js/include.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/index.js"></script>
+<script src="component/header.js"></script>
+</body>
+</html>
