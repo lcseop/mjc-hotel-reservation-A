@@ -1,6 +1,7 @@
 package com.mjc.hotel.auth.controller;
 
 import com.mjc.hotel.auth.dto.LogoutRequestDto;
+import com.mjc.hotel.auth.dto.EmailAvailabilityResponse;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
@@ -61,6 +62,23 @@ public class AuthRestController {
     public ResponseEntity<ApiResponse<MemberLoginResponseDto>> login(@RequestBody MemberLoginRequestDto request) {
         return ResponseEntity.ok(
                 new ApiResponse<>(ResponseCode.SUCCESS, "login success", authService.login(request))
+        );
+    }
+
+    @Operation(
+            summary = "이메일 사용 가능 여부 확인",
+            description = "회원가입 전에 이메일 중복 여부를 확인합니다."
+    )
+    @GetMapping("/email-availability")
+    public ResponseEntity<ApiResponse<EmailAvailabilityResponse>> checkEmailAvailability(
+            @RequestParam String email
+    ) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        ResponseCode.SUCCESS,
+                        "email availability checked",
+                        authService.checkEmailAvailability(email)
+                )
         );
     }
 

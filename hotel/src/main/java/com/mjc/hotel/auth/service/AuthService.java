@@ -1,11 +1,13 @@
 package com.mjc.hotel.auth.service;
 
 import com.mjc.hotel.auth.dto.LogoutRequestDto;
+import com.mjc.hotel.auth.dto.EmailAvailabilityResponse;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
+import com.mjc.hotel.auth.exception.DuplicateEmailException;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.mail.service.EmailVerificationService;
 import com.mjc.hotel.member.entity.Member;
@@ -22,12 +24,14 @@ import com.mjc.hotel.util.JwtProvider;
 import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +50,11 @@ public class AuthService {
     @Transactional
     public Member signup(MemberSignupRequestDto request) {
         validatePasswordConfirm(request);
-        if (!emailVerificationService.consumeVerification(request.getEmail())) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        request.setEmail(normalizedEmail);
+        ensureEmailAvailable(normalizedEmail);
+
+        if (!emailVerificationService.consumeVerification(normalizedEmail)) {
             throw new IllegalArgumentException("이메일 인증이 필요합니다.");
         }
 
@@ -70,7 +78,20 @@ public class AuthService {
 
         Member verifiedMember = memberDtoMapper.toEntity(request);
         verifiedMember.setEmailVerified(true);
-        return memberService.createMember(verifiedMember, authAccount, termAgreements);
+        try {
+            return memberService.createMember(verifiedMember, authAccount, termAgreements);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DuplicateEmailException();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public EmailAvailabilityResponse checkEmailAvailability(String email) {
+        String normalizedEmail = normalizeEmail(email);
+        return new EmailAvailabilityResponse(
+                normalizedEmail,
+                !memberRepository.existsByEmailIgnoreCase(normalizedEmail)
+        );
     }
 
     @Transactional
@@ -214,6 +235,9 @@ public class AuthService {
     }
 
     private void validatePasswordConfirm(MemberSignupRequestDto request) {
+        if (request == null) {
+            throw new IllegalArgumentException("회원가입 정보는 필수입니다.");
+        }
         String password = request.getPassword();
         if (password != null && !password.isBlank() && !password.equals(request.getPasswordConfirm())) {
             throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
@@ -246,5 +270,26 @@ public class AuthService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void ensureEmailAvailable(String email) {
+        if (memberRepository.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateEmailException();
+        }
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("이메일은 필수입니다.");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        int atIndex = normalizedEmail.indexOf('@');
+        if (atIndex <= 0
+                || atIndex != normalizedEmail.lastIndexOf('@')
+                || atIndex == normalizedEmail.length() - 1) {
+            throw new IllegalArgumentException("올바른 이메일을 입력해주세요.");
+        }
+        return normalizedEmail;
     }
 }

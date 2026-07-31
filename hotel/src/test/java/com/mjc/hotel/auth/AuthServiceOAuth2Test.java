@@ -1,11 +1,14 @@
 package com.mjc.hotel.auth;
 
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
+import com.mjc.hotel.auth.dto.EmailAvailabilityResponse;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.auth.service.AuthService;
 import com.mjc.hotel.auth.service.RefreshTokenService;
+import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
+import com.mjc.hotel.auth.exception.DuplicateEmailException;
 import com.mjc.hotel.member.converter.MemberDtoMapper;
 import com.mjc.hotel.member.entity.Member;
 import com.mjc.hotel.member.entity.MemberAuthAccount;
@@ -29,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AuthServiceOAuth2Test {
@@ -52,6 +56,31 @@ class AuthServiceOAuth2Test {
             refreshTokenService,
             emailVerificationService
     );
+
+    @Test
+    void emailAvailabilityNormalizesEmailAndChecksTheRepository() {
+        when(memberRepository.existsByEmailIgnoreCase("new@example.com")).thenReturn(false);
+
+        EmailAvailabilityResponse response =
+                authService.checkEmailAvailability("  NEW@EXAMPLE.COM ");
+
+        assertThat(response.email()).isEqualTo("new@example.com");
+        assertThat(response.available()).isTrue();
+        verify(memberRepository).existsByEmailIgnoreCase("new@example.com");
+    }
+
+    @Test
+    void duplicateEmailIsRejectedBeforeConsumingEmailVerification() {
+        when(memberRepository.existsByEmailIgnoreCase("used@example.com")).thenReturn(true);
+        MemberSignupRequestDto request = MemberSignupRequestDto.builder()
+                .email("USED@example.com")
+                .build();
+
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessage("이미 사용 중인 이메일입니다.");
+        verifyNoInteractions(emailVerificationService);
+    }
 
     @Test
     void googleLoginIssuesTheSameApplicationTokensAsLocalLogin() {

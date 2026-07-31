@@ -104,7 +104,7 @@ public class MemberService {
             List<MemberTermAgreement> termAgreements
     ) {
         prepareRequiredMemberValues(member);
-        Member savedMember = memberRepository.save(member);
+        Member savedMember = memberRepository.saveAndFlush(member);
 
         if (authAccount != null) {
             authAccount.setMember(savedMember);

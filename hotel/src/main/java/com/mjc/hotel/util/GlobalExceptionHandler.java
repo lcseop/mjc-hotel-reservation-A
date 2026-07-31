@@ -1,6 +1,7 @@
 package com.mjc.hotel.util;
 
 import com.mjc.hotel.util.excep.AuthenticationFailedException;
+import com.mjc.hotel.auth.exception.DuplicateEmailException;
 import com.mjc.hotel.util.excep.DataNotFoundException;
 import com.mjc.hotel.member.withdrawal.exception.SocialUnlinkException;
 import com.mjc.hotel.member.withdrawal.exception.WithdrawalConflictException;
@@ -12,6 +13,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<String>> duplicateEmailHandler(DuplicateEmailException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ApiResponse<>(ResponseCode.INSERT_ERROR, "duplicate email", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> illegalArgumentHandler(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(ResponseCode.INSERT_ERROR, "invalid request", ex.getMessage())
+        );
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<String>> accessDeniedHandler(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(

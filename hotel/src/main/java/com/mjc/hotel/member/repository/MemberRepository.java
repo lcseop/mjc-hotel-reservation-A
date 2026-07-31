@@ -10,13 +10,7 @@ import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
-    @Query("""
-            select count(member)
-            from Member member
-            where lower(member.email) = lower(:email)
-              and (member.deleted = false or member.deleted is null)
-            """)
-    long countActiveByEmail(@Param("email") String email);
+    boolean existsByEmailIgnoreCase(String email);
 
     @Query("""
             select member

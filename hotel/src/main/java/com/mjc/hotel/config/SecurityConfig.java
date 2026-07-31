@@ -89,7 +89,10 @@ public class SecurityConfig {
                         "/api/mail/verification/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.PATCH, "/api/member/password-reset").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth/oauth2/**").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                        "/api/auth/oauth2/**",
+                        "/api/auth/email-availability"
+                ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/hotel/search").permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/api/hotel/*",
