@@ -66,6 +66,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:?set TOSS_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
       FILE_UPLOAD_DIR: /app/uploads
       REVIEW_IMAGES: /app/uploads/review/
       ROOM_IMAGES: /app/uploads/room/
