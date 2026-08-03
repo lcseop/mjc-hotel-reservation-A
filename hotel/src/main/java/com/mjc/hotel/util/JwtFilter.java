@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -44,23 +45,21 @@ public class JwtFilter extends OncePerRequestFilter {
 
 			if (jwtProvider.validateAccessToken(token)) {
 				String name = jwtProvider.getName(token);
-				boolean activeMember = memberRepository.findActiveByEmail(name)
-						.filter(member -> member.getStatus() == MemberStatus.ACTIVE)
-						.isPresent();
-				if (!activeMember) {
+				var member = memberRepository.findActiveByEmail(name)
+						.filter(foundMember -> foundMember.getStatus() == MemberStatus.ACTIVE)
+						.orElse(null);
+				if (member == null) {
 					writeUnauthorized(response);
 					return;
 				}
 
 				UsernamePasswordAuthenticationToken authentication =
-						new UsernamePasswordAuthenticationToken(name, null, List.of());
+						new UsernamePasswordAuthenticationToken(
+								name,
+								null,
+								List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
+						);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
-
-//				UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-//								"tom",
-//								null,
-//								List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-//				);
 
 			} else {
 				writeUnauthorized(response);

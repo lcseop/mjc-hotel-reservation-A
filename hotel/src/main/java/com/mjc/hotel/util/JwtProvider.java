@@ -4,8 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -15,9 +18,17 @@ public class JwtProvider {
 	private static final String ACCESS_TOKEN_TYPE = "access";
 	private static final String REFRESH_TOKEN_TYPE = "refresh";
 
-	private static final String SECRET_KEY = "secret-my-secretkey-hello-secret-my-secretkey-hello";
 	private static final long ACCESS_TOKEN_TIME = 1000L * 60 * 60;
 	private static final long REFRESH_TOKEN_TIME = 1000L * 60 * 60 * 24 * 14;
+
+	private final SecretKey secretKey;
+
+	public JwtProvider(@Value("${jwt.secret}") String secret) {
+		if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+			throw new IllegalStateException("JWT_SECRET은 HS256 서명을 위해 32바이트 이상이어야 합니다.");
+		}
+		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+	}
 
 	public String createAccessToken(String name) {
 		return createToken(name, ACCESS_TOKEN_TYPE, ACCESS_TOKEN_TIME);
@@ -36,7 +47,7 @@ public class JwtProvider {
 						.setIssuedAt(now)
 						.setExpiration(new Date(now.getTime() + expirationMillis))
 						.signWith(
-										Keys.hmacShaKeyFor(SECRET_KEY.getBytes()),
+										secretKey,
 										SignatureAlgorithm.HS256
 						)
 						.compact();
@@ -84,7 +95,7 @@ public class JwtProvider {
 	private Claims getClaims(String token) {
 		return Jwts.parserBuilder()
 						.setSigningKey(
-										Keys.hmacShaKeyFor(SECRET_KEY.getBytes())
+										secretKey
 						)
 						.build()
 						.parseClaimsJws(token)
