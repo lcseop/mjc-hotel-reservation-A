@@ -16,9 +16,12 @@ import com.mjc.hotel.term.entity.Term;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 public class MemberDtoMapper {
+
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     public Member toEntity(MemberRequestDto dto) {
         return Member.builder()
@@ -59,7 +62,7 @@ public class MemberDtoMapper {
         return MemberTermAgreement.builder()
                 .term(term)
                 .isAgreed(dto.getIsAgreed())
-                .agreedAt(LocalDateTime.now())
+                .agreedAt(LocalDateTime.now(SEOUL_ZONE_ID))
                 .build();
     }
 
@@ -78,7 +81,7 @@ public class MemberDtoMapper {
                 .member(member)
                 .term(term)
                 .isAgreed(dto.getIsAgreed())
-                .agreedAt(dto.getAgreedAt() != null ? dto.getAgreedAt() : LocalDateTime.now())
+                .agreedAt(dto.getAgreedAt() != null ? dto.getAgreedAt() : LocalDateTime.now(SEOUL_ZONE_ID))
                 .withdrawnAt(dto.getWithdrawnAt())
                 .build();
     }
@@ -133,6 +136,6 @@ public class MemberDtoMapper {
     }
 
     private Boolean resolveBoolean(Boolean value) {
-        return value != null ? value : false;
+        return Boolean.TRUE.equals(value);
     }
 }

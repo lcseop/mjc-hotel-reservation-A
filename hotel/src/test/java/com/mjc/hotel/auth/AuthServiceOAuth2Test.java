@@ -32,9 +32,11 @@ import static org.mockito.Mockito.when;
 
 class AuthServiceOAuth2Test {
 
+    private static final String TEST_JWT_SECRET = "test-jwt-secret-key-with-at-least-32-bytes";
+
     private final MemberAuthAccountRepository authAccountRepository = mock(MemberAuthAccountRepository.class);
     private final MemberRepository memberRepository = mock(MemberRepository.class);
-    private final JwtProvider jwtProvider = new JwtProvider();
+    private final JwtProvider jwtProvider = new JwtProvider(TEST_JWT_SECRET);
     private final RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final AuthService authService = new AuthService(

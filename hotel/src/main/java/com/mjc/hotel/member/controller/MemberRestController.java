@@ -9,7 +9,6 @@ import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +20,9 @@ import java.util.List;
 @Tag(name = "회원", description = "회원 데이터 전반을 관리합니다.")
 public class MemberRestController {
 
-    @Autowired
-    private MemberService memberService;
+    private final MemberService memberService;
 
-    @Autowired
-    private MemberDtoMapper memberDtoMapper;
+    private final MemberDtoMapper memberDtoMapper;
 
     @Operation(
             summary = "회원 데이터 생성",
