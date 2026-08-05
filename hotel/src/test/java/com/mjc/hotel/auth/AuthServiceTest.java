@@ -1,7 +1,9 @@
 package com.mjc.hotel.auth;
 
+import com.mjc.hotel.auth.dto.LogoutRequestDto;
 import com.mjc.hotel.auth.dto.MemberLoginResponseDto;
 import com.mjc.hotel.auth.dto.MemberLoginRequestDto;
+import com.mjc.hotel.auth.dto.MemberSignupRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenRequestDto;
 import com.mjc.hotel.auth.dto.RefreshTokenResponseDto;
 import com.mjc.hotel.auth.service.AuthService;
@@ -21,34 +23,89 @@ import com.mjc.hotel.util.excep.AuthenticationFailedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class AuthServiceOAuth2Test {
+class AuthServiceTest {
 
     private static final String TEST_JWT_SECRET = "test-jwt-secret-key-with-at-least-32-bytes";
 
     private final MemberAuthAccountRepository authAccountRepository = mock(MemberAuthAccountRepository.class);
     private final MemberRepository memberRepository = mock(MemberRepository.class);
+    private final MemberService memberService = mock(MemberService.class);
+    private final TermRepository termRepository = mock(TermRepository.class);
+    private final MemberDtoMapper memberDtoMapper = mock(MemberDtoMapper.class);
     private final JwtProvider jwtProvider = new JwtProvider(TEST_JWT_SECRET);
     private final RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final AuthService authService = new AuthService(
             authAccountRepository,
             memberRepository,
-            mock(MemberService.class),
-            mock(TermRepository.class),
-            mock(MemberDtoMapper.class),
+            memberService,
+            termRepository,
+            memberDtoMapper,
             passwordEncoder,
             jwtProvider,
             refreshTokenService
     );
+
+    @Test
+    void signupCreatesLocalMemberAndAuthAccount() {
+        MemberSignupRequestDto request = MemberSignupRequestDto.builder()
+                .name("회원가입 테스트")
+                .phone("010-2222-3333")
+                .email("signup-user@example.com")
+                .password("password")
+                .passwordConfirm("password")
+                .emailVerified(true)
+                .build();
+        Member member = Member.builder()
+                .email(request.getEmail())
+                .name(request.getName())
+                .build();
+        Member savedMember = Member.builder()
+                .sid(1L)
+                .email(request.getEmail())
+                .name(request.getName())
+                .build();
+        MemberAuthAccount authAccount = MemberAuthAccount.builder()
+                .provider(MemberAuthProvider.LOCAL)
+                .providerUserId(request.getEmail())
+                .build();
+
+        when(memberDtoMapper.toEntity(request)).thenReturn(member);
+        when(memberDtoMapper.toAuthAccount(any(MemberSignupRequestDto.AuthAccountRequest.class)))
+                .thenReturn(authAccount);
+        when(passwordEncoder.encode("password")).thenReturn("encoded-password");
+        when(memberService.createMember(member, authAccount, List.of())).thenReturn(savedMember);
+
+        Member result = authService.signup(request);
+
+        assertThat(result.getSid()).isEqualTo(1L);
+        assertThat(result.getEmail()).isEqualTo(request.getEmail());
+        assertThat(authAccount.getPasswordHash()).isEqualTo("encoded-password");
+        verify(memberService).createMember(member, authAccount, List.of());
+    }
+
+    @Test
+    void logoutDeletesMatchingRefreshToken() {
+        String refreshToken = jwtProvider.createRefreshToken("logout-user@example.com");
+        LogoutRequestDto request = LogoutRequestDto.builder()
+                .memberSid(1L)
+                .refreshToken(refreshToken)
+                .build();
+
+        authService.logout(request);
+
+        verify(refreshTokenService).deleteIfMatches(1L, refreshToken);
+    }
 
     @Test
     void googleLoginIssuesTheSameApplicationTokensAsLocalLogin() {
@@ -85,7 +142,7 @@ class AuthServiceOAuth2Test {
         assertThat(response.getPoint()).isEqualTo(5000);
         assertThat(response.getProvider()).isEqualTo(MemberAuthProvider.GOOGLE);
         assertThat(authAccount.getLastLoginAt()).isNotNull();
-        verify(refreshTokenService).save(eq(1L), eq(response.getRefreshToken()), eq(1209600L));
+        verify(refreshTokenService).save(1L, response.getRefreshToken(), 1209600L);
     }
 
     @Test
@@ -114,7 +171,7 @@ class AuthServiceOAuth2Test {
         assertThat(jwtProvider.validateRefreshToken(response.getRefreshToken())).isTrue();
         assertThat(response.getProvider()).isEqualTo(MemberAuthProvider.NAVER);
         assertThat(member.getEmailVerified()).isFalse();
-        verify(refreshTokenService).save(eq(3L), eq(response.getRefreshToken()), eq(1209600L));
+        verify(refreshTokenService).save(3L, response.getRefreshToken(), 1209600L);
     }
 
     @Test
