@@ -16,12 +16,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class MemberWithdrawalTransactionService {
+
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private static final List<ReservationStatus> BLOCKING_RESERVATION_STATUSES = List.of(
             ReservationStatus.PENDING,
@@ -81,7 +84,7 @@ public class MemberWithdrawalTransactionService {
             }
         });
 
-        LocalDateTime withdrawnAt = LocalDateTime.now();
+        LocalDateTime withdrawnAt = LocalDateTime.now(SEOUL_ZONE_ID);
         termAgreementRepository.findByMember_Sid(memberSid).forEach(agreement -> {
             if (!Boolean.TRUE.equals(agreement.getDeleted())) {
                 agreement.setWithdrawnAt(withdrawnAt);

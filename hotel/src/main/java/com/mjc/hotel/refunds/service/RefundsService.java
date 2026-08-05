@@ -16,12 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RefundsService {
+
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final RefundsRepository refundsRepository;
     private final PaymentsRepository paymentsRepository;
@@ -77,7 +80,7 @@ public class RefundsService {
                 .refundAmount(refundAmount)
                 .reason(reason)
                 .status(RefundStatus.REQUESTED)
-                .requestedAt(LocalDateTime.now())
+                .requestedAt(LocalDateTime.now(SEOUL_ZONE_ID))
                 .build();
         return refundsRepository.save(refund).getSid();
     }
@@ -87,7 +90,7 @@ public class RefundsService {
         Refunds refund = getRefund(refundSid);
         refund.setPgTransactionKey(pgTransactionKey);
         refund.setStatus(RefundStatus.COMPLETED);
-        refund.setCompletedAt(LocalDateTime.now());
+        refund.setCompletedAt(LocalDateTime.now(SEOUL_ZONE_ID));
         refund.setFailedAt(null);
         refund.setFailureReason(null);
     }
@@ -96,7 +99,7 @@ public class RefundsService {
     public void failRefund(Long refundSid, String failureReason) {
         Refunds refund = getRefund(refundSid);
         refund.setStatus(RefundStatus.FAILED);
-        refund.setFailedAt(LocalDateTime.now());
+        refund.setFailedAt(LocalDateTime.now(SEOUL_ZONE_ID));
         refund.setFailureReason(failureReason);
     }
 

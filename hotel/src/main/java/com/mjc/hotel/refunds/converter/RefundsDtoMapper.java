@@ -9,12 +9,15 @@ import com.mjc.hotel.refunds.entity.Refunds;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 public class RefundsDtoMapper {
 
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
+
     public Refunds toEntity(RefundsRequestDto dto, Payments payment, Member member) {
-        LocalDateTime requestedAt = dto.getRequestedAt() != null ? dto.getRequestedAt() : LocalDateTime.now();
+        LocalDateTime requestedAt = dto.getRequestedAt() != null ? dto.getRequestedAt() : LocalDateTime.now(SEOUL_ZONE_ID);
 
         return Refunds.builder()
                 .payment(payment)
@@ -38,7 +41,7 @@ public class RefundsDtoMapper {
         if (currentRequestedAt != null) {
             return currentRequestedAt;
         }
-        return LocalDateTime.now();
+        return LocalDateTime.now(SEOUL_ZONE_ID);
     }
 
     public LocalDateTime resolveCompletedAt(RefundsRequestDto dto, LocalDateTime currentCompletedAt) {
@@ -49,7 +52,7 @@ public class RefundsDtoMapper {
             return currentCompletedAt;
         }
         if (dto.getStatus() == RefundStatus.COMPLETED) {
-            return LocalDateTime.now();
+            return LocalDateTime.now(SEOUL_ZONE_ID);
         }
         return null;
     }
@@ -62,7 +65,7 @@ public class RefundsDtoMapper {
             return currentFailedAt;
         }
         if (dto.getStatus() == RefundStatus.FAILED) {
-            return LocalDateTime.now();
+            return LocalDateTime.now(SEOUL_ZONE_ID);
         }
         return null;
     }

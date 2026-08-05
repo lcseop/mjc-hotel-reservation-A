@@ -8,7 +8,7 @@ import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +16,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/refunds")
+@RequiredArgsConstructor
 @Tag( name = "환불", description = "환불 데이터 전반을 관리합니다.")
 public class RefundsRestController {
 
-    @Autowired
-    private RefundsService refundsService;
+    private final RefundsService refundsService;
 
-    @Autowired
-    private RefundsDtoMapper refundsDtoMapper;
+    private final RefundsDtoMapper refundsDtoMapper;
 
     @Operation(
             summary = "환불 데이터 생성",

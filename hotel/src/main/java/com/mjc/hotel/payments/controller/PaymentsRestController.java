@@ -12,7 +12,7 @@ import com.mjc.hotel.util.ApiResponse;
 import com.mjc.hotel.util.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,14 +20,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
+@RequiredArgsConstructor
 @Tag( name = "결제", description = "결제 데이터 전반을 관리합니다.")
 public class PaymentsRestController {
 
-    @Autowired
-    private PaymentsService paymentsService;
+    private final PaymentsService paymentsService;
 
-    @Autowired
-    private PaymentsDtoMapper paymentsDtoMapper;
+    private final PaymentsDtoMapper paymentsDtoMapper;
 
     @Operation(
             summary = "결제 데이터 생성",
