@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mjc.hotel.coupon.entity.CouponIssue;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Base64;
 import java.util.Map;
@@ -46,8 +48,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class PaymentsService {
+
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
+    private static final String PAYMENT_KEY_FIELD = "paymentKey";
 
     private final PaymentsRepository paymentsRepository;
     private final ReservationRepository reservationRepository;
@@ -108,7 +114,7 @@ public class PaymentsService {
                 .paymentStatus(PaymentStatus.PENDING)
                 .orderId(orderId)
                 .provider("TOSS")
-                .requestedAt(LocalDateTime.now())
+                .requestedAt(LocalDateTime.now(SEOUL_ZONE_ID))
                 .point(0)
                 .build();
 
@@ -143,13 +149,13 @@ public class PaymentsService {
         String approvedAt = text(tossResponse, "approvedAt");
         String receiptUrl = tossResponse.path("receipt").path("url").asText(null);
 
-        payment.setPaymentKey(text(tossResponse, "paymentKey"));
-        payment.setTransactionNo(text(tossResponse, "paymentKey"));
+        payment.setPaymentKey(text(tossResponse, PAYMENT_KEY_FIELD));
+        payment.setTransactionNo(text(tossResponse, PAYMENT_KEY_FIELD));
         payment.setPaymentMethod(resolvePaymentMethod(text(tossResponse, "method")));
         payment.setPaymentStatus(PaymentStatus.COMPLETED);
         payment.setReceiptUrl(receiptUrl);
         payment.setApprovedAt(parseTossDateTime(approvedAt));
-        payment.setPaidAt(payment.getApprovedAt() != null ? payment.getApprovedAt() : LocalDateTime.now());
+        payment.setPaidAt(payment.getApprovedAt() != null ? payment.getApprovedAt() : LocalDateTime.now(SEOUL_ZONE_ID));
         payment.setFailCode(null);
         payment.setFailMessage(null);
         payment.setPoint((int) Math.floor(amount.doubleValue() * 0.005));
@@ -227,7 +233,7 @@ public class PaymentsService {
         CouponIssue couponIssue = reservation.getCouponIssue();
         if (couponIssue != null) {
             couponIssue.setIsUsed(true);
-            couponIssue.setUsedAt(LocalDateTime.now());
+            couponIssue.setUsedAt(LocalDateTime.now(SEOUL_ZONE_ID));
         }
 
         Integer pointDiscount = reservation.getPointDiscount() != null ? reservation.getPointDiscount() : 0;
@@ -294,7 +300,8 @@ public class PaymentsService {
             emailRequest.setSid(reservation.getSid());
             emailRequest.setRecipientEmail(member.getEmail());
             emailLogService.sendEmailAndLog(emailRequest);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("예약 확정 이메일 발송에 실패했습니다. reservationSid={}", reservation.getSid(), e);
         }
     }
 
@@ -397,7 +404,7 @@ public class PaymentsService {
 
         try {
             String requestBody = objectMapper.writeValueAsString(Map.of(
-                    "paymentKey", dto.getPaymentKey(),
+                    PAYMENT_KEY_FIELD, dto.getPaymentKey(),
                     "orderId", dto.getOrderId(),
                     "amount", dto.getAmount().longValue()
             ));
@@ -419,6 +426,9 @@ public class PaymentsService {
             }
 
             return body;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("토스 결제 승인 요청이 중단되었습니다.", e);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
@@ -456,6 +466,9 @@ public class PaymentsService {
             }
 
             return body;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("토스 결제 취소 요청이 중단되었습니다.", e);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
@@ -473,7 +486,7 @@ public class PaymentsService {
             }
         }
 
-        return text(cancelResponse, "paymentKey");
+        return text(cancelResponse, PAYMENT_KEY_FIELD);
     }
 
     private PaymentMethod resolvePaymentMethod(String method) {
@@ -505,7 +518,7 @@ public class PaymentsService {
         try {
             return OffsetDateTime.parse(value).toLocalDateTime();
         } catch (Exception e) {
-            return LocalDateTime.now();
+            return LocalDateTime.now(SEOUL_ZONE_ID);
         }
     }
 }

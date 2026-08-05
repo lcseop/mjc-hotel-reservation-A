@@ -8,9 +8,12 @@ import com.mjc.hotel.reservations.entity.Reservation;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 public class PaymentsDtoMapper {
+
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     public Payments toEntity(PaymentsRequestDto dto, Reservation reservation, Member member) {
         return Payments.builder()
@@ -28,7 +31,7 @@ public class PaymentsDtoMapper {
                 .failMessage(dto.getFailMessage())
                 .requestedAt(dto.getRequestedAt())
                 .approvedAt(dto.getApprovedAt())
-                .paidAt(dto.getPaidAt() != null ? dto.getPaidAt() : LocalDateTime.now())
+                .paidAt(dto.getPaidAt() != null ? dto.getPaidAt() : LocalDateTime.now(SEOUL_ZONE_ID))
                 .point(dto.getPoint())
                 .build();
     }
