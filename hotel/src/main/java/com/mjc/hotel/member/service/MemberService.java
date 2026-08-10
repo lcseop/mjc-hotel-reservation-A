@@ -36,6 +36,12 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    public boolean existsActiveEmail(String email) {
+        return email != null
+                && !email.isBlank()
+                && memberRepository.countActiveByEmail(email.trim()) > 0;
+    }
+
     public Member getMember(Long sid) {
         return memberRepository.findById(sid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. sid=" + sid));

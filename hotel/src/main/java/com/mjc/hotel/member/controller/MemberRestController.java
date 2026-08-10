@@ -54,6 +54,18 @@ public class MemberRestController {
     }
 
     @Operation(
+            summary = "이메일 중복 확인",
+            description = "회원가입 전에 이메일 사용 여부만 확인합니다."
+    )
+
+    @GetMapping("/email-exists")
+    public ResponseEntity<ApiResponse<Boolean>> existsEmail(@RequestParam String email) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(ResponseCode.SUCCESS, "member email exists checked", memberService.existsActiveEmail(email))
+        );
+    }
+
+    @Operation(
             summary = "회원 데이터 상세 검색",
             description = "회원 데이터 하나를 검색합니다."
     )
