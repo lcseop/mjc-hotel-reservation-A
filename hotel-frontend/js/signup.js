@@ -8,7 +8,7 @@ const SIGNUP_API = window.StayNowConfig.apiUrl("/auth/signup");
 const TERMS_API = window.StayNowConfig.apiUrl("/term");
 const EMAIL_VERIFY_SEND_API = window.StayNowConfig.apiUrl("/mail/verification/send");
 const EMAIL_VERIFY_CONFIRM_API = window.StayNowConfig.apiUrl("/mail/verification/confirm");
-const MEMBER_LIST_API = window.StayNowConfig.apiUrl("/member");
+const MEMBER_EMAIL_EXISTS_API = window.StayNowConfig.apiUrl("/member/email-exists");
 const TERM_TYPES = ["SERVICE", "PRIVACY", "MARKETING"];
 const TERM_CONTENTS = {
     SERVICE: {
@@ -710,13 +710,11 @@ function checkEmailDuplicate(email) {
     }
 
     emailCheckRequest = $.ajax({
-        url: MEMBER_LIST_API,
+        url: MEMBER_EMAIL_EXISTS_API,
         type: "GET",
+        data: { email },
         success: function (result) {
-            const members = Array.isArray(result.data) ? result.data : [];
-            const used = members.some(function (member) {
-                return String(member.email || "").trim().toLowerCase() === email;
-            });
+            const used = Boolean(result && result.data);
 
             checkedEmail = email;
             emailAvailable = !used;

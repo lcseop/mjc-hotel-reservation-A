@@ -89,6 +89,7 @@ public class SecurityConfig {
                         "/api/member/password-reset/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/term/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/member/email-exists").permitAll()
                 .requestMatchers("/api/hotel/import/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/hotel/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/hotel/search").permitAll()
