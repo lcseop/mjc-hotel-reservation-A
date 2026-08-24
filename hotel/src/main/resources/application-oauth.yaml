@@ -51,4 +51,4 @@ spring:
             user-name-attribute: response
 staynow:
   oauth2:
-    frontend-callback-url: ${OAUTH2_FRONTEND_CALLBACK_URL:http://localhost/oauth-callback.html}
+    frontend-callback-url: ${OAUTH2_FRONTEND_CALLBACK_URL}

@@ -6,7 +6,7 @@
 cp docker.env.example .env
 ```
 
-`.env`에서 Docker Hub ID, DB/Redis 비밀번호, Gmail 앱 비밀번호, Toss 키와 Google OAuth 정보를 서버 환경에 맞게 수정합니다.
+`.env`에서 Docker Hub ID, DB/Redis 비밀번호, Gmail 앱 비밀번호, Toss 키와 Google OAuth 정보를 서버 환경에 맞게 수정합니다. `CORS_ALLOWED_ORIGINS`에는 배포 프런트엔드 주소(예: `https://staynow.example.com`)를, `OAUTH2_FRONTEND_CALLBACK_URL`에는 같은 도메인의 OAuth 콜백 주소를 지정합니다.
 
 Google Cloud Console에는 `https://<배포-도메인>/login/oauth2/code/google`을 승인된 리다이렉트 URI로 등록합니다. `.env`의 `OAUTH2_FRONTEND_CALLBACK_URL`은 `https://<배포-도메인>/oauth-callback.html`로 설정합니다.
 
@@ -15,6 +15,8 @@ Google Cloud Console에는 `https://<배포-도메인>/login/oauth2/code/google`
 ```bash
 docker compose up -d --build
 ```
+
+Compose 기본값은 `oauth,prod` 프로필입니다. `prod`는 HTTPS 쿠키를 강제하고 JPA 스키마 자동 변경 및 초기 데이터 삽입을 하지 않으므로, 배포 전에 마이그레이션으로 스키마를 준비해야 합니다.
 
 API 확인:
 
