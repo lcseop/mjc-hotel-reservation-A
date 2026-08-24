@@ -1,7 +1,7 @@
 # StayNow 
 http://hotel.seoplee.site/
-관리자 계정 : dik43210@gmail.com | 비밀번호 : 1234
-사용자 계정 : cndtjqdlqsle@gmail.com | 비밀번호 : dldydwk!
+- 관리자 계정 : dik43210@gmail.com | 비밀번호 : 1234
+- 사용자 계정 : cndtjqdlqsle@gmail.com | 비밀번호 : dldydwk!
 
 > 숙소 탐색부터 예약·결제·체크인까지 하나의 흐름으로 연결한 호텔 예약 웹 서비스
 
