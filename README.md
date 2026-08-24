@@ -11,7 +11,7 @@ StayNow는 사용자가 조건에 맞는 숙소와 객실을 찾고, 예약과 �
 | --- | --- |
 | 서비스 영역 | 호텔·리조트 예약 플랫폼 |
 | 백엔드 | Java 21, Spring Boot 4, Spring Security, JPA, QueryDSL, MyBatis |
-| 프런트엔드 | HTML, CSS, JavaScript, jQuery, Nginx |
+| 프론트엔드 | HTML, CSS, JavaScript, jQuery, Nginx |
 | 데이터·인프라 | MariaDB, Redis Session, Docker Compose |
 | 외부 연동 | Google·Kakao·Naver OAuth 2.0, Toss Payments, 공공데이터포털 관광 API, SMTP 메일 |
 
@@ -70,7 +70,7 @@ Spring Boot API ───── MariaDB
   └── Tourism API
 ```
 
-프런트엔드는 Nginx가 정적 파일을 제공하고, `/api`, OAuth, 이미지 요청은 API 서버로 프록시합니다. API는 역할 기반 접근 제어로 고객 기능과 관리자 기능을 분리합니다.
+프론트엔드는 Nginx가 정적 파일을 제공하고, `/api`, OAuth, 이미지 요청은 API 서버로 프록시합니다. API는 역할 기반 접근 제어로 고객 기능과 관리자 기능을 분리합니다.
 
 ## 디렉터리 구조
 
@@ -78,7 +78,7 @@ Spring Boot API ───── MariaDB
 .
 ├── hotel/                 # Spring Boot API
 │   └── src/main/java/     # 도메인별 controller · service · repository
-├── hotel-frontend/        # 정적 프런트엔드와 Nginx 설정
+├── hotel-frontend/        # 정적 프론트엔드와 Nginx 설정
 ├── docs/                  # SQL 및 Redis Compose 참고 자료
 ├── json/                  # Postman API 컬렉션
 └── docker-compose.yml     # API · frontend · MariaDB · Redis 실행 구성
@@ -110,7 +110,7 @@ CORS_ALLOWED_ORIGINS=https://your-domain.example
 docker compose up -d --build
 ```
 
-- 프런트엔드: `http://localhost`
+- 프론트엔드: `http://localhost`
 - API Swagger UI: `http://localhost:33000/swagger-ui/index.html`
 
 배포용 Compose는 기본적으로 `oauth,prod` 프로필을 사용합니다. `prod` 프로필은 HTTPS 쿠키를 활성화하고 JPA 스키마 자동 변경을 허용하지 않으므로, 배포 전 스키마를 마이그레이션으로 준비해야 합니다. 자세한 내용은 [DOCKER_DEPLOY.md](DOCKER_DEPLOY.md)를 참고하세요.
